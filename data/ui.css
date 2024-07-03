@@ -1,0 +1,228 @@
+@import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+
+html,
+body {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.top {
+    align-items: center;
+}
+
+.navbar {
+    display: flex;
+    align-items: center;
+    font-size: .875rem;
+    background-color: rgb(255, 255, 255);
+    padding: 20px;
+    border-color: white;
+    z-index: 2;
+}
+
+.title {
+    padding-top: 0px;
+    align-items: center;
+    font-size: 18px;
+    text-transform: none;
+    color: #000000;
+    vertical-align: center;
+    font-weight: 700;
+}
+
+.sidebar_overview {
+    width: 25%;
+}
+
+.homepage-body {
+    display: flex;
+    align-items: center;
+}
+
+
+
+.bold-text {
+    font-weight: bolder;
+}
+
+html {
+    font-family: "open sans", sans-serif;
+}
+
+body>.container-fluid:first-child {
+    padding: 0 !important;
+}
+
+.homepage-content {
+    padding-top: 75px;
+    display: flex;
+    flex-direction: column;
+}
+
+.homepage-head {
+    display: flex;
+    justify-content: center;
+    /* background-color: peachpuff; */
+}
+
+.text-sc {
+    font-variant-caps: small-caps;
+}
+
+.homepage-background {
+    background-image: url("https://images.nationalgeographic.org/image/upload/v1638892272/EducationHub/photos/hoh-river-valley.jpg");
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: center;
+    min-height: calc(100vh - 75px);
+    margin: -24px;
+}
+
+.homepage-background:before {
+    content: '';
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: linear-gradient(to bottom right, #002F4B, #DC4225);
+    opacity: .6;
+    z-index: 0
+}
+
+.homepage-background>* {
+    z-index: 1;
+}
+
+.light h1,
+.light h2,
+.light h3,
+.light h4 {
+    color: #fff;
+}
+
+.light .lead,
+.light {
+    color: #eee;
+}
+
+.homepage-lead-text-block {
+    max-width: 100%;
+    text-align: justify;
+}
+
+.indicator-section {
+    margin: 40px;
+}
+
+.indicators-title {
+    font-variant-caps: small-caps;
+    text-align: center;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.indicator-boxes {
+    justify-content: center;
+    display: flex;
+}
+
+.indicators-boxes-row {
+    background-color: white;
+    padding: 15px;
+}
+
+.indicator-box-title {
+    color: #02735E;
+    text-align: center;
+    padding: 15px;
+    font-variant-caps: small-caps;
+    font-size: 20px;
+}
+
+.indicator-text {
+    text-shadow: #05A688;
+    color: #FFB800;
+    text-align: center;
+    padding: 15px;
+    font-weight: bolder;
+    font-size: 24px;
+    border-top: 2px solid #02735E;
+}
+
+@media(min-width: 768px) {
+    .homepage-lead-text-block {
+        max-width: 66%;
+    }
+}
+
+@media(min-width: 992px) {
+    .homepage-lead-text-block {
+        max-width: 33%;
+    }
+}
+
+.bottom {
+    margin-top: auto;
+}
+
+.ackn-elt {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ackn-elt:not(:last-child) {
+    margin-bottom: 15px;
+}
+
+.light a:not(.btn) {
+    text-decoration: underline;
+    color: #ccc;
+}
+
+.light a:not(.btn):hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
+.bamboo{
+    color: #53c5ff;
+    text-decoration: none;
+}
+
+.cactus{
+    color: #49d1d5;
+    text-decoration: none;
+}
+
+.climber{
+    color: #dbb448;
+    text-decoration: none;
+}
+
+.herb{
+    color: #f8827a;
+    text-decoration: none;
+}
+
+.palm{
+    color: #ff8fda;
+    text-decoration: none;
+}
+
+.shurb{
+    color: #45d090;
+    text-decoration: none;
+}
+
+.subshurb{
+    color: #779137;
+    text-decoration: none;
+}
+
+.tree{
+    color: #d7a0ff;
+    text-decoration: none;
+}

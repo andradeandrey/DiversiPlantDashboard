@@ -1,0 +1,12 @@
+{
+    "https://api.shinyapps.io": {
+        "server_url": "https://api.shinyapps.io",
+        "filename": "C:\\Users\\vagli\\Documents\\Canada\\Agroforestry",
+        "app_url": "https://agroforestry.shinyapps.io/apppy1/",
+        "app_id": 12266785,
+        "app_guid": null,
+        "title": "app.py",
+        "app_mode": "python-shiny",
+        "app_store_version": 1
+    }
+}
