@@ -1,7 +1,5 @@
 import pandas as pd
 from math import *
-import dotenv
-dotenv.load_dotenv("./db.env")
 
 def open_csv(file):
     return pd.read_csv(file)

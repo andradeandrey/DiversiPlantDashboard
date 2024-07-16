@@ -1,12 +1,13 @@
-import os, dotenv
+import os
 from shiny import ui,App
+from pathlib import Path
 from shinywidgets import output_widget
 from custom_server.agroforestry_server import get_Variables
-dotenv.load_dotenv("./db.env")
-
-FILE_NAME = os.environ["FILE_NAME"]
 
 
+FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
+
+print(FILE_NAME)
 intercrops = ui.nav_panel(
     "Intercrops",
     ui.page_fluid(ui.layout_sidebar(

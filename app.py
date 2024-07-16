@@ -7,6 +7,7 @@ from custom_ui.homepage_tabs import homepage
 from custom_server.server_app import server_app
 
 css_file = os.path.join(Path(__file__).parent,"data","ui.css")
+print(f"path={css_file}")
 
 app_ui=ui.page_fluid(ui.include_css(css_file),ui.page_navbar(
     homepage,

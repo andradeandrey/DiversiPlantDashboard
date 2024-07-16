@@ -1,14 +1,15 @@
 import os
-import dotenv
+
 import pandas as pd
+from pathlib import Path
 import plotly.express as px
 from shinywidgets import render_widget
 from shiny import render, ui
 import plotly.graph_objects as go
 from custom_server.agroforestry_server import open_csv
-dotenv.load_dotenv("./db.env")
 
-FILE_NAME = os.environ["FILE_NAME"]
+
+FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
 
 COLOR = {'Herb' : '#f8827a','Climber':"#dbb448",'Subshrub' : "#779137",'Shrub' :'#45d090','Cactus' : '#49d1d5','Bamboo' : '#53c5ff','Tree' : '#d7a0ff','Palm' : '#ff8fda'}
 

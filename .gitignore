@@ -5,9 +5,9 @@
 
 # Ignore data files
 *.db
-*.csv
+
 *.ipynb
-!*/MgmtTraitData_CSV.csv
+**/rsconnect-pyton/
 *.env
 *venv
 .DS_Store
