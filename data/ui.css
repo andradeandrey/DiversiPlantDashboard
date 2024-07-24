@@ -226,3 +226,8 @@ body>.container-fluid:first-child {
     color: #d7a0ff;
     text-decoration: none;
 }
+
+.card_title{
+    font-weight: bold;
+    text-align: center;
+}

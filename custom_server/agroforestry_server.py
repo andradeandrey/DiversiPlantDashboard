@@ -4,7 +4,7 @@ from math import *
 def open_csv(file):
     return pd.read_csv(file)
 
-def get_Variables(file):
+def get_Plants(file):
     df = pd.read_csv(file)
     lifeForm=list(set(df["growth_form"].tolist()))
     lifeForm=[form for form in lifeForm if type(form)!=float]
@@ -18,4 +18,21 @@ def get_Variables(file):
             VARIABLES[growth_form][plant]=plant
 
     return VARIABLES
+
+def get_Country():
+    return "feur"
+
+def get_Function(file):
+    df = pd.read_csv(file)
+    functions=list(set(df["function"].tolist()))
+    functions2=list(set(df["function2"].tolist()))
+    total=functions+functions2
+    FUNCTIONS=[]
+    for fct in total:
+        if str(fct)!='nan':
+            FUNCTIONS.append(fct)
+
+    FUNCTIONS.sort()
+    
+    return FUNCTIONS
 
