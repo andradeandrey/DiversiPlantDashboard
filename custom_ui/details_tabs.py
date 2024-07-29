@@ -11,7 +11,7 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.
 
 
 details = ui.nav_panel(
-    "Details", ui.page_fluid(
+    "Growth Form", ui.page_fluid(
         ui.layout_sidebar(
             ui.sidebar(
                 ui.h3("Lifetime"),

@@ -231,3 +231,7 @@ body>.container-fluid:first-child {
     font-weight: bold;
     text-align: center;
 }
+
+.map{
+    align-items: center;
+}

@@ -7,11 +7,13 @@ from shinywidgets import render_widget
 from shiny import render, ui
 import plotly.graph_objects as go
 from custom_server.agroforestry_server import open_csv
-
+import geopandas as gpd
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
 
 COLOR = {'Herb' : '#f8827a','Climber':"#dbb448",'Subshrub' : "#779137",'Shrub' :'#45d090','Cactus' : '#49d1d5','Bamboo' : '#53c5ff','Tree' : '#d7a0ff','Palm' : '#ff8fda'}
+
+last_point=None
 
 def server_app(input,output,session):
 
@@ -83,39 +85,40 @@ def server_app(input,output,session):
         cards_suggestion=[]
         true_plants=[]
         stratums=[]
-        for plant in plants:
-            query=df.query("common_pt == '%s'" % plant)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+        if len(plants)!=0:
+            for plant in plants:
+                query=df.query("common_pt == '%s'" % plant)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                
+                if str(query[3])!='nan' and str(query[2])!='nan' and str(query[1])!='nan':
+                    true_plants.append(query)
+                    stratums.append(query[3])
             
-            if str(query[3])!='nan' and str(query[2])!='nan' and str(query[1])!='nan':
-                true_plants.append(query)
-                stratums.append(query[3])
-        
-        first_sgg = df[~df['stratum'].isin(stratums)]
-        first_sgg = first_sgg[first_sgg['stratum'].notna()]
-        first_sgg = first_sgg[['common_pt','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
-        
-        total_sgg = first_sgg[~df['common_pt'].isin(plants)]
+            first_sgg = df[~df['stratum'].isin(stratums)]
+            first_sgg = first_sgg[first_sgg['stratum'].notna()]
+            first_sgg = first_sgg[['common_pt','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
+            
+            total_sgg = first_sgg[~df['common_pt'].isin(plants)]
 
-        if len(total_sgg)>12:
-            total_sgg=total_sgg.sample(n=12)
-        
-        list_of_card = total_sgg.values.tolist()
-        print(list_of_card)
-        for info in list_of_card:
-            card=ui.card(
-                ui.div(
-                    ui.h4(info[0].capitalize(), class_="card_title"),
-                        ui.p(ui.tags.b("Growth form: "), ui.a(f"{info[1]}")),
-                        ui.p(ui.tags.b("Maximum height: "), ui.a(f"{info[2]}")),
-                        ui.p(ui.tags.b("Stratum: "), ui.a(f"{info[3]}")),
-                        ui.p(ui.tags.b("Family: "), ui.a(f"{info[4]}")),
-                        ui.p(ui.tags.b("Function: "), ui.a(f"{info[5]}")),
-                        ui.p(ui.tags.b("Time before harvest: "), ui.a(f"{info[6]}")),
-                        ui.p(ui.tags.b("Life history: "), ui.a(f"{info[7]}")),
-                        ui.p(ui.tags.b("Longevity: "), ui.a(f"{info[8]}"))
+            if len(total_sgg)>12:
+                total_sgg=total_sgg.sample(n=12)
+            
+            list_of_card = total_sgg.values.tolist()
+            print(list_of_card)
+            for info in list_of_card:
+                card=ui.card(
+                    ui.div(
+                        ui.h4(info[0].capitalize(), class_="card_title"),
+                            ui.p(ui.tags.b("Growth form: "), ui.a(f"{info[1]}")),
+                            ui.p(ui.tags.b("Maximum height: "), ui.a(f"{info[2]}")),
+                            ui.p(ui.tags.b("Stratum: "), ui.a(f"{info[3]}")),
+                            ui.p(ui.tags.b("Family: "), ui.a(f"{info[4]}")),
+                            ui.p(ui.tags.b("Function: "), ui.a(f"{info[5]}")),
+                            ui.p(ui.tags.b("Time before harvest: "), ui.a(f"{info[6]}")),
+                            ui.p(ui.tags.b("Life history: "), ui.a(f"{info[7]}")),
+                            ui.p(ui.tags.b("Longevity: "), ui.a(f"{info[8]}"))
+                    )
                 )
-            )
-            cards_suggestion.append(card)
+                cards_suggestion.append(card)
         return ui.layout_columns(*cards_suggestion, col_widths=[4,4,4])
 
     def tri():
@@ -204,3 +207,70 @@ def server_app(input,output,session):
         
         return ui.layout_columns(*cards,col_widths=[6,6])
     
+
+    @render_widget
+    def world_map():
+
+        world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+        # Attribuer une valeur constante à la colonne utilisée pour la couleur
+        world['color'] = 'grey'
+
+        # Créer une carte du monde interactive
+        fig = px.choropleth(world, 
+                            locations='iso_a3',  # Utiliser le code ISO A3 pour chaque pays
+                            color='color',  # Utiliser la colonne 'color' pour la couleur
+                            hover_name='name',  # Afficher le nom du pays lors du survol
+                            hover_data={'continent': True, 'color': False, 'iso_a3': False},  # Afficher le continent et retirer la couleur lors du survol
+                            projection='natural earth',  # Utiliser une projection 'natural earth'
+                            color_discrete_sequence=['grey'])  # Utiliser une échelle de couleurs grise
+
+        fig.update_geos(showcountries=True, showcoastlines=True, showland=True, fitbounds="locations")
+
+        # Désactiver la légende
+        fig.update_layout(showlegend=False)
+
+        fig.update_layout(
+                height=600
+            )
+        
+        return fig
+    
+    @output
+    @render.ui
+    def compatibility():
+        df=open_csv(FILE_NAME)
+        plants=input.overview_plants()
+        issue=[]
+        cards=[]
+        print(plants)
+        for i in range(len(plants)-1):
+            plant=plants[i]
+            query=df.query("common_pt == '%s'" % plant)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+            if str(query[1])=='nan' or str(query[2])=='nan' or str(query[3])=='nan':
+                continue
+            else:
+                for j in range(i+1,len(plants)):
+                    other_plt=plants[j]
+                    opposite=df.query("common_pt == '%s'" % other_plt)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                    if str(opposite[1])=='nan' or str(opposite[2])=='nan' or str(opposite[3])=='nan':
+                        continue
+                    else:
+                        if opposite[3]==query[3]:
+                            if query[1]<=opposite[1] and query[1]+query[2]>=opposite[1]:
+                                issue.append((query[0],opposite[0]))
+                                
+                            elif query[1]>=opposite[1] and query[1]<=opposite[1]+opposite[2]:
+                                issue.append((query[0],opposite[0]))
+                                
+        
+        for plants in issue:
+            
+            card=ui.card(
+                    ui.div(
+                        ui.h4("Non compatibilty", class_="card_title"),
+                        ui.a(f"{plants[0]} and \n {plants[1]}"))
+                    )
+            cards.append(card)
+
+        return ui.layout_columns(*cards, col_widths=[4,4,4])
