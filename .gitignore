@@ -1,5 +1,7 @@
 **/__pycache__/
 
+
+**/test_js/
 # Environments
 *.env
 
