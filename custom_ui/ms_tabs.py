@@ -31,7 +31,7 @@ main_species = ui.nav_panel(
                 ui.help_text("Modify some parameters of the graph"),
                 ui.h5("Stratum"),
                 ui.help_text("Select the number of stratum division you want"),
-                ui.div(ui.input_slider("number_of_division","",min=2,max=8,value=8)),
+                ui.div(ui.input_slider("number_of_division","",min=2,max=9,value=9)),
                 open="always",
                 width="17%"
                 ),

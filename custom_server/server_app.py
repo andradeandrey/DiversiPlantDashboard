@@ -13,6 +13,16 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.
 
 COLOR = {'Herb' : '#f8827a','Climber':"#dbb448",'Subshrub' : "#779137",'Shrub' :'#45d090','Cactus' : '#49d1d5','Bamboo' : '#53c5ff','Tree' : '#d7a0ff','Palm' : '#ff8fda'}
 
+STRATUM = [0,1,[[0,4,9],{2:"Shade tolerant", 6.5:"Light demanding"}],
+            [[0,3,6,9],{1.5:"Shade tolerant", 4.5:"Medium", 8:"Light demanding"}],
+            [[0,3,5,7,9],{1.5:"Low", 3:"Medium", 6:"High", 8:"Emergent"}],
+            [[0,2,4,6,7,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High", 8:"Emergent"}],
+            [[0,2,4,6,7,8,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High",7.5:"High-Emergent", 8.5:"Emergent"}],
+            [[0,2,4,5,6,7,8,9],{1:"Ground", 3:"Low", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
+            [[0,2,3,4,5,6,7,8,9],{1:"Ground", 2.5:"Low", 3.5:"Low-Medium", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
+            [[0,1,2,3,4,5,6,7,8,9],{0.5: "Ground",1.5: "Ground-Low",2.5: "Low",3.5: "Low-Medium",4.5: "Medium",5.5: "Medium-High",6.5: "High",7.5: "High-Emergent",8.5: "Emergent"}]]
+
+
 last_point=None
 
 def server_app(input,output,session):
@@ -160,9 +170,9 @@ def server_app(input,output,session):
                     fig.add_annotation(x=info[2],y=indice+(0.1+0.8*i/(n-1)),text=info[0],font=dict(color="black"),align="center",ax=-10,ay=-15,bgcolor="white")
                     if info[2]+info[3]>max:
                         max=info[2]+info[3]
-        for i in range (9):
+        for i in STRATUM[input.number_of_division()][0]:
             fig.add_trace(go.Scatter(x=[0, max], y=[i, i], mode='lines',line=dict(color='black', width=0.5),showlegend=False))
-        custom_y_labels = {0.5: "Ground",1.5: "Ground-Low",2.5: "Low",3.5: "Low-Medium",4.5: "Medium",5.5: "Medium-High",6.5: "High",7.5: "High-Emergent",8.5: "Emergent"}
+        custom_y_labels = STRATUM[input.number_of_division()][1]
         growth_forms=['Bamboo', 'Cactus', 'Climber', 'Herb', 'Palm', 'Shrub','Subshrub','Tree']
         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda','#45d090',"#779137",'#d7a0ff']
         for growth, colr in zip(growth_forms, colors):
