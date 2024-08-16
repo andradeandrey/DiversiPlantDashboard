@@ -14,8 +14,8 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.
 COLOR = {'Herb' : '#f8827a','Climber':"#dbb448",'Subshrub' : "#779137",'Shrub' :'#45d090','Cactus' : '#49d1d5','Bamboo' : '#53c5ff','Tree' : '#d7a0ff','Palm' : '#ff8fda'}
 
 STRATUM = [0,1,[[0,4,9],{2:"Shade tolerant", 6.5:"Light demanding"}],
-            [[0,3,6,9],{1.5:"Shade tolerant", 4.5:"Medium", 8:"Light demanding"}],
-            [[0,3,5,7,9],{1.5:"Low", 3:"Medium", 6:"High", 8:"Emergent"}],
+            [[0,3,6,9],{1.5:"Shade tolerant", 4.5:"Medium", 7.5:"Light demanding"}],
+            [[0,3,5,7,9],{1.5:"Low", 4:"Medium", 6:"High", 8:"Emergent"}],
             [[0,2,4,6,7,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High", 8:"Emergent"}],
             [[0,2,4,6,7,8,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High",7.5:"High-Emergent", 8.5:"Emergent"}],
             [[0,2,4,5,6,7,8,9],{1:"Ground", 3:"Low", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
@@ -78,7 +78,7 @@ def server_app(input,output,session):
              x='Plant Name', 
              y='Graph height', 
              color='Graph color', 
-             labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height'},
+             labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height (m)'},
              category_orders={'Plant Name' : variables_x},
              hover_name="Plant Name",
              hover_data={'Maximum height':True, 'Family':True, 'Growth form':True, 'Function':True,'Time before harvest':True,'Life history':True,'Longevity':True,'Graph height':False})
