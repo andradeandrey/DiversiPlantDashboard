@@ -2,8 +2,7 @@ import os
 from shiny import ui,App
 from pathlib import Path
 from shinywidgets import output_widget
-from custom_server.agroforestry_server import get_Plants, get_Function, get_Country
-import geopandas as gpd
+
 
 #Second tabs of the dashboard
 #help_text are the texts in grey under titles (ui.h4)

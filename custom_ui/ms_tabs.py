@@ -2,7 +2,7 @@ import os
 from shiny import ui,App
 from pathlib import Path
 from shinywidgets import output_widget
-from custom_server.agroforestry_server import get_Plants, get_Function, get_Country
+from custom_server.agroforestry_server import get_Plants
 
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
