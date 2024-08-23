@@ -32,7 +32,7 @@ pip3 install -r requirements.txt
   
 </details>
 
-###Shiny for Python
+### Shiny for Python
 
 In order to launch the app locally and be able to use as expected, you should install the shiny app of your IDE.
 
