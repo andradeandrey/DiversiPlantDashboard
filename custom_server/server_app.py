@@ -4,16 +4,35 @@ import pandas as pd
 from pathlib import Path
 import plotly.express as px
 from shinywidgets import render_widget
-from shiny import render, ui
+from shiny import render, ui, reactive
 import plotly.graph_objects as go
-from custom_server.agroforestry_server import open_csv
+from itables.shiny import DT
+from custom_server.agroforestry_server import open_csv, get_Plants
 import geopandas as gpd
+
+from rpy2.robjects.conversion import localconverter
+from rpy2 import robjects
+from rpy2.robjects.packages import importr
+from rpy2.robjects.vectors import StrVector
+import rpy2.robjects.packages as rpackages, data
+from rpy2.robjects import r, pandas2ri 
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
 
 COLOR = {'Herb' : '#f8827a','Climber':"#dbb448",'Subshrub' : "#779137",'Shrub' :'#45d090','Cactus' : '#49d1d5','Bamboo' : '#53c5ff','Tree' : '#d7a0ff','Palm' : '#ff8fda'}
 
-last_point=None
+STRATUM = [0,1,[[0,4,9],{2:"Shade tolerant", 6.5:"Light demanding"}],
+            [[0,3,6,9],{1.5:"Shade tolerant", 4.5:"Medium", 7.5:"Light demanding"}],
+            [[0,3,5,7,9],{1.5:"Low", 4:"Medium", 6:"High", 8:"Emergent"}],
+            [[0,2,4,6,7,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High", 8:"Emergent"}],
+            [[0,2,4,6,7,8,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High",7.5:"High-Emergent", 8.5:"Emergent"}],
+            [[0,2,4,5,6,7,8,9],{1:"Ground", 3:"Low", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
+            [[0,2,3,4,5,6,7,8,9],{1:"Ground", 2.5:"Low", 3.5:"Low-Medium", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
+            [[0,1,2,3,4,5,6,7,8,9],{0.5: "Ground",1.5: "Ground-Low",2.5: "Low",3.5: "Low-Medium",4.5: "Medium",5.5: "Medium-High",6.5: "High",7.5: "High-Emergent",8.5: "Emergent"}]]
+
+FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'naturalized',  "All Species":'all'}
+
+SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 
 def server_app(input,output,session):
 
@@ -68,7 +87,7 @@ def server_app(input,output,session):
              x='Plant Name', 
              y='Graph height', 
              color='Graph color', 
-             labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height'},
+             labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height (m)'},
              category_orders={'Plant Name' : variables_x},
              hover_name="Plant Name",
              hover_data={'Maximum height':True, 'Family':True, 'Growth form':True, 'Function':True,'Time before harvest':True,'Life history':True,'Longevity':True,'Graph height':False})
@@ -78,48 +97,43 @@ def server_app(input,output,session):
 
     @output
     @render.ui
-    def suggestion():
-        df=open_csv(FILE_NAME)
-        plants=input.overview_plants()
-        stratum=input.number_of_division()
-        cards_suggestion=[]
-        true_plants=[]
-        stratums=[]
-        if len(plants)!=0:
+    def suggestion_plants():
+        if input.database_choice()=="Normal Database":
+            df=open_csv(FILE_NAME)
+            plants=input.overview_plants()
+            cards_suggestion=[]
+            true_plants=[]
+            stratums=[]
+            
             for plant in plants:
                 query=df.query("common_pt == '%s'" % plant)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
                 
                 if str(query[3])!='nan' and str(query[2])!='nan' and str(query[1])!='nan':
                     true_plants.append(query)
                     stratums.append(query[3])
-            
+                
             first_sgg = df[~df['stratum'].isin(stratums)]
             first_sgg = first_sgg[first_sgg['stratum'].notna()]
             first_sgg = first_sgg[['common_pt','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
             
             total_sgg = first_sgg[~df['common_pt'].isin(plants)]
-
-            if len(total_sgg)>12:
-                total_sgg=total_sgg.sample(n=12)
             
-            list_of_card = total_sgg.values.tolist()
-            print(list_of_card)
-            for info in list_of_card:
-                card=ui.card(
-                    ui.div(
-                        ui.h4(info[0].capitalize(), class_="card_title"),
-                            ui.p(ui.tags.b("Growth form: "), ui.a(f"{info[1]}")),
-                            ui.p(ui.tags.b("Maximum height: "), ui.a(f"{info[2]}")),
-                            ui.p(ui.tags.b("Stratum: "), ui.a(f"{info[3]}")),
-                            ui.p(ui.tags.b("Family: "), ui.a(f"{info[4]}")),
-                            ui.p(ui.tags.b("Function: "), ui.a(f"{info[5]}")),
-                            ui.p(ui.tags.b("Time before harvest: "), ui.a(f"{info[6]}")),
-                            ui.p(ui.tags.b("Life history: "), ui.a(f"{info[7]}")),
-                            ui.p(ui.tags.b("Longevity: "), ui.a(f"{info[8]}"))
-                    )
-                )
-                cards_suggestion.append(card)
-        return ui.layout_columns(*cards_suggestion, col_widths=[4,4,4])
+            table = total_sgg.fillna("-")  # Nice looking na values
+            table = table.sort_values(by='common_pt')
+            table = table.drop(table.columns[0],axis=1)
+            with pd.option_context("display.float_format", "{:,.2f}".format):
+                return ui.HTML(DT(table))
+
+        else:
+            print(SPECIES_GIFT_DATAFRAME)
+            
+            table = SPECIES_GIFT_DATAFRAME.fillna("-")
+            table = table.sort_values("family")
+            unecessary_columns=['ref_ID','list_ID','entity_ID','work_ID','genus_ID','questionable','quest_native','endemic_ref','quest_end_ref','quest_end_list']
+            table=table.drop(columns=unecessary_columns)
+            table = table.drop(table.columns[0],axis=1)
+            with pd.option_context("display.float_format", "{:,.2f}".format):
+                    return ui.HTML(DT(table))
 
     def tri():
         df=open_csv(FILE_NAME)
@@ -160,9 +174,9 @@ def server_app(input,output,session):
                     fig.add_annotation(x=info[2],y=indice+(0.1+0.8*i/(n-1)),text=info[0],font=dict(color="black"),align="center",ax=-10,ay=-15,bgcolor="white")
                     if info[2]+info[3]>max:
                         max=info[2]+info[3]
-        for i in range (9):
+        for i in STRATUM[input.number_of_division()][0]:
             fig.add_trace(go.Scatter(x=[0, max], y=[i, i], mode='lines',line=dict(color='black', width=0.5),showlegend=False))
-        custom_y_labels = {0.5: "Ground",1.5: "Ground-Low",2.5: "Low",3.5: "Low-Medium",4.5: "Medium",5.5: "Medium-High",6.5: "High",7.5: "High-Emergent",8.5: "Emergent"}
+        custom_y_labels = STRATUM[input.number_of_division()][1]
         growth_forms=['Bamboo', 'Cactus', 'Climber', 'Herb', 'Palm', 'Shrub','Subshrub','Tree']
         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda','#45d090',"#779137",'#d7a0ff']
         for growth, colr in zip(growth_forms, colors):
@@ -274,3 +288,62 @@ def server_app(input,output,session):
             cards.append(card)
 
         return ui.layout_columns(*cards, col_widths=[4,4,4])
+
+    @reactive.event(input.update_database)
+    def get_new_species():
+        if input.database_choice() == "GIFT Database":
+            global SPECIES_GIFT_DATAFRAME
+            flor_group=FLORISTIC_GROUP[input.floristic_group()]
+            print(flor_group)
+            robjects.r.assign("flor_group",flor_group)
+            data = robjects.r(f'''library("GIFT")
+                coord <- cbind(-48.5412,-27.6853)
+                natvasc <- GIFT_checklists(taxon_name="Tracheophyta", 
+                                        complete_taxon=F, 
+                                        floristic_group=flor_group,
+                                        complete_floristic=F, 
+                                        coordinates = coord,
+                                        overlap="extent_intersect", 
+                                        list_set_only=F, 
+                                        remove_overlap=T, 
+                                        area_threshold_mainland=100)
+                natvasc[["lists"]]
+                natvascl <- natvasc[["checklists"]]
+                df <- data.frame(natvascl)
+                df
+                ''')
+            with localconverter(robjects.default_converter + pandas2ri.converter):
+                new_species = robjects.conversion.rpy2py(data)
+            SPECIES_GIFT_DATAFRAME=new_species
+            families = new_species['family'].unique()
+            families_clean = sorted(families.tolist())
+            dict = {}
+            for family in families_clean:
+                print(dict)
+                dict[family] = {}
+                plants = new_species.query("family == '%s'" % family)['work_species'].tolist()
+                plants.sort()
+                for plant in plants:
+                    dict[family][plant] = plant
+            return dict
+        else:
+            return get_Plants(FILE_NAME)
+
+    @reactive.effect
+    @reactive.event(input.update_database)
+    def update_main_species():
+        dict=get_new_species()
+        ui.update_selectize(
+            "overview_plants",
+            choices=dict,
+            selected=[],
+            server=True,
+        )
+
+    @output
+    @render.download(filename=f"studied_data.csv")
+    def export_df():
+        if input.database_choice()=="Normal Database":
+            yield open_csv(FILE_NAME).to_csv()
+        else:
+            yield SPECIES_GIFT_DATAFRAME.to_csv()

@@ -9,7 +9,7 @@ homepage = ui.nav_panel(
                 ui.div(
                     ui.div(
                         ui.h1(
-                            "Welcome to the Agroforestry Dashboard!", class_="text-sc"
+                            "Welcome to the Agroforestry Dashboard", class_="text-sc"
                         ),
                         ui.p(
                             "This dashboard is a decision tool to combine plant ecophysiology with practitioners knowledge for multifunctional intercropping",
