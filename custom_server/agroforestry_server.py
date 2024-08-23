@@ -4,6 +4,8 @@ from math import *
 def open_csv(file):
     return pd.read_csv(file)
 
+
+#Give the list of the plants, groupes by growth_form
 def get_Plants(file):
     df = pd.read_csv(file)
     lifeForm=list(set(df["growth_form"].tolist()))
@@ -19,9 +21,7 @@ def get_Plants(file):
 
     return VARIABLES
 
-def get_Country():
-    return "feur"
-
+#Give the list of all the different functions 
 def get_Function(file):
     df = pd.read_csv(file)
     functions=list(set(df["function"].tolist()))
