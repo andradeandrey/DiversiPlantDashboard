@@ -24,9 +24,9 @@ homepage = ui.nav_panel(
                         ui.div(ui.h2("How does it work ?", class_="text-sc"),
                         ui.p(
                             """Find practical information about plants that are likely to thrive together in your agriculture, forestry or restoration project:
-From 100,000s of plant species filter out those not adapted (and not native if you prefer) to your planting project. 
-Skip tabs if you want to keep all available options open. Revert to change previous filtering selections at any time on any tab.
-"""),
+                            From 100,000s of plant species filter out those not adapted (and not native if you prefer) to your planting project. 
+                            Skip tabs if you want to keep all available options open. Revert to change previous filtering selections at any time on any tab.
+                            """),
                         ui.p(
                             """Location/Climate → Main species → Compatible Growth forms → Compatible Growth cycles & Heights & Light demands → Selected compatible species output with direct hyperlinks to external databases"""),
                             class_="lead",

@@ -120,7 +120,6 @@ def server_app(input,output,session):
             
             table = total_sgg.fillna("-")  # Nice looking na values
             table = table.sort_values(by='common_pt')
-            table = table.drop(table.columns[0],axis=1)
             with pd.option_context("display.float_format", "{:,.2f}".format):
                 return ui.HTML(DT(table))
 
@@ -131,7 +130,7 @@ def server_app(input,output,session):
             table = table.sort_values("family")
             unecessary_columns=['ref_ID','list_ID','entity_ID','work_ID','genus_ID','questionable','quest_native','endemic_ref','quest_end_ref','quest_end_list']
             table=table.drop(columns=unecessary_columns)
-            table = table.drop(table.columns[0],axis=1)
+
             with pd.option_context("display.float_format", "{:,.2f}".format):
                     return ui.HTML(DT(table))
 
@@ -223,10 +222,11 @@ def server_app(input,output,session):
     
 
     @render_widget
+    @reactive.event(input.update_map,ignore_none=None)
     def world_map():
 
         world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-
+        
         # Attribuer une valeur constante à la colonne utilisée pour la couleur
         world['color'] = 'grey'
 
@@ -241,6 +241,11 @@ def server_app(input,output,session):
 
         fig.update_geos(showcountries=True, showcoastlines=True, showland=True, fitbounds="locations")
 
+        if input.longitude()!='' and input.latitude()!='':
+
+            fig.add_scattergeo(lat=[input.latitude()], lon=[input.longitude()], mode='markers',
+                   marker=dict(color='red', size=10))
+            
         # Désactiver la légende
         fig.update_layout(showlegend=False)
 
@@ -294,10 +299,12 @@ def server_app(input,output,session):
         if input.database_choice() == "GIFT Database":
             global SPECIES_GIFT_DATAFRAME
             flor_group=FLORISTIC_GROUP[input.floristic_group()]
-            print(flor_group)
+            
             robjects.r.assign("flor_group",flor_group)
+            robjects.r.assign("long",input.longitude())
+            robjects.r.assign("lat",input.latitude())
             data = robjects.r(f'''library("GIFT")
-                coord <- cbind(-48.5412,-27.6853)
+                coord <- cbind(long,lat)
                 natvasc <- GIFT_checklists(taxon_name="Tracheophyta", 
                                         complete_taxon=F, 
                                         floristic_group=flor_group,

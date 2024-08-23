@@ -26,11 +26,13 @@ location = ui.nav_panel(
                 ui.h4("Botanical region"),
                 ui.help_text("After checking the map, choose your botanical region."),
                 ui.help_text("For now the coordinates are set by default"),
-                ui.div(ui.input_selectize("choose_location",
-                              "",
-                              choices=[""]+countries,
-                              multiple=False
-                              ),class_="input-selectize"),
+                ui.div(ui.input_text(
+                    "longitude","Longitude :"
+                ),
+                ui.input_text(
+                    "latitude","Latitude :"
+                )),
+                ui.div(ui.input_action_button("update_map", "Update map")),
                 open="always",
                 width="17%"
                 ),

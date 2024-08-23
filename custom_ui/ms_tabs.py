@@ -18,6 +18,7 @@ main_species = ui.nav_panel(
                     choices=["Normal Database", "GIFT Database"],
                     multiple=False
                     ),class_="input-selectize"),
+                ui.div(ui.input_action_button("update_database", "Update choices")),
                 ui.h3("Growth Form"),
                 
                 ui.p(ui.help_text("Add plants that are important for your planting project. "),
@@ -36,7 +37,7 @@ main_species = ui.nav_panel(
                     multiple=True
                     ),class_="input-selectize"),
 
-                ui.div(ui.input_action_button("update_database", "Update choices")),
+                
 
                 ui.h3("Parameters"),
                 ui.help_text("Modify some parameters of the graph"),
