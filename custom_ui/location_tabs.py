@@ -20,11 +20,12 @@ location = ui.nav_panel(
                 ui.div(ui.input_selectize(
                     "floristic_group",
                     "",
-                    choices=["","Native", "Endemic", "Naturalized",  "All Species"],
+                    choices=["All Species", "Endemic","Native", "Naturalized"],
                     multiple=False
                     ),class_="input-selectize"),
                 ui.h4("Botanical region"),
-                ui.help_text("After checking the map, choose your botanical region"),
+                ui.help_text("After checking the map, choose your botanical region."),
+                ui.help_text("For now the coordinates are set by default"),
                 ui.div(ui.input_selectize("choose_location",
                               "",
                               choices=[""]+countries,
