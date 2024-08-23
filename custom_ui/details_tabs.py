@@ -10,9 +10,10 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.
 
 
 
-details = ui.nav_panel(
-    "Growth Form", ui.page_fluid(
+details = ui.nav_panel("Growth Form", 
+        ui.page_fluid(
         ui.layout_sidebar(
+
             ui.sidebar(
                 ui.h3("Lifetime"),
                 ui.help_text("Visualize the growth of every species over time (in year)"),
@@ -26,6 +27,8 @@ details = ui.nav_panel(
                     open="always",
                     width="17%"
                     ),
+
+
             ui.div(output_widget("plot_plants")),
             
             height="2000px"

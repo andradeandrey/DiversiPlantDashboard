@@ -1,7 +1,9 @@
 from shiny import ui,App
 
-homepage = ui.nav_panel(
-    "Home",
+#Landing page of the dashboard.
+#Every word inside a triple quote bracket can be changed, except the ones that are next to a class_= (ex:class_=homepage_head)
+
+homepage = ui.nav_panel("Home",
     ui.page_fluid(
         ui.row(
         ui.div(
