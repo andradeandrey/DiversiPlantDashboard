@@ -374,7 +374,7 @@ def server_app(input,output,session):
             
             table = SPECIES_GIFT_DATAFRAME.fillna("-")
             table = table.sort_values("family")
-            unecessary_columns=[' ','ref_ID','list_ID','entity_ID','work_ID','genus_ID','questionable','quest_native','endemic_ref','quest_end_ref','quest_end_list']
+            unecessary_columns=['ref_ID','list_ID','entity_ID','work_ID','genus_ID','questionable','quest_native','endemic_ref','quest_end_ref','quest_end_list']
             table=table.drop(columns=unecessary_columns)
             table=table.reset_index(drop=True)
 
