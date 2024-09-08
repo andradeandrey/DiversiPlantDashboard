@@ -7,7 +7,7 @@ Welcome to the Github repository of the Agroforestry Dashboard
 Clone the repository to your local machine:
 
 ```bash
-git clone git@github.com:Anto1n/Agroforestry.git
+git clone https://github.com/Anto1n/Agroforestry.git
 ```
 
 Ensure you have Python installed on your machine. The version used is detailed in `runtime.txt`. The Python dependecies for this project are listed in `requirements.txt` for `virtualenv`-based package managers. Create a virtual environment (venv or conda) and install them.
