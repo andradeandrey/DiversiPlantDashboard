@@ -223,7 +223,7 @@ def server_app(input,output,session):
             robjects.r.assign("flor_group",flor_group)
             robjects.r.assign("long",float(input.longitude()))
             robjects.r.assign("lat",float(input.latitude()))
-            data = robjects.r(f'''install.packages("GIFT")
+            data = robjects.r(f'''
                             library("GIFT")
                 coord <- cbind(long,lat)
                 natvasc <- GIFT_checklists(taxon_name="Tracheophyta", 
