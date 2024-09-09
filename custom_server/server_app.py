@@ -382,4 +382,8 @@ def server_app(input,output,session):
             with pd.option_context("display.float_format", "{:,.2f}".format):
                     return ui.HTML(DT(table))
 
+    @render.image
+    def climate_image():
+        img_path = "data/img/climate.png"  # Replace with your image file name
+        return {"src": img_path, "alt": "Climate Image", "style": "width: 100%; height: auto;"}
 
