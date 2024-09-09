@@ -33,12 +33,12 @@ location = ui.nav_panel("Location",
                 ui.div(ui.input_text(
                     "longitude",#changes would impact server_app
                     "Longitude :",#changes would only impact what we read
-                    '0'
+                    '-49'
                 ),
                 ui.input_text(
                     "latitude",#changes would impact server_app
                     "Latitude :",#changes would only impact what we read
-                    '0'
+                    '-27'
                 )),
                 ui.div(ui.input_action_button("update_map", #connection with the server_app file
                                               "Update map" #what appears on the button
