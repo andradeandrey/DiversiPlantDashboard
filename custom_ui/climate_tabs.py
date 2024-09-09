@@ -6,12 +6,14 @@ from shiny import ui, render, reactive
 
 climate = ui.nav_panel("Climate",
     ui.page_fluid(
+        ui.h1("Climate", class_="text-center mb-4"),
         ui.div(
-            ui.output_image("climate_image", height="80%", width="100%"),
-            style="max-width: 100%; height: auto;"
+            ui.output_image("climate_image", height="600px",width="100%"),
+            class_="climate-image-container"
         )
     )
 )
+
 
 # In your server function, add this:
 
