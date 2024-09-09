@@ -6,16 +6,7 @@ from shinywidgets import output_widget
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 
-# Absolute path for the image
-IMAGE_PATH = "/Users/riddhibattu/Desktop/Agroforestry/custom_ui/img/Climate_Page_Web_With_Transparency.png"
-#Third tab, needs changes to make it work and impactful on the dashboard
-climate = ui.nav_panel(
-    "Climate",  # Tab name remains "Climate"
-    ui.page_fluid(
-    ui.h1("Local Image Display"),
-    ui.img(src="img/Climate_Page_Web_With_Transparency.png", height="300px", width="auto")
-)
-)
+
 # climate = ui.nav_panel("Climate",
 
 #     ui.page_fluid(ui.layout_sidebar(
