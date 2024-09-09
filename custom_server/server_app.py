@@ -387,3 +387,8 @@ def server_app(input,output,session):
         img_path = "data/img/climate.png"  # Replace with your image file name
         return {"src": img_path, "alt": "Climate Image", "style": "width: 100%; height: auto;"}
 
+    @render.image
+    def main_species_image():
+        img_path = "data/img/main_species.png"  # Replace with your image file name
+        return {"src": img_path, "alt": "Main Species Image"}
+
