@@ -13,6 +13,14 @@ git clone https://github.com/Anto1n/Agroforestry.git
 Ensure you have Python installed on your machine. The version used is detailed in `runtime.txt`. The Python dependecies for this project are listed in `requirements.txt` for `virtualenv`-based package managers. Create a virtual environment (venv or conda) and install them.
 
 <details>
+  <summary>R-lang</summary>
+
+ Since this project relies on the R ecosystem, make sure R itself is installed and the `GIFT` package within the R libraries is on `PATH` for the python dependencies to pick it up.
+`GIFT` relies on some geospatial libraries like `sf`, `units` etc., so some further system installation might be required.  (eg. `dnf install udunits2-devel proj-devel` on RHEL/CentOS).
+
+</details>
+
+<details>
   <summary>Virtualenv/venv</summary>
 
 
@@ -55,6 +63,8 @@ INFO:     127.0.0.1:61812 - "GET /ui.css HTTP/1.1" 304 Not Modified
 INFO:     ('127.0.0.1', 61817) - "WebSocket /websocket/" [accepted]
 INFO:     connection open
 ```
+
+Alternatively, use `uvicorn app:app --port <PORT>  --reload <WORKERS CONFIGURATION>` with any of `screen`,`tmux`,`nohup` or similar to background a multithreaded process running the app.   
 
 ## Structure
 
