@@ -17,9 +17,9 @@ from rpy2.robjects.vectors import StrVector
 import rpy2.robjects.packages as rpackages, data
 from rpy2.robjects import r, pandas2ri 
 
-FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
+FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 
-COLOR = {'Herb' : '#f8827a','Climber':"#dbb448",'Subshrub' : "#779137",'Shrub' :'#45d090','Cactus' : '#49d1d5','Bamboo' : '#53c5ff','Tree' : '#d7a0ff','Palm' : '#ff8fda'}
+COLOR = {'herb' : '#f8827a','climber':"#dbb448",'subshrub' : "#779137",'shrub' :'#45d090','cactus' : '#49d1d5','bamboo' : '#53c5ff','tree' : '#d7a0ff','palm' : '#ff8fda'}
 
 STRATUM = [0,1,[[0,4,9],{2:"Shade tolerant", 6.5:"Light demanding"}],
             [[0,3,6,9],{1.5:"Shade tolerant", 4.5:"Medium", 7.5:"Light demanding"}],
@@ -112,7 +112,7 @@ def server_app(input,output,session):
             for i in STRATUM[input.number_of_division()][0]:
                 fig.add_trace(go.Scatter(x=[0, max], y=[i, i], mode='lines',line=dict(color='black', width=0.5),showlegend=False))
             custom_y_labels = STRATUM[input.number_of_division()][1]
-            growth_forms=['Bamboo', 'Cactus', 'Climber', 'Herb', 'Palm', 'Shrub','Subshrub','Tree']
+            growth_forms=['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub','subshrub','tree']
             colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda','#45d090',"#779137",'#d7a0ff']
             for growth, colr in zip(growth_forms, colors):
                 fig.add_trace(go.Scatter(
@@ -170,13 +170,13 @@ def server_app(input,output,session):
             print(plants)
             for i in range(len(plants)-1):
                 plant=plants[i]
-                query=df.query("common_pt == '%s'" % plant)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                query=df.query("common_en == '%s'" % plant)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
                 if str(query[1])=='nan' or str(query[2])=='nan' or str(query[3])=='nan':
                     continue
                 else:
                     for j in range(i+1,len(plants)):
                         other_plt=plants[j]
-                        opposite=df.query("common_pt == '%s'" % other_plt)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                        opposite=df.query("common_en == '%s'" % other_plt)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
                         if str(opposite[1])=='nan' or str(opposite[2])=='nan' or str(opposite[3])=='nan':
                             continue
                         else:
@@ -204,7 +204,7 @@ def server_app(input,output,session):
         plants=input.overview_plants()
         good,bad_year,bad_stratum=[],[],[]
         for plant in plants:
-            query=df.query("common_pt == '%s'" % plant)[['common_pt','growth_form','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+            query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
             if str(query[2])!='nan' and str(query[3])!='nan' and str(query[4])!='nan': 
                 good.append(query)
             elif str(query[4])=='nan':
@@ -290,7 +290,7 @@ def server_app(input,output,session):
             variables_x,variables_y,color,family,function,time_to_fh,life_hist,longev_prod,links,graph_y,color_change=[],[],[],[],[],[],[],[],[],[],[]
 
             for plant in plants:
-                query=df.query("common_pt == '%s'" % plant)[['common_pt','growth_form','plant_max_height','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status','ref']].values.tolist()[0]
+                query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','plant_max_height','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status','ref']].values.tolist()[0]
                 variables_x.append(query[0]),color.append(query[1]),family.append(str(query[3])),function.append(str(query[4])),time_to_fh.append(str(query[5])),life_hist.append(str(query[6])),longev_prod.append(str(query[7])),links.append([query[8]])
                 if str(query[2])=='nan':
                     variables_y.append(3)
@@ -351,7 +351,7 @@ def server_app(input,output,session):
             stratums=[]
             
             for plant in plants:
-                query=df.query("common_pt == '%s'" % plant)[['common_pt','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                query=df.query("common_en == '%s'" % plant)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
                 
                 if str(query[3])!='nan' and str(query[2])!='nan' and str(query[1])!='nan':
                     true_plants.append(query)
@@ -359,12 +359,12 @@ def server_app(input,output,session):
                 
             first_sgg = df[~df['stratum'].isin(stratums)]
             first_sgg = first_sgg[first_sgg['stratum'].notna()]
-            first_sgg = first_sgg[['common_pt','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
+            first_sgg = first_sgg[['common_en','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
             
-            total_sgg = first_sgg[~df['common_pt'].isin(plants)]
+            total_sgg = first_sgg[~df['common_en'].isin(plants)]
             
             table = total_sgg.fillna("-")  # Nice looking na values
-            table = table.sort_values(by='common_pt')
+            table = table.sort_values(by='common_en')
             table=table.reset_index(drop=True)
 
             with pd.option_context("display.float_format", "{:,.2f}".format):

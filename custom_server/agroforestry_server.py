@@ -14,7 +14,7 @@ def get_Plants(file):
     VARIABLES={}
     for growth_form in lifeForm:
         VARIABLES[growth_form]={}
-        plants=df.query("growth_form == '%s'" % growth_form)['common_pt'].tolist()
+        plants=df.query("growth_form == '%s'" % growth_form)['common_en'].tolist()
         plants.sort()
         for plant in plants:
             VARIABLES[growth_form][plant]=plant

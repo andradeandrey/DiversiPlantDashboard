@@ -7,7 +7,7 @@ from shinywidgets import output_widget
 #Second tabs of the dashboard
 #help_text are the texts in grey under titles (ui.h4)
 
-FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
+FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 
 location = ui.nav_panel("Location",
                         

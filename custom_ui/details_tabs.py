@@ -6,7 +6,7 @@ from shinywidgets import output_widget
 
 
 
-FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
+FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 
 
 

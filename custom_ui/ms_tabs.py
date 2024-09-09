@@ -5,7 +5,7 @@ from shinywidgets import output_widget
 from custom_server.agroforestry_server import get_Plants
 
 
-FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
+FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 
 main_species = ui.nav_panel("Main Species",
     ui.page_fluid(ui.layout_sidebar(
