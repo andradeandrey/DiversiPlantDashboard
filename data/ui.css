@@ -71,7 +71,7 @@ body>.container-fluid:first-child {
 }
 
 .homepage-background {
-    background-image: url("https://images.nationalgeographic.org/image/upload/v1638892272/EducationHub/photos/hoh-river-valley.jpg");
+    background-image: url("/img/home.jpg");
     background-color: transparent;
     background-repeat: no-repeat;
     background-size: 100%;

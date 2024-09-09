@@ -9,12 +9,8 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.
 #Third tab, needs changes to make it work and impactful on the dashboard
 
 climate = ui.nav_panel("Climate",
-
     ui.page_fluid(ui.layout_sidebar(
-
             ui.sidebar(
-
-
                 ui.h4("Climate"),
                 ui.p(ui.help_text("Choose your climate type"),
                 ui.tooltip(
