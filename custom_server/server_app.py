@@ -392,3 +392,8 @@ def server_app(input,output,session):
         img_path = "data/img/main_species.png"  # Replace with your image file name
         return {"src": img_path, "alt": "Main Species Image"}
 
+    @render.image
+    def growth_form_image():
+        img_path = "data/img/growth_form_graph.png"  # Replace with your image file name
+        return {"src": img_path, "alt": "Growth Form"}
+
