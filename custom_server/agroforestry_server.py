@@ -21,6 +21,7 @@ def get_Plants(file):
 
     return VARIABLES
 
+
 #Give the list of all the different functions 
 def get_Function(file):
     df = pd.read_csv(file)
