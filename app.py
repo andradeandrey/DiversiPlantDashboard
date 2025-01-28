@@ -14,14 +14,15 @@ from custom_server.server_app import server_app
 css_file = os.path.join(Path(__file__).parent,"data","ui.css")
 
 app_ui=ui.page_fluid(
-    ui.include_css(css_file),ui.page_navbar(
+    ui.include_css(css_file),
+    ui.page_navbar(
     homepage,
     location,
     climate,
     main_species,
     details,
     other_species,
-    title=ui.div("Agroforestry Dashboard", class_="title")
+    title=ui.div("Agroforestry Dashboard", class_="title"),
     )
 )
 

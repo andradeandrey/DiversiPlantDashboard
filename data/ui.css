@@ -1,6 +1,53 @@
 @import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
 
 html,
+/* Make h1 bold */
+h1 {
+    font-weight: bold; /* Bold the h1 headers */
+}
+
+/* Spread out h3 and reduce size */
+h3 {
+    letter-spacing: 0.5px; /* Increase letter spacing */
+    font-size: 14px; /* Adjust size as needed */
+}
+
+/* General text size adjustment */
+body {
+    font-size: 14px; /* Smaller text size for general content */
+}
+
+/* General page styles */
+body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+/* Header styles */
+.header {
+    background-color: #fff;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Main content styles */
+.main-content {
+    padding: 20px;
+    background-color: #fff;
+    margin: 20px;
+    border-radius: 5px;
+}
+
+/* Steps or actions styles */
+.step {
+    background-color: #e8f5e9;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
 body {
     width: 100%;
     padding: 0;
@@ -15,9 +62,9 @@ body {
     display: flex;
     align-items: center;
     font-size: .875rem;
-    background-color: rgb(255, 255, 255);
-    padding: 20px;
-    border-color: white;
+    background-color: rgb(155, 162, 172);
+    padding: 10px;
+    border-color: rgb(155, 162, 172);
     z-index: 2;
 }
 
@@ -39,8 +86,6 @@ body {
     display: flex;
     align-items: center;
 }
-
-
 
 .bold-text {
     font-weight: bolder;
@@ -66,9 +111,6 @@ body>.container-fluid:first-child {
     /* background-color: peachpuff; */
 }
 
-.text-sc {
-    font-variant-caps: small-caps;
-}
 
 .homepage-background {
     background-image: url("/img/home.jpg");
@@ -248,4 +290,227 @@ body>.container-fluid:first-child {
     max-width: 100%;
     max-height: 100%;
     object-fit: fill;
+}
+
+.full-height {
+    height: 100vh;  /* 100% of the viewport height */
+    overflow: hidden; /* Prevents scrolling */
+    display: flex;
+    flex-direction: column;
+}
+.content-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    align-items: start; /* Aligns content to the start horizontally */
+    overflow: hidden;
+}
+.image-column img {
+    height: auto;
+    width: 100%;  /* Full width of the column */
+    max-height: 100vh; /* Maximum height to fit the viewport */
+    object-fit: cover; /* Cover the area without losing aspect ratio */
+}
+
+/* Custom for home page split between image and text */
+.row-equal-height {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.column-equal-height {
+    display: flex;
+    flex-direction: column;
+}
+
+.content-fill {
+    flex: 1;  /* This will make the content expand to fill available space */
+}
+
+
+/* General styling for the location tab */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    }
+
+/* Top section styling */
+.top-options {
+    background-color: #CCCCCC;
+    padding: 20px;
+    border-bottom: 1px solid #ccc;
+    text-align: center;
+    }
+
+.top-options h3 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    }
+
+.input-selectize {
+    margin: 10px auto;
+    width: 80%;
+    }
+
+.top-options input[type="text"] {
+    margin: 5px;
+    padding: 10px;
+    width: calc(40% - 20px);
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    }
+
+.top-options button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.top-options button:hover {
+    background-color: #45a049;
+}
+
+/* Map section styling */
+.map {
+    margin: 20px auto;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    max-width: 90%;
+}
+
+.map h3 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+/* Flexbox container to align left and right sections */
+.flex-container {
+    display: flex;
+    justify-content: space-between; /* Space between left and right sections */
+    align-items: stretch; /*flex-start; Align items to the top */
+    gap: 20px; /* Add spacing between sections */
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: #d5d2d2; /* Light background for the container */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 85%; /* Adjust width for smaller container */
+    max-width: 950px; /* Set a maximum width */
+    margin: 0 auto; /* Center the container horizontally */
+    height: 300px;
+}
+
+/* Left section styling */
+.left-section {
+    flex: 1; /* Left section takes up equal space */
+    padding: 15px;
+    border-right: 1px solid #ddd; /* Add a divider between left and right */
+    display: flex; /* Enable flexbox */
+    flex-direction: column; /* Stack elements vertically */
+    justify-content: center; /* Center vertically */
+    align-items: flex-start; /* Align items to the left horizontally */
+    height: 100%; /* Ensure the section takes up the full available height */
+}
+
+
+
+.left-section h4 {
+font-size: 1.2em;
+margin-bottom: 10px;
+font-weight: bold;
+}
+
+.left-section h5 {
+font-size: 1em;
+margin-bottom: 5px;
+color: #555;
+}
+
+.left-section p {
+font-size: 0.9em;
+color: #666;
+}
+
+/* Right section styling */
+.right-section {
+flex: 1; /* Right section takes up equal space */
+padding: 15px;
+display: flex; /* Enable flexbox */
+flex-direction: column; /* Stack elements vertically */
+justify-content: center; /* Center vertically */
+align-items: flex-start; /* Align items to the left horizontally */
+height: 100%; /* Ensure the section takes up the full available height */
+}
+
+.right-section h4 {
+font-size: 1.2em;
+margin-bottom: 10px;
+}
+
+.right-section .input-selectize {
+margin-top: 10px;
+}
+
+.right-section button {
+margin-top: 15px;
+padding: 10px 20px;
+/* background-color: #4CAF50; */
+/* color: white; */
+/* border: none; */
+border-radius: 5px;
+cursor: pointer;
+}
+
+/* .right-section button:hover {
+background-color: #45a049;
+} */
+
+/* Map styling */
+.map {
+margin: 20px auto;
+text-align: center;
+padding: 10px;
+border: 1px solid #ccc;
+border-radius: 5px;
+background-color: #fff;
+max-width: 90%;
+}
+
+/* Custom styling for the red button */
+.red-button {
+    background-color: #ff4d4d; /* Red background */
+    color: white; /* White text */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.red-button:hover {
+background-color: #ff1a1a; /* Darker red on hover */
+}
+
+
+.coordinates-container {
+    display: flex;
+    align-items: center; /* Vertically align the input and button */
+    gap: 10px; /* Add space between the input and button */
+}
+
+.coordinates-container input[type="text"] {
+    flex: 1; /* Make the input field take most of the available space */
+}
+
+.coordinates-container button {
+    padding: 10px 20px; /* Ensure the button has a consistent size */
 }

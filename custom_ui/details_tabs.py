@@ -11,7 +11,7 @@ FILE_NAME = os.path.join(
 
 
 details = ui.nav_panel(
-    "Growth Form",
+    "❹ Growth Form",
     ui.page_fluid(
         ui.layout_sidebar(
             ui.sidebar(

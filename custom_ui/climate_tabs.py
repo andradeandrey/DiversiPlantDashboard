@@ -4,7 +4,7 @@ from pathlib import Path
 from shinywidgets import output_widget
 from shiny import ui, render, reactive
 
-climate = ui.nav_panel("Climate",
+climate = ui.nav_panel("❷ Climate",
     ui.page_fluid(
         ui.h1("Climate", class_="text-center mb-4"),
         ui.div(
@@ -70,8 +70,6 @@ climate = ui.nav_panel("Climate",
 #                                     ],
 #                               multiple=False
 #                               ),class_="input-selectize"),
-
-                              
 #                 open="always",
 #                 width="17%"
 #                 ),

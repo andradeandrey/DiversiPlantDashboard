@@ -10,21 +10,21 @@ FILE_NAME = os.path.join(
 )
 
 main_species = ui.nav_panel(
-    "Main Species",
+    "❸ Main Species",
     ui.page_fluid(
         ui.layout_sidebar(
             ui.sidebar(
-                ui.h3("Datasource"),
-                ui.div(
-                    ui.input_selectize(
-                        "database_choice",
-                        "",
-                        choices=["Normal Database", "GIFT Database"],
-                        multiple=False,
-                    ),
-                    class_="input-selectize",
-                ),
-                ui.div(ui.input_action_button("update_database", "Update choices")),
+                # ui.h3("Datasource"),
+                # ui.div(
+                #     ui.input_selectize(
+                #         "database_choice",
+                #         "",
+                #         choices=["Normal Database", "GIFT Database"],
+                #         multiple=False,
+                #     ),
+                #     class_="input-selectize",
+                # ),
+                # ui.div(ui.input_action_button("update_database", "Update choices")),
                 ui.h3("Growth Form"),
                 ui.p(
                     ui.help_text(

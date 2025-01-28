@@ -9,7 +9,8 @@ import plotly.graph_objects as go
 from itables.shiny import DT
 from custom_server.agroforestry_server import open_csv, get_Plants
 import geopandas as gpd
-
+import folium
+from folium import plugins
 from rpy2.robjects.conversion import localconverter
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
@@ -34,45 +35,81 @@ FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'
 
 SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 
-def server_app(input,output,session):
 
+def parse_lat_lon(lat_lon_str):
+    """
+    Parses a string containing latitude and longitude (e.g., 'lat,lon').
+
+    Args:
+        lat_lon_str (str): Input string in the format 'lat,lon'.
+
+    Returns:
+        tuple: (latitude, longitude) as floats.
+    """
+    try:
+        # Split the string on ',' and remove any surrounding whitespace
+        lat, lon = map(str.strip, lat_lon_str.split(","))
+        return float(lat), float(lon)
+    except (ValueError, AttributeError):
+        # Handle invalid input
+        raise ValueError("Invalid input. Please enter coordinates in the format 'latitude,longitude'.")
+
+def server_app(input,output,session):
+## Homepage
+    # @reactive.event(input.begin)
+    # def _():
+    #     reactive.set_value("homepage_content", "location")
+    
 ##Location
 
     #This function creates the world map and update it if you click on "Update map"
-    @render_widget
-    @reactive.event(input.update_map,ignore_none=None)
+    @output
+    @render.ui
+    @reactive.event(input.update_map, ignore_none=None)
     def world_map():
+        # Default center of the map (e.g., equatorial region)
+        default_center = [20, 0]
 
-        world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-        
+        # Initialize Folium map with satellite tiles
+        world_map = folium.Map(
+            location=default_center,
+            zoom_start=2  # Set an appropriate zoom level
+        )
+        # Add OpenStreetMap layer (default)
+        folium.TileLayer("OpenStreetMap").add_to(world_map)
 
-        world['color'] = 'grey'
+        # Add Satellite layer
+        folium.TileLayer(
+            tiles="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+            attr="Map data © Google",
+            name="Satellite",
+            subdomains=["mt0", "mt1", "mt2", "mt3"]
+        ).add_to(world_map)
+        # If the user provides latitude and longitude input
+        if input.longitude_latitude() != "":
+            try:
+                # Parse the user input
+                lat, lon = parse_lat_lon(input.longitude_latitude())
 
+                # Add a red marker for the user-provided coordinates
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=f"Lat: {lat}, Lon: {lon}",
+                    icon=folium.Icon(color="red", icon="info-sign")
+                ).add_to(world_map)
 
-        fig = px.choropleth(world, 
-                            locations='iso_a3',  
-                            color='color', 
-                            hover_name='name', 
-                            hover_data={'continent': True, 'color': False, 'iso_a3': False}, 
-                            projection='natural earth',
-                            color_discrete_sequence=['grey']) 
+                # Center the map on the provided coordinates
+                world_map.location = [lat, lon]
+                world_map.zoom_start = 20  # Adjust zoom for closer view
+            except ValueError as e:
+                print(f"Error parsing coordinates: {e}")
 
-        fig.update_geos(showcountries=True, showcoastlines=True, showland=True, fitbounds="locations")
+        # Add a scale bar and a fullscreen button for better usability
+        folium.plugins.Fullscreen().add_to(world_map)
+        folium.plugins.LocateControl(auto_start=False).add_to(world_map)
 
-
-        #If the user inputs longitude AND latitude, add a red point on the location
-        if input.longitude()!='' and input.latitude()!='':
-
-            fig.add_scattergeo(lat=[input.latitude()], lon=[input.longitude()], mode='markers',
-                   marker=dict(color='red', size=10))
-            
-        fig.update_layout(showlegend=False)
-
-        fig.update_layout(
-                height=600
-            )
-        
-        return fig
+        # Return the Folium map as raw HTML
+        return ui.HTML(world_map._repr_html_())
 
 
 ##Climate
@@ -220,9 +257,10 @@ def server_app(input,output,session):
             global SPECIES_GIFT_DATAFRAME
             flor_group=FLORISTIC_GROUP[input.floristic_group()]
             
+            lat, lon = parse_lat_lon(input.longitude_latitude())
             robjects.r.assign("flor_group",flor_group)
-            robjects.r.assign("long",float(input.longitude()))
-            robjects.r.assign("lat",float(input.latitude()))
+            robjects.r.assign("long",float(lon))
+            robjects.r.assign("lat",float(lat))
             data = robjects.r(f'''
                             library("GIFT")
                 coord <- cbind(long,lat)
