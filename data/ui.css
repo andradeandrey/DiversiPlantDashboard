@@ -514,3 +514,102 @@ background-color: #ff1a1a; /* Darker red on hover */
 .coordinates-container button {
     padding: 10px 20px; /* Ensure the button has a consistent size */
 }
+
+/* Grey container styling */
+/* .grey-container {
+    background-color: #d5d2d2; /* Light grey background */
+    /* padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    max-width: 950px; /* Set max width */
+    /* margin: 0 auto; /* Center horizontally */
+/* }
+
+/* Bold text styling */
+/* .bold-text {
+    font-weight: bold;
+    font-size: 18px;
+} */
+
+/* Select input styling */
+/* .input-selectize {
+    width: 100%;
+    max-width: 500px;
+} */
+
+/* Flexbox container for potential layout adjustments */
+/* .flex-container-ms {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+} */
+
+
+/* Grey container styling */
+.grey-container {
+    background-color: #d5d2d2; /* Light grey background */
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    max-width: 50%; /* Adjust width dynamically */
+    min-width: 100px; /* Prevent excessive shrinking */
+    margin: 0 auto; /* Center horizontally */
+    transition: width 0.3s ease-in-out; /* Smooth transition */
+}
+
+/* Flexbox container for left (input) and right (text) */
+.flex-container-ms {
+    display: flex;
+    justify-content: space-between; /* Push left and right sections apart */
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+/* Left section: input */
+.left-section-sm {
+    flex: 0.1;
+    min-width: 350px;
+}
+
+/* Right section: text */
+.right-section-sm {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Make input-selectize larger */
+/* .input-selectize .selectize-control {
+    height: 50px; /* Adjust height */
+    /* width: 500px;
+    font-size: 16px; /* Make text more readable */
+/* } */
+/* Ensure input container takes proper width */
+.input-container {
+    width: 100%; /* Make input-container expand */
+    max-width: 500px; /* Adjust max width for better alignment */
+}
+/* Make input-selectize larger */
+.input-selectize .selectize-control {
+    height: 60px; /* Increased height */
+    width: 100%; /* Make it responsive */
+    font-size: 18px; /* Increase text size */
+    padding: 10px; /* More padding for better UX */
+}
+
+/* Ensure input inside selectize expands properly */
+.input-selectize .selectize-input {
+    min-height: 60px; /* Ensure text area expands */
+    font-size: 18px; /* Match font size */
+}
+
+.center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+}

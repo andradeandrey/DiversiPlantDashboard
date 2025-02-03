@@ -2,7 +2,7 @@ import os
 from shiny import ui,App
 from pathlib import Path
 from shinywidgets import output_widget
-
+import faicons as fa
 
 #Second tabs of the dashboard
 #help_text are the texts in grey under titles (ui.h4)
@@ -54,7 +54,7 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_upda
 #     ui.div(output_widget("world_map"),class_="map"),),
 #     height="4000px"
 #     )),
-import faicons as fa
+
 
 # Add main content
 ICONS = {
@@ -67,7 +67,7 @@ location = ui.nav_panel(
         # Container for flexbox layout
         ui.div(
             ui.div(
-                ui.h4("Copy your Project Coordinates From ",
+                ui.h4("Copy your Project Coordinates from ",
                     ui.a(
                         "Google Maps", 
                         href="https://www.google.com/maps",  # Link to Google Maps

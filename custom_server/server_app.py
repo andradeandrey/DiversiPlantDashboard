@@ -17,6 +17,8 @@ from rpy2.robjects.packages import importr
 from rpy2.robjects.vectors import StrVector
 import rpy2.robjects.packages as rpackages, data
 from rpy2.robjects import r, pandas2ri 
+from collections import Counter
+
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 
@@ -35,6 +37,15 @@ FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'
 
 SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 
+# Define the modal that will show the loading message
+def gift_loading_modal():
+    return ui.modal(
+        "Loading Data",
+        ui.p("Fetching data from the GIFT database. Please wait, this might take a few minutes."),
+        size="sm",
+        easy_close=False,
+        footer=ui.modal_button("Close", style="visibility: hidden;")  # Hidden close button to ensure user cannot close it prematurely
+    )
 
 def parse_lat_lon(lat_lon_str):
     """
@@ -120,57 +131,484 @@ def server_app(input,output,session):
 ##Main Species
 
     #This function creates the stratum graph
+    # @render_widget
+    # def intercrops():
+    #     if input.database_choice() == "Practitioner's Database": #Ignore the creation of the graph if the we don't select the good data source
+    #         data=tri()[0]
+    #         max=0
+    #         fig=go.Figure()
+    #         repartition={0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[]}
+    #         for plant in data:
+    #             repartition[plant[4]].append(plant)
+    #         for indice in range(9):
+    #             n=len(repartition[indice])
+    #             if n == 0:
+    #                 pass
+    #             elif n == 1:
+    #                 info=repartition[indice][0]
+    #                 fig.add_trace(go.Scatter(x=[info[2], info[2]+info[3]], y=[indice+0.5, indice+0.5], name=info[0],mode='lines',line=dict(color=COLOR[info[1]], width=5), showlegend=False))
+    #                 fig.add_annotation(x=info[2],y=indice+0.5,text=info[0],font=dict(color="black"), align="center",ax=-10,ay=-15,bgcolor="white")
+    #                 if info[2]+info[3]>max:
+    #                     max=info[2]+info[3]
+    #             else:
+    #                 for i in range(n):
+    #                     info=repartition[indice][i]
+    #                     fig.add_trace(go.Scatter(x=[info[2], info[2]+info[3]], y=[indice+(0.1+0.8*i/(n-1)), indice+(0.1+0.8*i/(n-1))],name=info[0], mode='lines',line=dict(color=COLOR[info[1]], width=5), showlegend=False))
+    #                     fig.add_annotation(x=info[2],y=indice+(0.1+0.8*i/(n-1)),text=info[0],font=dict(color="black"),align="center",ax=-10,ay=-15,bgcolor="white")
+    #                     if info[2]+info[3]>max:
+    #                         max=info[2]+info[3]
+    #         for i in STRATUM[input.number_of_division()][0]:
+    #             fig.add_trace(go.Scatter(x=[0, max], y=[i, i], mode='lines',line=dict(color='black', width=0.5),showlegend=False))
+    #         custom_y_labels = STRATUM[input.number_of_division()][1]
+    #         growth_forms=['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub','subshrub','tree']
+    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda','#45d090',"#779137",'#d7a0ff']
+    #         for growth, colr in zip(growth_forms, colors):
+    #             fig.add_trace(go.Scatter(
+    #                 x=[None],  
+    #                 y=[None],
+    #                 mode='markers',
+    #                 marker=dict(size=10, color=colr),
+    #                 showlegend=True,
+    #                 name=growth,
+    #             ))
+    #         fig.update_yaxes(tickvals=list(custom_y_labels.keys()),ticktext=list(custom_y_labels.values()))
+    #         fig.update_xaxes(title_text = 'Growth Period (year)') 
+    #         fig.update_yaxes(title_text = 'Stratum')
+    #         fig.update_layout(height=600)
+    #         return figimport plotly.graph_objects as go
+
+
+# ! WORKS
+    # @render_widget
+    # def intercrops():
+    #     if input.database_choice() == "Practitioner's Database":  
+    #         data = tri()[0]  # Fetch Data
+    #         # ✅ Check if data is empty
+    #         if not data:
+    #             return go.Figure()  # Return empty figure if no data
+    #         # 1️⃣ Determine dynamic range for bins based on data
+    #         min_x = min([plant[2] for plant in data])  # Minimum Harvest Period
+    #         max_x = max([plant[2] + plant[3] for plant in data])  # Maximum Harvest Period (Start + Duration)
+
+    #         min_y = min([plant[4] for plant in data])  # Minimum Light Demand (Stratum)
+    #         max_y = max([plant[4] for plant in data])  # Maximum Light Demand (Stratum)
+
+    #         # 2️⃣ Define number of divisions (keeping bins structured)
+    #         num_x_bins = 4  # Define number of x bins (adjustable)
+    #         num_y_bins = 4  # Define number of y bins (adjustable)
+
+    #         # 3️⃣ Create dynamically divided bins
+    #         x_bins = np.linspace(min_x, max_x, num_x_bins).tolist()  # Create evenly spaced X bins
+    #         y_bins = np.linspace(min_y, max_y, num_y_bins).tolist()  # Create evenly spaced Y bins
+
+    #         # 4️⃣ Define Colors for Growth Forms
+    #         growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
+    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
+    #         color_map = dict(zip(growth_forms, colors))
+
+    #         # 5️⃣ Initialize Figure
+    #         fig = go.Figure()
+
+    #         # 6️⃣ Add Background Grid (Rectangles)
+    #         for i in range(len(x_bins) - 1):
+    #             for j in range(len(y_bins) - 1):
+    #                 fig.add_shape(
+    #                     type="rect",
+    #                     x0=x_bins[i], x1=x_bins[i+1],
+    #                     y0=y_bins[j], y1=y_bins[j+1],
+    #                     line=dict(color="black", width=1),
+    #                     fillcolor="rgba(100,100,100,0.2)",  # Light grey for grid cells
+    #                 )
+
+    #         # 7️⃣ Place Plants Inside Fixed Boxes
+    #         for plant in data:
+    #             name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
+
+    #             # 8️⃣ Determine the correct bin for placement (ensuring species are included)
+    #             x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
+    #             y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
+
+    #             # 9️⃣ Prevent IndexError when accessing next bin
+    #             x_bin_index = x_bins.index(x_bin)
+    #             y_bin_index = y_bins.index(y_bin)
+
+    #             if x_bin_index < len(x_bins) - 1:
+    #                 x_center = (x_bin + x_bins[x_bin_index + 1]) / 2
+    #             else:
+    #                 x_center = x_bin  # Stay within bounds
+
+    #             if y_bin_index < len(y_bins) - 1:
+    #                 y_center = (y_bin + y_bins[y_bin_index + 1]) / 2
+    #             else:
+    #                 y_center = y_bin  # Stay within bounds
+
+    #             # 🔟 Plot Species in the Assigned Box
+    #             fig.add_trace(go.Scatter(
+    #                 x=[x_center],  # Safe X placement
+    #                 y=[y_center],  # Safe Y placement
+    #                 mode="markers",
+    #                 marker=dict(size=15, color=color_map.get(growth_type, "grey")),
+    #                 name=name,
+    #                 showlegend=False
+    #             ))
+
+    #             # 🔟 Add Label Inside the Box
+    #             fig.add_annotation(
+    #                 x=x_center,
+    #                 y=y_center,
+    #                 text=name, 
+    #                 font=dict(color="white"), 
+    #                 showarrow=False,
+    #                 bgcolor="black"
+    #             )
+
+    #         # 🔟 Add Legend for Growth Forms
+    #         for growth, colr in color_map.items():
+    #             fig.add_trace(go.Scatter(
+    #                 x=[None],  
+    #                 y=[None],
+    #                 mode='markers',
+    #                 marker=dict(size=10, color=colr),
+    #                 showlegend=True,
+    #                 name=growth
+    #             ))
+
+    #         # 🔟 Configure Axes Labels and Grid
+    #         fig.update_xaxes(title_text="Harvest Period (Years After Planting)", zeroline=False, tickvals=x_bins)
+    #         fig.update_yaxes(title_text="Light Demand (Stratum)", zeroline=False, tickvals=y_bins)
+
+    #         # 🔟 Set Graph Layout
+    #         fig.update_layout(
+    #             height=600,
+    #             plot_bgcolor="white",
+    #             showlegend=True
+    #         )
+
+    #         return fig
+# ! UPDATED below:  
+    # @render_widget
+    # def intercrops():
+    #     if input.database_choice() == "Practitioner's Database":  
+    #         data = tri()[0]  # Fetch Data
+    #         print(data)
+    #         if not data:
+    #             return go.Figure()  # Return empty figure if no data
+
+    #         # Determine dynamic range for bins
+    #         min_x = min([plant[2] for plant in data])  
+    #         max_x = max([plant[2] + plant[3] for plant in data])  
+
+    #         min_y = min([plant[4] for plant in data])  
+    #         max_y = max([plant[4] for plant in data])  
+
+    #         num_x_bins = 4  
+    #         num_y_bins = 4  
+
+    #         x_bins = np.linspace(min_x, max_x, num_x_bins).tolist()  
+    #         y_bins = np.linspace(min_y, max_y, num_y_bins).tolist()  
+
+    #         # Growth Form Mappings
+    #         growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
+    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
+    #         symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
+
+    #         color_map = dict(zip(growth_forms, colors))
+    #         symbol_map = dict(zip(growth_forms, symbols))
+
+    #         fig = go.Figure()
+
+    #         # Add Background Grid
+    #         for i in range(len(x_bins) - 1):
+    #             for j in range(len(y_bins) - 1):
+    #                 fig.add_shape(
+    #                     type="rect",
+    #                     x0=x_bins[i], x1=x_bins[i+1],
+    #                     y0=y_bins[j], y1=y_bins[j+1],
+    #                     line=dict(color="black", width=1),
+    #                     fillcolor="rgba(100,100,100,0.2)",
+    #                 )
+
+    #         # Place Plants Inside Bins
+    #         for plant in data:
+    #             name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
+
+    #             x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
+    #             y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
+
+    #             x_bin_index = x_bins.index(x_bin)
+    #             y_bin_index = y_bins.index(y_bin)
+
+    #             x_center = (x_bin + x_bins[x_bin_index + 1]) / 2 if x_bin_index < len(x_bins) - 1 else x_bin
+    #             y_center = (y_bin + y_bins[y_bin_index + 1]) / 2 if y_bin_index < len(y_bins) - 1 else y_bin
+
+    #             # Add Plant Symbols with Tooltip
+    #             fig.add_trace(go.Scatter(
+    #                 x=[x_center],  
+    #                 y=[y_center],  
+    #                 mode="markers",
+    #                 marker=dict(
+    #                     size=15, 
+    #                     color=color_map.get(growth_type, "grey"), 
+    #                     symbol=symbol_map.get(growth_type, "circle")
+    #                 ),
+    #                 name=growth_type,
+    #                 hoverinfo="text",
+    #                 text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {x_start} yrs<br> Duration: {duration} yrs<br> Stratum: {y_position}"
+    #             ))
+
+    #         # Add Legend for Growth Forms
+    #         for growth, colr in color_map.items():
+    #             fig.add_trace(go.Scatter(
+    #                 x=[None],  
+    #                 y=[None],
+    #                 mode='markers',
+    #                 marker=dict(size=10, color=colr, symbol=symbol_map[growth]),
+    #                 showlegend=True,
+    #                 name=growth
+    #             ))
+
+    #         # Configure Axes
+    #         fig.update_xaxes(title_text="Harvest Period (Years After Planting)", zeroline=False, tickvals=x_bins)
+    #         fig.update_yaxes(title_text="Light Demand (Stratum)", zeroline=False, tickvals=y_bins)
+
+    #         # Set Graph Layout
+    #         fig.update_layout(
+    #             height=600,
+    #             plot_bgcolor="white",
+    #             showlegend=True
+    #         )
+
+    #         return fig
+# ! UPDATED ABOVE
+    # @render_widget
+    # def intercrops():
+    #     if input.database_choice() == "Practitioner's Database":  
+    #         data = tri()[0]  # Fetch Data
+    #         print(data)
+    #         if not data:
+    #             return None  # Return empty figure if no data
+
+    #         # Determine dynamic range for bins
+    #         min_x = min([plant[2] for plant in data])  
+    #         max_x = max([plant[2] + plant[3] for plant in data])  
+
+    #         min_y = min([plant[4] for plant in data])  
+    #         max_y = max([plant[4] for plant in data])  
+
+    #         num_x_bins = 4  
+    #         num_y_bins = 4  
+
+    #         x_bins = np.linspace(min_x, max_x, num_x_bins).tolist()  
+    #         y_bins = np.linspace(min_y, max_y, num_y_bins).tolist()  
+
+    #         # Growth Form Mappings
+    #         growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
+    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
+    #         symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
+
+    #         color_map = dict(zip(growth_forms, colors))
+    #         symbol_map = dict(zip(growth_forms, symbols))
+
+    #         fig = go.Figure()
+
+    #         # 🎯 ADD FIXED LEGEND (TOP - SEPARATE FROM PLOTLY'S LEGEND)
+    #         fixed_legend_x = np.linspace(min_x, max_x, len(growth_forms))  # Spread symbols evenly
+    #         fixed_legend_y = [max_y + (max_y * 0.1)] * len(growth_forms)  # Position above plot
+
+    #         for i, growth in enumerate(growth_forms):
+    #             fig.add_trace(go.Scatter(
+    #                 x=[fixed_legend_x[i]],  
+    #                 y=[fixed_legend_y[i]],  
+    #                 mode="markers+text",
+    #                 marker=dict(size=15, color=color_map[growth], symbol=symbol_map[growth]),
+    #                 text=growth,  # Growth form name
+    #                 textposition="top center",
+    #                 showlegend=False  # Hide from plotly legend
+    #             ))
+
+    #         # Add Background Grid
+    #         for i in range(len(x_bins) - 1):
+    #             for j in range(len(y_bins) - 1):
+    #                 fig.add_shape(
+    #                     type="rect",
+    #                     x0=x_bins[i], x1=x_bins[i+1],
+    #                     y0=y_bins[j], y1=y_bins[j+1],
+    #                     line=dict(color="black", width=1),
+    #                     fillcolor="rgba(100,100,100,0.2)",
+    #                 )
+
+    #         # Place Plants Inside Bins (Dynamic Legend)
+    #         for plant in data:
+    #             name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
+
+    #             x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
+    #             y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
+
+    #             x_bin_index = x_bins.index(x_bin)
+    #             y_bin_index = y_bins.index(y_bin)
+
+    #             x_center = (x_bin + x_bins[x_bin_index + 1]) / 2 if x_bin_index < len(x_bins) - 1 else x_bin
+    #             y_center = (y_bin + y_bins[y_bin_index + 1]) / 2 if y_bin_index < len(y_bins) - 1 else y_bin
+
+    #             # Add Plant Symbols with Tooltip
+    #             fig.add_trace(go.Scatter(
+    #                 x=[x_center],  
+    #                 y=[y_center],  
+    #                 mode="markers",
+    #                 marker=dict(
+    #                     size=15, 
+    #                     color=color_map.get(growth_type, "grey"), 
+    #                     symbol=symbol_map.get(growth_type, "circle")
+    #                 ),
+    #                 name=name,  # Only plant name appears in dynamic legend
+    #                 showlegend=True,
+    #                 hoverinfo="text",
+    #                 text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {x_start} yrs<br> Duration: {duration} yrs<br> Stratum: {y_position}"
+    #             ))
+
+    #         # Configure Axes
+    #         fig.update_xaxes(title_text="Harvest Period (Years After Planting)", zeroline=False, tickvals=x_bins)
+    #         fig.update_yaxes(title_text="Light Demand (Stratum)", zeroline=False, tickvals=y_bins)
+
+    #         # Set Graph Layout
+    #         fig.update_layout(
+    #             height=600,
+    #             plot_bgcolor="white",
+    #             showlegend=True,
+    #             legend=dict(
+    #                 orientation="v",  # Dynamic legend remains vertical (on right)
+    #                 yanchor="top",
+    #                 y=0.98,  
+    #                 xanchor="left",
+    #                 x=1.02,  # Moves the dynamic legend to the right
+    #                 tracegroupgap=5
+    #             )
+    #         )
+
+    #         return fig
     @render_widget
     def intercrops():
-        if input.database_choice() == "Normal Database": #Ignore the creation of the graph if the we don't select the good data source
-            data=tri()[0]
-            max=0
-            fig=go.Figure()
-            repartition={0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[]}
-            for plant in data:
-                repartition[plant[4]].append(plant)
-            for indice in range(9):
-                n=len(repartition[indice])
-                if n == 0:
-                    pass
-                elif n == 1:
-                    info=repartition[indice][0]
-                    fig.add_trace(go.Scatter(x=[info[2], info[2]+info[3]], y=[indice+0.5, indice+0.5], name=info[0],mode='lines',line=dict(color=COLOR[info[1]], width=5), showlegend=False))
-                    fig.add_annotation(x=info[2],y=indice+0.5,text=info[0],font=dict(color="black"), align="center",ax=-10,ay=-15,bgcolor="white")
-                    if info[2]+info[3]>max:
-                        max=info[2]+info[3]
-                else:
-                    for i in range(n):
-                        info=repartition[indice][i]
-                        fig.add_trace(go.Scatter(x=[info[2], info[2]+info[3]], y=[indice+(0.1+0.8*i/(n-1)), indice+(0.1+0.8*i/(n-1))],name=info[0], mode='lines',line=dict(color=COLOR[info[1]], width=5), showlegend=False))
-                        fig.add_annotation(x=info[2],y=indice+(0.1+0.8*i/(n-1)),text=info[0],font=dict(color="black"),align="center",ax=-10,ay=-15,bgcolor="white")
-                        if info[2]+info[3]>max:
-                            max=info[2]+info[3]
-            for i in STRATUM[input.number_of_division()][0]:
-                fig.add_trace(go.Scatter(x=[0, max], y=[i, i], mode='lines',line=dict(color='black', width=0.5),showlegend=False))
-            custom_y_labels = STRATUM[input.number_of_division()][1]
-            growth_forms=['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub','subshrub','tree']
-            colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda','#45d090',"#779137",'#d7a0ff']
-            for growth, colr in zip(growth_forms, colors):
+        if input.database_choice() == "Practitioner's Database":  
+            data = tri()[0]  # Fetch Data
+            print(data)
+            if not data:
+                return None  # Return empty figure if no data
+
+            # Determine dynamic range for bins
+            min_x = round(min([plant[2] for plant in data]), 2)  
+            max_x = round(max([plant[2] + plant[3] for plant in data]), 2)  
+
+            min_y = round(min([plant[4] for plant in data]), 2)  
+            max_y = round(max([plant[4] for plant in data]), 2)  
+
+            num_x_bins = 4  
+            num_y_bins = 4  
+
+            # Create rounded bins
+            x_bins = [round(x, 2) for x in np.linspace(min_x, max_x, num_x_bins).tolist()]
+            y_bins = [round(y, 2) for y in np.linspace(min_y, max_y, num_y_bins).tolist()]
+
+            # Growth Form Mappings
+            growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
+            colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
+            symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
+
+            color_map = dict(zip(growth_forms, colors))
+            symbol_map = dict(zip(growth_forms, symbols))
+
+            fig = go.Figure()
+
+            # 🎯 ADD FIXED LEGEND (TOP - SEPARATE FROM PLOTLY'S LEGEND)
+            fixed_legend_x = np.linspace(min_x, max_x, len(growth_forms)).tolist()  # Spread symbols evenly
+            fixed_legend_y = [round(max_y + (max_y * 0.1), 2)] * len(growth_forms)  # Position above plot
+
+            for i, growth in enumerate(growth_forms):
                 fig.add_trace(go.Scatter(
-                    x=[None],  
-                    y=[None],
-                    mode='markers',
-                    marker=dict(size=10, color=colr),
-                    showlegend=True,
-                    name=growth,
+                    x=[round(fixed_legend_x[i], 2)],  
+                    y=[fixed_legend_y[i]],  
+                    mode="markers+text",
+                    marker=dict(size=15, color=color_map[growth], symbol=symbol_map[growth]),
+                    text=growth,  # Growth form name
+                    textposition="top center",
+                    showlegend=False  # Hide from plotly legend
                 ))
-            fig.update_yaxes(tickvals=list(custom_y_labels.keys()),ticktext=list(custom_y_labels.values()))
-            fig.update_xaxes(title_text = 'Growth Period (year)') 
-            fig.update_yaxes(title_text = 'Stratum')
-            fig.update_layout(height=600)
+
+            # Add Background Grid
+            for i in range(len(x_bins) - 1):
+                for j in range(len(y_bins) - 1):
+                    fig.add_shape(
+                        type="rect",
+                        x0=x_bins[i], x1=x_bins[i+1],
+                        y0=y_bins[j], y1=y_bins[j+1],
+                        line=dict(color="black", width=1),
+                        fillcolor="rgba(100,100,100,0.2)",
+                    )
+
+            # Place Plants Inside Bins (Dynamic Legend)
+            for plant in data:
+                name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
+
+                x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
+                y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
+
+                x_bin_index = x_bins.index(x_bin)
+                y_bin_index = y_bins.index(y_bin)
+
+                x_center = round((x_bin + x_bins[x_bin_index + 1]) / 2 if x_bin_index < len(x_bins) - 1 else x_bin, 2)
+                y_center = round((y_bin + y_bins[y_bin_index + 1]) / 2 if y_bin_index < len(y_bins) - 1 else y_bin, 2)
+
+                # Add Plant Symbols with Tooltip
+                fig.add_trace(go.Scatter(
+                    x=[x_center],  
+                    y=[y_center],  
+                    mode="markers",
+                    marker=dict(
+                        size=15, 
+                        color=color_map.get(growth_type, "grey"), 
+                        symbol=symbol_map.get(growth_type, "circle")
+                    ),
+                    name=name,  # Only plant name appears in dynamic legend
+                    showlegend=True,
+                    hoverinfo="text",
+                    text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {round(x_start, 2)} yrs<br> Duration: {round(duration, 2)} yrs<br> Stratum: {round(y_position, 2)}"
+                ))
+
+            # Configure Axes with Rounded Tick Values
+            fig.update_xaxes(
+                title_text="Harvest Period (Years After Planting)", 
+                zeroline=False, 
+                tickvals=x_bins,
+                tickformat=".2f"  # Display ticks rounded to 2 decimal places
+            )
+            fig.update_yaxes(
+                title_text="Light Demand (Stratum)", 
+                zeroline=False, 
+                tickvals=y_bins,
+                tickformat=".2f"  # Display ticks rounded to 2 decimal places
+            )
+
+            # Set Graph Layout
+            fig.update_layout(
+                height=600,
+                plot_bgcolor="white",
+                showlegend=True,
+                legend=dict(
+                    orientation="v",  # Dynamic legend remains vertical (on right)
+                    yanchor="top",
+                    y=0.98,  
+                    xanchor="left",
+                    x=1.02,  # Moves the dynamic legend to the right
+                    tracegroupgap=5
+                )
+            )
+
             return fig
 
     #This function creates the cards for the missing informations on growth and strata
     @output
     @render.ui
     def card_wrong_plant():
-        if input.database_choice() == "Normal Database": #Ignore the creation of the graph if the we don't select the good data source
+        if input.database_choice() == "Practitioner's Database": #Ignore the creation of the graph if the we don't select the good data source
             cards = []
             card_one,card_two=tri()[1],tri()[2]
             first_list,second_list=[],[]
@@ -199,7 +637,7 @@ def server_app(input,output,session):
     @output
     @render.ui
     def compatibility():
-        if input.database_choice() == "Normal Database": #Ignore the creation of the graph if the we don't select the good data source
+        if input.database_choice() == "Practitioner's Database": #Ignore the creation of the graph if the we don't select the good data source
             df=open_csv(FILE_NAME)
             plants=input.overview_plants()
             issue=[]
@@ -249,8 +687,8 @@ def server_app(input,output,session):
             else:
                 bad_year.append(query[0])
         return [good,bad_year,bad_stratum]
- 
-    #This function run the R code to get the new species list if the GIFT database is chosen. Otherwise it returns the Normal Database
+
+    #This function run the R code to get the new species list if the GIFT database is chosen. Otherwise it returns the Practitioner's Database
     @reactive.event(input.update_database)
     def get_new_species():
         if input.database_choice() == "GIFT Database":
@@ -311,22 +749,60 @@ def server_app(input,output,session):
     @output
     @render.download(filename=f"studied_data.csv")
     def export_df():
-        if input.database_choice()=="Normal Database":
+        if input.database_choice()=="Practitioner's Database":
             yield open_csv(FILE_NAME).to_csv()
         else:
             yield SPECIES_GIFT_DATAFRAME.to_csv()
+    ## Export the data:
+    @output
+    @render.download(filename=lambda: f"{input.database_choice().replace(' ', '_').lower()}_data.csv")
+    def export_df_os():
+        if input.database_choice() == "Practitioner's Database":
+            df = open_csv(FILE_NAME)
+            plants = input.overview_plants()
+            stratums = []
+            
+            for plant in plants:
+                query = df.query("common_en == '%s'" % plant)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                if str(query[3]) != 'nan' and str(query[2]) != 'nan' and str(query[1]) != 'nan':
+                    stratums.append(query[3])
+
+            first_sgg = df[~df['stratum'].isin(stratums)]
+            first_sgg = first_sgg[first_sgg['stratum'].notna()]
+            first_sgg = first_sgg[['common_en','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
+            
+            total_sgg = first_sgg[~df['common_en'].isin(plants)]
+            total_sgg = total_sgg.fillna("-")
+            total_sgg = total_sgg.sort_values(by='common_en')
+            
+            yield total_sgg.to_csv(index=False)
+
+        else:
+            global SPECIES_GIFT_DATAFRAME
+            if SPECIES_GIFT_DATAFRAME.empty:
+                print("SPECIES_GIFT_DATAFRAME is not populated.")
+                yield "Data not available."  # You can customize this message as needed
+            else:
+                SPECIES_GIFT_DATAFRAME = SPECIES_GIFT_DATAFRAME.fillna("-")
+                SPECIES_GIFT_DATAFRAME = SPECIES_GIFT_DATAFRAME.sort_values("family")
+                unecessary_columns = ['ref_ID', 'list_ID', 'entity_ID', 'work_ID', 'genus_ID', 'questionable', 'quest_native', 'endemic_ref', 'quest_end_ref', 'quest_end_list']
+                SPECIES_GIFT_DATAFRAME = SPECIES_GIFT_DATAFRAME.drop(columns=unecessary_columns)
+                
+                yield SPECIES_GIFT_DATAFRAME.to_csv(index=False)
 
 ##Growth Form
 
-    #This functions creates the barchart and make it evolve depending on the lifetime chosen
+    # # This functions creates the barchart and make it evolve depending on the lifetime chosen
     @render_widget
     def plot_plants():
-        if input.database_choice() == "Normal Database": #Ignore the creation of the graph if the we don't select the good data source
+        if input.database_choice() == "Practitioner's Database":
             size=input.life_time()
             df=open_csv(FILE_NAME)
             plants=input.overview_plants()
             variables_x,variables_y,color,family,function,time_to_fh,life_hist,longev_prod,links,graph_y,color_change=[],[],[],[],[],[],[],[],[],[],[]
-
+            if not plants:
+                print("No plants selected. Returning an empty figure.")
+                return None
             for plant in plants:
                 query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','plant_max_height','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status','ref']].values.tolist()[0]
                 variables_x.append(query[0]),color.append(query[1]),family.append(str(query[3])),function.append(str(query[4])),time_to_fh.append(str(query[5])),life_hist.append(str(query[6])),longev_prod.append(str(query[7])),links.append([query[8]])
@@ -372,16 +848,17 @@ def server_app(input,output,session):
                 hover_data={'Maximum height':True, 'Family':True, 'Growth form':True, 'Function':True,'Time before harvest':True,'Life history':True,'Longevity':True,'Graph height':False})
             
             fig.update_layout(height=650)
+            
             return fig
 
 
 ##Other Species
 
-    #This function return the table of all the species that are not selected. For the normal database, it makes suggestion, incompatible plants won't be shown, and for the GIFT one, it just shows the list
+    #This function return the table of all the species that are not selected. For the Practitioner's Database, it makes suggestion, incompatible plants won't be shown, and for the GIFT one, it just shows the list
     @output
     @render.ui
     def suggestion_plants():
-        if input.database_choice()=="Normal Database":
+        if input.database_choice()=="Practitioner's Database":
             df=open_csv(FILE_NAME)
             plants=input.overview_plants()
             cards_suggestion=[]

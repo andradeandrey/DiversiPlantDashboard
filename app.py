@@ -20,7 +20,7 @@ app_ui=ui.page_fluid(
     location,
     climate,
     main_species,
-    details,
+    # details,
     other_species,
     title=ui.div("Agroforestry Dashboard", class_="title"),
     )

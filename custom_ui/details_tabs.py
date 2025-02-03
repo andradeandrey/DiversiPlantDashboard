@@ -13,25 +13,24 @@ FILE_NAME = os.path.join(
 details = ui.nav_panel(
     "❹ Growth Form",
     ui.page_fluid(
-        ui.layout_sidebar(
-            ui.sidebar(
-                ui.h3("Lifetime"),
-                ui.help_text(
-                    "Visualize the growth of every species over time (in year)"
-                ),
-                ui.div(
-                    ui.input_slider("life_time", "", min=0, max=101, value=1),
-                    class_="input-selectize",
-                ),
-                open="always",
-                width="17%",
-            ),
+        # ui.layout_sidebar(
+            # ui.sidebar(
+            #     ui.h3("Lifetime"),
+            #     ui.help_text(
+            #         "Visualize the growth of every species over time (in year)"
+            #     ),
+            #     ui.div(
+            #         ui.input_slider("life_time", "", min=0, max=101, value=1),
+            #         class_="input-selectize",
+            #     ),
+            #     open="always",
+            #     width="17%",
+            # ),
             ui.div(
-                output_widget("plot_plants"),
-                ui.output_image("growth_form_image", height="auto", width="100%"),
-                class_="main-content",
+                # output_widget("plot_plants"),
+                # ui.output_image("growth_form_image", height="auto", width="100%"),
+                # class_="main-content",
             ),
-            height="2000px",
+            # height="2000px",
         )
     ),
-)
