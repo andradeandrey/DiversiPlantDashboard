@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from shiny import ui, App
 import os
+import uvicorn
 
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
@@ -54,5 +55,4 @@ app.add_middleware(SessionMiddleware, secret_key="feur")
 SHINY_HOSTNAME = "http://localhost:8000/"
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host='127.0.0.1', port=8000)
+    uvicorn.run("app:app", host='0.0.0.0', port=8000)
