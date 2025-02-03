@@ -5,7 +5,7 @@ anyio==4.4.0
 appdirs==1.4.4
 asgiref==3.8.1
 asttokens==2.4.1
-attrs====24.2.0
+attrs==24.2.0
 branca==0.8.1
 bzip2==1.0.8
 ca-certificates==2024.8.3
