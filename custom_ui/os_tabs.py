@@ -26,7 +26,7 @@ other_species = ui.nav_panel("❹ Other Species",
             ui.column(
                 12,  # Full-width column
                 ui.output_ui("suggestion_plants", class_="input-selectize"),  # Display the suggestions
-                ui.download_button("export_df_os", "Export data", class_="mt-2 float-right")  # Download button with margin top and float right
+                ui.download_button("export_df_os", "Download Data", class_="mt-2 float-right")  # Download button with margin top and float right
             )
         )
     )

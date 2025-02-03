@@ -37,15 +37,10 @@ FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'
 
 SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 
-# Define the modal that will show the loading message
-def gift_loading_modal():
-    return ui.modal(
-        "Loading Data",
-        ui.p("Fetching data from the GIFT database. Please wait, this might take a few minutes."),
-        size="sm",
-        easy_close=False,
-        footer=ui.modal_button("Close", style="visibility: hidden;")  # Hidden close button to ensure user cannot close it prematurely
-    )
+growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
+colors = ['#53c5ff', '#49d1d5', '#dbb448', '#f8827a', '#ff8fda', '#45d090', '#779137', '#d7a0ff']
+color_mapping = dict(zip(growth_forms, colors))
+
 
 def parse_lat_lon(lat_lon_str):
     """
@@ -794,63 +789,187 @@ def server_app(input,output,session):
 
     # # This functions creates the barchart and make it evolve depending on the lifetime chosen
     @render_widget
+    # def plot_plants():
+    #     if input.database_choice() == "Practitioner's Database":
+    #         size=input.life_time()
+    #         df=open_csv(FILE_NAME)
+    #         plants=input.overview_plants()
+    #         variables_x,variables_y,color,family,function,time_to_fh,life_hist,longev_prod,links,graph_y,color_change=[],[],[],[],[],[],[],[],[],[],[]
+    #         if not plants:
+    #             print("No plants selected. Returning an empty figure.")
+    #             return None
+    #         for plant in plants:
+    #             query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','plant_max_height','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status','ref']].values.tolist()[0]
+    #             variables_x.append(query[0]),color.append(query[1]),family.append(str(query[3])),function.append(str(query[4])),time_to_fh.append(str(query[5])),life_hist.append(str(query[6])),longev_prod.append(str(query[7])),links.append([query[8]])
+    #             if str(query[2])=='nan':
+    #                 variables_y.append(3)
+    #             else:
+    #                 variables_y.append(query[2])
+    #             if str(query[7])=='nan' or query[7]==0:
+    #                 expect=7
+    #             else:
+    #                 expect=query[7]
+    #             if str(query[2])=='nan':
+    #                 graph_y_max=3
+    #             else:
+    #                 graph_y_max=query[2]
+    #             graph_y.append(min(graph_y_max,size*graph_y_max/expect))
+    #             if size==0:
+    #                 graph_y[-1]=0.1
+    #             print(graph_y)
+    #             if size>expect:
+    #                 color_change.append(query[0])
+                
+    #         dataframe=pd.DataFrame({
+    #                     'Plant Name': variables_x,
+    #                     'Maximum height': variables_y,
+    #                     'Growth form' : color,
+    #                     'Family' : family,
+    #                     'Function':function,
+    #                     'Time before harvest':time_to_fh,
+    #                     'Life history':life_hist,
+    #                     'Longevity':longev_prod,
+    #                     'Graph height':graph_y,
+    #                 })
+    #         dataframe['Graph color'] = dataframe['Growth form']
+    #         dataframe.loc[dataframe['Plant Name'].isin(color_change), 'Graph color'] = 'Dead'
+    #         fig = px.bar(dataframe, 
+    #             x='Plant Name', 
+    #             y='Graph height', 
+    #             color='Graph color', 
+    #             labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height (m)'},
+    #             category_orders={'Plant Name' : variables_x},
+    #             hover_name="Plant Name",
+    #             hover_data={'Maximum height':True, 'Family':True, 'Growth form':True, 'Function':True,'Time before harvest':True,'Life history':True,'Longevity':True,'Graph height':False})
+            
+    #         fig.update_layout(height=650)
+            
+    #         return fig
     def plot_plants():
         if input.database_choice() == "Practitioner's Database":
-            size=input.life_time()
-            df=open_csv(FILE_NAME)
-            plants=input.overview_plants()
-            variables_x,variables_y,color,family,function,time_to_fh,life_hist,longev_prod,links,graph_y,color_change=[],[],[],[],[],[],[],[],[],[],[]
+            size = input.life_time()
+            df = open_csv(FILE_NAME)
+            plants = input.overview_plants()
+
+            # Growth form -> color mapping:
+            growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
+            colors = ['#53c5ff', '#49d1d5', '#dbb448', '#f8827a', '#ff8fda', '#45d090', '#779137', '#d7a0ff']
+            
+            # Create a dictionary from growth form to color:
+            color_discrete_map = dict(zip(growth_forms, colors))
+            # Add the "Dead" color mapping:
+            color_discrete_map['Dead'] = 'black'
+            
             if not plants:
                 print("No plants selected. Returning an empty figure.")
                 return None
+
+            # Prepare data containers
+            variables_x, variables_y = [], []
+            color, family, function = [], [], []
+            time_to_fh, life_hist, longev_prod = [], [], []
+            links, graph_y, color_change = [], [], []
+
             for plant in plants:
-                query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','plant_max_height','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status','ref']].values.tolist()[0]
-                variables_x.append(query[0]),color.append(query[1]),family.append(str(query[3])),function.append(str(query[4])),time_to_fh.append(str(query[5])),life_hist.append(str(query[6])),longev_prod.append(str(query[7])),links.append([query[8]])
-                if str(query[2])=='nan':
+                query = df.query("common_en == '%s'" % plant)[
+                    [
+                        'common_en',     # 0
+                        'growth_form',   # 1
+                        'plant_max_height',
+                        'family',
+                        'function',
+                        'yrs_ini_prod',
+                        'life_hist',
+                        'longev_prod',
+                        'threat_status', # 8
+                        'ref'           # 9
+                    ]
+                ].values.tolist()[0]
+
+                variables_x.append(query[0])  # Plant name
+                color.append(str(query[1]))   # Growth form
+                family.append(str(query[3]))
+                function.append(str(query[4]))
+                time_to_fh.append(str(query[5]))
+                life_hist.append(str(query[6]))
+                longev_prod.append(str(query[7]))
+                links.append([query[8]])
+
+                # Handle missing max height
+                if pd.isna(query[2]):
                     variables_y.append(3)
                 else:
                     variables_y.append(query[2])
-                if str(query[7])=='nan' or query[7]==0:
-                    expect=7
+
+                # Calculate expected longevity
+                if pd.isna(query[7]) or query[7] == 0:
+                    expect = 7
                 else:
-                    expect=query[7]
-                if str(query[2])=='nan':
-                    graph_y_max=3
+                    expect = query[7]
+
+                # graph_y_max is the "full" height
+                if pd.isna(query[2]):
+                    graph_y_max = 3
                 else:
-                    graph_y_max=query[2]
-                graph_y.append(min(graph_y_max,size*graph_y_max/expect))
-                if size==0:
-                    graph_y[-1]=0.1
-                print(graph_y)
-                if size>expect:
+                    graph_y_max = query[2]
+
+                # Scale the bar height by size relative to expect
+                graph_y_value = min(graph_y_max, size * graph_y_max / expect)
+                if size == 0:
+                    graph_y_value = 0.1
+                graph_y.append(graph_y_value)
+
+                # Check if size > expect => "Dead"
+                if size > expect:
                     color_change.append(query[0])
-                
-            dataframe=pd.DataFrame({
-                        'Plant Name': variables_x,
-                        'Maximum height': variables_y,
-                        'Growth form' : color,
-                        'Family' : family,
-                        'Function':function,
-                        'Time before harvest':time_to_fh,
-                        'Life history':life_hist,
-                        'Longevity':longev_prod,
-                        'Graph height':graph_y,
-                    })
+
+            # Build final dataframe
+            dataframe = pd.DataFrame({
+                'Plant Name': variables_x,
+                'Maximum height': variables_y,
+                'Growth form': color,
+                'Family': family,
+                'Function': function,
+                'Time before harvest': time_to_fh,
+                'Life history': life_hist,
+                'Longevity': longev_prod,
+                'Graph height': graph_y
+            })
+
+            # Default color is 'Growth form', but mark dead plants
             dataframe['Graph color'] = dataframe['Growth form']
             dataframe.loc[dataframe['Plant Name'].isin(color_change), 'Graph color'] = 'Dead'
-            fig = px.bar(dataframe, 
-                x='Plant Name', 
-                y='Graph height', 
-                color='Graph color', 
-                labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height (m)'},
-                category_orders={'Plant Name' : variables_x},
-                hover_name="Plant Name",
-                hover_data={'Maximum height':True, 'Family':True, 'Growth form':True, 'Function':True,'Time before harvest':True,'Life history':True,'Longevity':True,'Graph height':False})
-            
-            fig.update_layout(height=650)
-            
-            return fig
 
+            # Create the bar chart
+            fig = px.bar(
+                dataframe,
+                x='Plant Name',
+                y='Graph height',
+                color='Graph color',
+                labels={
+                    'Plant Name': 'Plant Name',
+                    'Graph height': 'Height (m)'
+                },
+                category_orders={'Plant Name': variables_x},
+                hover_name="Plant Name",
+                hover_data={
+                    'Maximum height': True,
+                    'Family': True,
+                    'Growth form': True,
+                    'Function': True,
+                    'Time before harvest': True,
+                    'Life history': True,
+                    'Longevity': True,
+                    'Graph height': False
+                },
+                color_discrete_map=color_discrete_map
+            )
+
+            fig.update_layout(height=650)
+            fig.update_xaxes(showgrid=False)
+            fig.update_yaxes(showgrid=False)
+            fig.update_layout(plot_bgcolor='lightgrey')
+            return fig
 
 ##Other Species
 

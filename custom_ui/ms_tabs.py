@@ -167,8 +167,8 @@ main_species = ui.nav_panel(
             ui.div(
                 ui.div(
                     ui.p("Lifetime", class_="bold-text"),
-                    ui.help_text("Visualize the growth of every species over time"),
-                    ui.input_slider("life_time", "", min=0, max=101, value=1), 
+                    ui.help_text("Visualize the growth of selected species over time"),
+                    ui.input_slider("life_time", "", min=0, max=101, value=1, step = 0.5), 
                     class_="center-content"
                 ),
                 class_="grey-container"
