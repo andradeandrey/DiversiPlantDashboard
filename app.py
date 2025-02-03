@@ -55,4 +55,4 @@ app.add_middleware(SessionMiddleware, secret_key="feur")
 SHINY_HOSTNAME = "http://localhost:8000/"
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host='0.0.0.0', port=8000)
+    uvicorn.run("app:app", host='0.0.0.0', port=8000, workers=16, ws_ping_interval = 48000, ws_ping_timeout= None)
