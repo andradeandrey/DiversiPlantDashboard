@@ -1,5 +1,5 @@
 #install packages#
-install.packages("GFIT")
+install.packages("GIFT")
 
 #call packages#
 library("GIFT")

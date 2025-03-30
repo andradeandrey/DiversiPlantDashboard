@@ -18,8 +18,12 @@ from custom_ui.climate_tabs import climate
 from custom_ui.ms_tabs import main_species
 
 from custom_server.server_app import server_app
-
+from custom_server.server_homepage import server_homepage
 css_file = os.path.join(Path(__file__).parent,"data","ui.css")
+
+
+# TODO: mount each tab like litefarm dashboard.
+
 
 app_ui=ui.page_fluid(
     ui.include_css(css_file),
@@ -30,7 +34,7 @@ app_ui=ui.page_fluid(
     main_species,
     # details,
     other_species,
-    title=ui.div("Agroforestry Dashboard", class_="title"),
+    title=ui.div("DiversiPlant", class_="title"),
     )
 )
 
@@ -52,7 +56,6 @@ routes = [
 app = Starlette(routes=routes)
 app.add_middleware(SessionMiddleware, secret_key="feur")
 
-SHINY_HOSTNAME = "http://localhost:8000/"
-
 if __name__ == "__main__":
-    uvicorn.run("app:app", host='0.0.0.0', port=8000, workers=16, ws_ping_interval = 48000, ws_ping_timeout= None)
+    uvicorn.run("app:app", host='127.0.0.1', port=8001, workers=16, ws_ping_interval = 48000, ws_ping_timeout= None)
+    

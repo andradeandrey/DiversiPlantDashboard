@@ -1032,3 +1032,7 @@ def server_app(input,output,session):
         img_path = "data/img/growth_form_graph.png"  # Replace with your image file name
         return {"src": img_path, "alt": "Growth Form"}
 
+    # @render.image
+    # def homepage_image():
+    #     img_path = "data/img/homepage.jpg"
+    #     return {"src": img_path}

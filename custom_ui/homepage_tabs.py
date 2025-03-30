@@ -51,7 +51,8 @@ homepage = ui.nav_panel(
             ),
             ui.column(
                 6,  # Right column taking the other half
-                ui.img(src="/img/homepage.jpg", style="width: 95%; height: 100%; object-fit: cover;"),
+                # ui.output_image("homepage_image", width="95%", height="100%"),
+                ui.img(src="img/homepage.jpg", style="width: 95%; height: 100%; object-fit: cover;"),
                 style="display: flex; align-items: stretch; padding: 0px 0px;"
             ),
         ),
