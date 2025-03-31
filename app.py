@@ -44,12 +44,12 @@ shiny_app = App(app_ui, server_app, static_assets=static_dir)
 
 # Redirect root to your shiny app
 async def redirect_handler(request):
-    return RedirectResponse(url="/shiny")
+    return RedirectResponse(url="/diversiplant")
 
 # Set up routes
 routes = [
     Route("/", endpoint=redirect_handler),
-    Mount("/shiny", app=shiny_app)
+    Mount("/diversiplant", app=shiny_app)
 ]
 
 # Create the Starlette app
