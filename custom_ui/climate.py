@@ -4,7 +4,12 @@ from pathlib import Path
 from shinywidgets import output_widget
 from shiny import ui, render, reactive
 
-climate = ui.nav_panel("❷ Climate",
+climate = ui.nav_panel(
+    ui.div(
+        ui.span("2", class_="badge bg-secondary rounded-circle me-2"),
+        ui.span("Climate"),
+        class_="d-flex align-items-center"
+    ),
     ui.page_fluid(
         ui.h1("Climate", class_="text-center mb-4"),
         ui.div(
@@ -16,8 +21,6 @@ climate = ui.nav_panel("❷ Climate",
 
 
 # In your server function, add this:
-
-
 
 # FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_CSV.csv")
 

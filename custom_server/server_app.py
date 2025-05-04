@@ -125,365 +125,9 @@ def server_app(input,output,session):
 
 ##Main Species
 
-    #This function creates the stratum graph
-    # @render_widget
-    # def intercrops():
-    #     if input.database_choice() == "Practitioner's Database": #Ignore the creation of the graph if the we don't select the good data source
-    #         data=tri()[0]
-    #         max=0
-    #         fig=go.Figure()
-    #         repartition={0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[]}
-    #         for plant in data:
-    #             repartition[plant[4]].append(plant)
-    #         for indice in range(9):
-    #             n=len(repartition[indice])
-    #             if n == 0:
-    #                 pass
-    #             elif n == 1:
-    #                 info=repartition[indice][0]
-    #                 fig.add_trace(go.Scatter(x=[info[2], info[2]+info[3]], y=[indice+0.5, indice+0.5], name=info[0],mode='lines',line=dict(color=COLOR[info[1]], width=5), showlegend=False))
-    #                 fig.add_annotation(x=info[2],y=indice+0.5,text=info[0],font=dict(color="black"), align="center",ax=-10,ay=-15,bgcolor="white")
-    #                 if info[2]+info[3]>max:
-    #                     max=info[2]+info[3]
-    #             else:
-    #                 for i in range(n):
-    #                     info=repartition[indice][i]
-    #                     fig.add_trace(go.Scatter(x=[info[2], info[2]+info[3]], y=[indice+(0.1+0.8*i/(n-1)), indice+(0.1+0.8*i/(n-1))],name=info[0], mode='lines',line=dict(color=COLOR[info[1]], width=5), showlegend=False))
-    #                     fig.add_annotation(x=info[2],y=indice+(0.1+0.8*i/(n-1)),text=info[0],font=dict(color="black"),align="center",ax=-10,ay=-15,bgcolor="white")
-    #                     if info[2]+info[3]>max:
-    #                         max=info[2]+info[3]
-    #         for i in STRATUM[input.number_of_division()][0]:
-    #             fig.add_trace(go.Scatter(x=[0, max], y=[i, i], mode='lines',line=dict(color='black', width=0.5),showlegend=False))
-    #         custom_y_labels = STRATUM[input.number_of_division()][1]
-    #         growth_forms=['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub','subshrub','tree']
-    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda','#45d090',"#779137",'#d7a0ff']
-    #         for growth, colr in zip(growth_forms, colors):
-    #             fig.add_trace(go.Scatter(
-    #                 x=[None],  
-    #                 y=[None],
-    #                 mode='markers',
-    #                 marker=dict(size=10, color=colr),
-    #                 showlegend=True,
-    #                 name=growth,
-    #             ))
-    #         fig.update_yaxes(tickvals=list(custom_y_labels.keys()),ticktext=list(custom_y_labels.values()))
-    #         fig.update_xaxes(title_text = 'Growth Period (year)') 
-    #         fig.update_yaxes(title_text = 'Stratum')
-    #         fig.update_layout(height=600)
-    #         return figimport plotly.graph_objects as go
-
-
-# ! WORKS
-    # @render_widget
-    # def intercrops():
-    #     if input.database_choice() == "Practitioner's Database":  
-    #         data = tri()[0]  # Fetch Data
-    #         # ✅ Check if data is empty
-    #         if not data:
-    #             return go.Figure()  # Return empty figure if no data
-    #         # 1️⃣ Determine dynamic range for bins based on data
-    #         min_x = min([plant[2] for plant in data])  # Minimum Harvest Period
-    #         max_x = max([plant[2] + plant[3] for plant in data])  # Maximum Harvest Period (Start + Duration)
-
-    #         min_y = min([plant[4] for plant in data])  # Minimum Light Demand (Stratum)
-    #         max_y = max([plant[4] for plant in data])  # Maximum Light Demand (Stratum)
-
-    #         # 2️⃣ Define number of divisions (keeping bins structured)
-    #         num_x_bins = 4  # Define number of x bins (adjustable)
-    #         num_y_bins = 4  # Define number of y bins (adjustable)
-
-    #         # 3️⃣ Create dynamically divided bins
-    #         x_bins = np.linspace(min_x, max_x, num_x_bins).tolist()  # Create evenly spaced X bins
-    #         y_bins = np.linspace(min_y, max_y, num_y_bins).tolist()  # Create evenly spaced Y bins
-
-    #         # 4️⃣ Define Colors for Growth Forms
-    #         growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
-    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
-    #         color_map = dict(zip(growth_forms, colors))
-
-    #         # 5️⃣ Initialize Figure
-    #         fig = go.Figure()
-
-    #         # 6️⃣ Add Background Grid (Rectangles)
-    #         for i in range(len(x_bins) - 1):
-    #             for j in range(len(y_bins) - 1):
-    #                 fig.add_shape(
-    #                     type="rect",
-    #                     x0=x_bins[i], x1=x_bins[i+1],
-    #                     y0=y_bins[j], y1=y_bins[j+1],
-    #                     line=dict(color="black", width=1),
-    #                     fillcolor="rgba(100,100,100,0.2)",  # Light grey for grid cells
-    #                 )
-
-    #         # 7️⃣ Place Plants Inside Fixed Boxes
-    #         for plant in data:
-    #             name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
-
-    #             # 8️⃣ Determine the correct bin for placement (ensuring species are included)
-    #             x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
-    #             y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
-
-    #             # 9️⃣ Prevent IndexError when accessing next bin
-    #             x_bin_index = x_bins.index(x_bin)
-    #             y_bin_index = y_bins.index(y_bin)
-
-    #             if x_bin_index < len(x_bins) - 1:
-    #                 x_center = (x_bin + x_bins[x_bin_index + 1]) / 2
-    #             else:
-    #                 x_center = x_bin  # Stay within bounds
-
-    #             if y_bin_index < len(y_bins) - 1:
-    #                 y_center = (y_bin + y_bins[y_bin_index + 1]) / 2
-    #             else:
-    #                 y_center = y_bin  # Stay within bounds
-
-    #             # 🔟 Plot Species in the Assigned Box
-    #             fig.add_trace(go.Scatter(
-    #                 x=[x_center],  # Safe X placement
-    #                 y=[y_center],  # Safe Y placement
-    #                 mode="markers",
-    #                 marker=dict(size=15, color=color_map.get(growth_type, "grey")),
-    #                 name=name,
-    #                 showlegend=False
-    #             ))
-
-    #             # 🔟 Add Label Inside the Box
-    #             fig.add_annotation(
-    #                 x=x_center,
-    #                 y=y_center,
-    #                 text=name, 
-    #                 font=dict(color="white"), 
-    #                 showarrow=False,
-    #                 bgcolor="black"
-    #             )
-
-    #         # 🔟 Add Legend for Growth Forms
-    #         for growth, colr in color_map.items():
-    #             fig.add_trace(go.Scatter(
-    #                 x=[None],  
-    #                 y=[None],
-    #                 mode='markers',
-    #                 marker=dict(size=10, color=colr),
-    #                 showlegend=True,
-    #                 name=growth
-    #             ))
-
-    #         # 🔟 Configure Axes Labels and Grid
-    #         fig.update_xaxes(title_text="Harvest Period (Years After Planting)", zeroline=False, tickvals=x_bins)
-    #         fig.update_yaxes(title_text="Light Demand (Stratum)", zeroline=False, tickvals=y_bins)
-
-    #         # 🔟 Set Graph Layout
-    #         fig.update_layout(
-    #             height=600,
-    #             plot_bgcolor="white",
-    #             showlegend=True
-    #         )
-
-    #         return fig
-# ! UPDATED below:  
-    # @render_widget
-    # def intercrops():
-    #     if input.database_choice() == "Practitioner's Database":  
-    #         data = tri()[0]  # Fetch Data
-    #         print(data)
-    #         if not data:
-    #             return go.Figure()  # Return empty figure if no data
-
-    #         # Determine dynamic range for bins
-    #         min_x = min([plant[2] for plant in data])  
-    #         max_x = max([plant[2] + plant[3] for plant in data])  
-
-    #         min_y = min([plant[4] for plant in data])  
-    #         max_y = max([plant[4] for plant in data])  
-
-    #         num_x_bins = 4  
-    #         num_y_bins = 4  
-
-    #         x_bins = np.linspace(min_x, max_x, num_x_bins).tolist()  
-    #         y_bins = np.linspace(min_y, max_y, num_y_bins).tolist()  
-
-    #         # Growth Form Mappings
-    #         growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
-    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
-    #         symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
-
-    #         color_map = dict(zip(growth_forms, colors))
-    #         symbol_map = dict(zip(growth_forms, symbols))
-
-    #         fig = go.Figure()
-
-    #         # Add Background Grid
-    #         for i in range(len(x_bins) - 1):
-    #             for j in range(len(y_bins) - 1):
-    #                 fig.add_shape(
-    #                     type="rect",
-    #                     x0=x_bins[i], x1=x_bins[i+1],
-    #                     y0=y_bins[j], y1=y_bins[j+1],
-    #                     line=dict(color="black", width=1),
-    #                     fillcolor="rgba(100,100,100,0.2)",
-    #                 )
-
-    #         # Place Plants Inside Bins
-    #         for plant in data:
-    #             name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
-
-    #             x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
-    #             y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
-
-    #             x_bin_index = x_bins.index(x_bin)
-    #             y_bin_index = y_bins.index(y_bin)
-
-    #             x_center = (x_bin + x_bins[x_bin_index + 1]) / 2 if x_bin_index < len(x_bins) - 1 else x_bin
-    #             y_center = (y_bin + y_bins[y_bin_index + 1]) / 2 if y_bin_index < len(y_bins) - 1 else y_bin
-
-    #             # Add Plant Symbols with Tooltip
-    #             fig.add_trace(go.Scatter(
-    #                 x=[x_center],  
-    #                 y=[y_center],  
-    #                 mode="markers",
-    #                 marker=dict(
-    #                     size=15, 
-    #                     color=color_map.get(growth_type, "grey"), 
-    #                     symbol=symbol_map.get(growth_type, "circle")
-    #                 ),
-    #                 name=growth_type,
-    #                 hoverinfo="text",
-    #                 text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {x_start} yrs<br> Duration: {duration} yrs<br> Stratum: {y_position}"
-    #             ))
-
-    #         # Add Legend for Growth Forms
-    #         for growth, colr in color_map.items():
-    #             fig.add_trace(go.Scatter(
-    #                 x=[None],  
-    #                 y=[None],
-    #                 mode='markers',
-    #                 marker=dict(size=10, color=colr, symbol=symbol_map[growth]),
-    #                 showlegend=True,
-    #                 name=growth
-    #             ))
-
-    #         # Configure Axes
-    #         fig.update_xaxes(title_text="Harvest Period (Years After Planting)", zeroline=False, tickvals=x_bins)
-    #         fig.update_yaxes(title_text="Light Demand (Stratum)", zeroline=False, tickvals=y_bins)
-
-    #         # Set Graph Layout
-    #         fig.update_layout(
-    #             height=600,
-    #             plot_bgcolor="white",
-    #             showlegend=True
-    #         )
-
-    #         return fig
-# ! UPDATED ABOVE
-    # @render_widget
-    # def intercrops():
-    #     if input.database_choice() == "Practitioner's Database":  
-    #         data = tri()[0]  # Fetch Data
-    #         print(data)
-    #         if not data:
-    #             return None  # Return empty figure if no data
-
-    #         # Determine dynamic range for bins
-    #         min_x = min([plant[2] for plant in data])  
-    #         max_x = max([plant[2] + plant[3] for plant in data])  
-
-    #         min_y = min([plant[4] for plant in data])  
-    #         max_y = max([plant[4] for plant in data])  
-
-    #         num_x_bins = 4  
-    #         num_y_bins = 4  
-
-    #         x_bins = np.linspace(min_x, max_x, num_x_bins).tolist()  
-    #         y_bins = np.linspace(min_y, max_y, num_y_bins).tolist()  
-
-    #         # Growth Form Mappings
-    #         growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
-    #         colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
-    #         symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
-
-    #         color_map = dict(zip(growth_forms, colors))
-    #         symbol_map = dict(zip(growth_forms, symbols))
-
-    #         fig = go.Figure()
-
-    #         # 🎯 ADD FIXED LEGEND (TOP - SEPARATE FROM PLOTLY'S LEGEND)
-    #         fixed_legend_x = np.linspace(min_x, max_x, len(growth_forms))  # Spread symbols evenly
-    #         fixed_legend_y = [max_y + (max_y * 0.1)] * len(growth_forms)  # Position above plot
-
-    #         for i, growth in enumerate(growth_forms):
-    #             fig.add_trace(go.Scatter(
-    #                 x=[fixed_legend_x[i]],  
-    #                 y=[fixed_legend_y[i]],  
-    #                 mode="markers+text",
-    #                 marker=dict(size=15, color=color_map[growth], symbol=symbol_map[growth]),
-    #                 text=growth,  # Growth form name
-    #                 textposition="top center",
-    #                 showlegend=False  # Hide from plotly legend
-    #             ))
-
-    #         # Add Background Grid
-    #         for i in range(len(x_bins) - 1):
-    #             for j in range(len(y_bins) - 1):
-    #                 fig.add_shape(
-    #                     type="rect",
-    #                     x0=x_bins[i], x1=x_bins[i+1],
-    #                     y0=y_bins[j], y1=y_bins[j+1],
-    #                     line=dict(color="black", width=1),
-    #                     fillcolor="rgba(100,100,100,0.2)",
-    #                 )
-
-    #         # Place Plants Inside Bins (Dynamic Legend)
-    #         for plant in data:
-    #             name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
-
-    #             x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
-    #             y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
-
-    #             x_bin_index = x_bins.index(x_bin)
-    #             y_bin_index = y_bins.index(y_bin)
-
-    #             x_center = (x_bin + x_bins[x_bin_index + 1]) / 2 if x_bin_index < len(x_bins) - 1 else x_bin
-    #             y_center = (y_bin + y_bins[y_bin_index + 1]) / 2 if y_bin_index < len(y_bins) - 1 else y_bin
-
-    #             # Add Plant Symbols with Tooltip
-    #             fig.add_trace(go.Scatter(
-    #                 x=[x_center],  
-    #                 y=[y_center],  
-    #                 mode="markers",
-    #                 marker=dict(
-    #                     size=15, 
-    #                     color=color_map.get(growth_type, "grey"), 
-    #                     symbol=symbol_map.get(growth_type, "circle")
-    #                 ),
-    #                 name=name,  # Only plant name appears in dynamic legend
-    #                 showlegend=True,
-    #                 hoverinfo="text",
-    #                 text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {x_start} yrs<br> Duration: {duration} yrs<br> Stratum: {y_position}"
-    #             ))
-
-    #         # Configure Axes
-    #         fig.update_xaxes(title_text="Harvest Period (Years After Planting)", zeroline=False, tickvals=x_bins)
-    #         fig.update_yaxes(title_text="Light Demand (Stratum)", zeroline=False, tickvals=y_bins)
-
-    #         # Set Graph Layout
-    #         fig.update_layout(
-    #             height=600,
-    #             plot_bgcolor="white",
-    #             showlegend=True,
-    #             legend=dict(
-    #                 orientation="v",  # Dynamic legend remains vertical (on right)
-    #                 yanchor="top",
-    #                 y=0.98,  
-    #                 xanchor="left",
-    #                 x=1.02,  # Moves the dynamic legend to the right
-    #                 tracegroupgap=5
-    #             )
-    #         )
-
-    #         return fig
     @render_widget
     def intercrops():
-        if input.database_choice() == "Practitioner's Database":  
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":  
             data = tri()[0]  # Fetch Data
             print(data)
             if not data:
@@ -603,7 +247,7 @@ def server_app(input,output,session):
     @output
     @render.ui
     def card_wrong_plant():
-        if input.database_choice() == "Practitioner's Database": #Ignore the creation of the graph if the we don't select the good data source
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.": #Ignore the creation of the graph if the we don't select the good data source
             cards = []
             card_one,card_two=tri()[1],tri()[2]
             first_list,second_list=[],[]
@@ -632,7 +276,7 @@ def server_app(input,output,session):
     @output
     @render.ui
     def compatibility():
-        if input.database_choice() == "Practitioner's Database": #Ignore the creation of the graph if the we don't select the good data source
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.": #Ignore the creation of the graph if the we don't select the good data source
             df=open_csv(FILE_NAME)
             plants=input.overview_plants()
             issue=[]
@@ -684,9 +328,9 @@ def server_app(input,output,session):
         return [good,bad_year,bad_stratum]
 
     #This function run the R code to get the new species list if the GIFT database is chosen. Otherwise it returns the Practitioner's Database
-    @reactive.event(input.update_database)
+    @reactive.event(input.update_map)
     def get_new_species():
-        if input.database_choice() == "GIFT Database":
+        if input.database_choice() == "✔️ Most known species. ✔️ Botanical details. ✔️ Filtered for your location. ❌ Slow.":
             global SPECIES_GIFT_DATAFRAME
             flor_group=FLORISTIC_GROUP[input.floristic_group()]
             
@@ -730,7 +374,7 @@ def server_app(input,output,session):
 
     #This function updates the choices on the sidebar of main species
     @reactive.effect
-    @reactive.event(input.update_database)
+    @reactive.event(input.update_map)
     def update_main_species():
         dict=get_new_species()
         ui.update_selectize(
@@ -740,113 +384,92 @@ def server_app(input,output,session):
             server=True,
         )
 
-    #This function allows to download the species
+    # #This function allows to download the species
+    # Replace both download functions with these modified versions
+    # * for now we are removing this button.
     @output
-    @render.download(filename=f"studied_data.csv")
+    @render.download(filename=f"selected_species_data.csv")
     def export_df():
-        if input.database_choice()=="Practitioner's Database":
-            yield open_csv(FILE_NAME).to_csv()
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+            # Get the full dataset
+            df = open_csv(FILE_NAME)
+            # Filter only selected plants
+            plants = input.overview_plants()
+            selected_df = df[df['common_en'].isin(plants)]
+            # Return the filtered CSV
+            yield selected_df.to_csv(index=False)
         else:
-            yield SPECIES_GIFT_DATAFRAME.to_csv()
-    ## Export the data:
+            # For GIFT database
+            global SPECIES_GIFT_DATAFRAME
+            selected_plants = input.overview_plants()
+            
+            if SPECIES_GIFT_DATAFRAME.empty:
+                yield "No data available."
+            elif 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
+                # Filter by selected plants
+                selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
+                yield selected_df.to_csv(index=False)
+            else:
+                yield "Unable to filter GIFT database."
+                
     @output
-    @render.download(filename=lambda: f"{input.database_choice().replace(' ', '_').lower()}_data.csv")
+    @render.download(filename=lambda: f"selected_{input.database_choice().replace(' ', '_').lower()}_data.csv")
     def export_df_os():
-        if input.database_choice() == "Practitioner's Database":
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
-            stratums = []
             
-            for plant in plants:
-                query = df.query("common_en == '%s'" % plant)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
-                if str(query[3]) != 'nan' and str(query[2]) != 'nan' and str(query[1]) != 'nan':
-                    stratums.append(query[3])
-
-            first_sgg = df[~df['stratum'].isin(stratums)]
-            first_sgg = first_sgg[first_sgg['stratum'].notna()]
-            first_sgg = first_sgg[['common_en','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
+            # Filter to only include selected plants
+            selected_df = df[df['common_en'].isin(plants)]
             
-            total_sgg = first_sgg[~df['common_en'].isin(plants)]
-            total_sgg = total_sgg.fillna("-")
-            total_sgg = total_sgg.sort_values(by='common_en')
+            # Keep only the columns we want
+            selected_columns = ['common_en', 'growth_form', 'plant_max_height', 'stratum', 
+                            'family', 'function', 'yrs_ini_prod', 'life_hist', 
+                            'longev_prod', 'threat_status']
             
-            yield total_sgg.to_csv(index=False)
-
+            # Select columns that exist in the dataframe
+            columns_to_keep = [col for col in selected_columns if col in selected_df.columns]
+            selected_df = selected_df[columns_to_keep]
+            
+            # Format the dataframe
+            selected_df = selected_df.fillna("-")
+            selected_df = selected_df.sort_values(by='common_en')
+            
+            yield selected_df.to_csv(index=False)
         else:
             global SPECIES_GIFT_DATAFRAME
             if SPECIES_GIFT_DATAFRAME.empty:
                 print("SPECIES_GIFT_DATAFRAME is not populated.")
-                yield "Data not available."  # You can customize this message as needed
+                yield "Data not available."
             else:
-                SPECIES_GIFT_DATAFRAME = SPECIES_GIFT_DATAFRAME.fillna("-")
-                SPECIES_GIFT_DATAFRAME = SPECIES_GIFT_DATAFRAME.sort_values("family")
-                unecessary_columns = ['ref_ID', 'list_ID', 'entity_ID', 'work_ID', 'genus_ID', 'questionable', 'quest_native', 'endemic_ref', 'quest_end_ref', 'quest_end_list']
-                SPECIES_GIFT_DATAFRAME = SPECIES_GIFT_DATAFRAME.drop(columns=unecessary_columns)
+                # Filter by selected plants
+                selected_plants = input.overview_plants()
                 
-                yield SPECIES_GIFT_DATAFRAME.to_csv(index=False)
-
+                if 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
+                    selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
+                    
+                    # Format the dataframe
+                    selected_df = selected_df.fillna("-")
+                    selected_df = selected_df.sort_values("family")
+                    
+                    # Remove unnecessary columns
+                    unnecessary_columns = ['ref_ID', 'list_ID', 'entity_ID', 'work_ID', 'genus_ID', 
+                                        'questionable', 'quest_native', 'endemic_ref', 
+                                        'quest_end_ref', 'quest_end_list']
+                    
+                    # Only drop columns that exist
+                    columns_to_drop = [col for col in unnecessary_columns if col in selected_df.columns]
+                    if columns_to_drop:
+                        selected_df = selected_df.drop(columns=columns_to_drop)
+                    
+                    yield selected_df.to_csv(index=False)
+                else:
+                    yield "Unable to filter GIFT database. Column structure may be different than expected."
 ##Growth Form
 
     # # This functions creates the barchart and make it evolve depending on the lifetime chosen
-    @render_widget
-    # def plot_plants():
-    #     if input.database_choice() == "Practitioner's Database":
-    #         size=input.life_time()
-    #         df=open_csv(FILE_NAME)
-    #         plants=input.overview_plants()
-    #         variables_x,variables_y,color,family,function,time_to_fh,life_hist,longev_prod,links,graph_y,color_change=[],[],[],[],[],[],[],[],[],[],[]
-    #         if not plants:
-    #             print("No plants selected. Returning an empty figure.")
-    #             return None
-    #         for plant in plants:
-    #             query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','plant_max_height','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status','ref']].values.tolist()[0]
-    #             variables_x.append(query[0]),color.append(query[1]),family.append(str(query[3])),function.append(str(query[4])),time_to_fh.append(str(query[5])),life_hist.append(str(query[6])),longev_prod.append(str(query[7])),links.append([query[8]])
-    #             if str(query[2])=='nan':
-    #                 variables_y.append(3)
-    #             else:
-    #                 variables_y.append(query[2])
-    #             if str(query[7])=='nan' or query[7]==0:
-    #                 expect=7
-    #             else:
-    #                 expect=query[7]
-    #             if str(query[2])=='nan':
-    #                 graph_y_max=3
-    #             else:
-    #                 graph_y_max=query[2]
-    #             graph_y.append(min(graph_y_max,size*graph_y_max/expect))
-    #             if size==0:
-    #                 graph_y[-1]=0.1
-    #             print(graph_y)
-    #             if size>expect:
-    #                 color_change.append(query[0])
-                
-    #         dataframe=pd.DataFrame({
-    #                     'Plant Name': variables_x,
-    #                     'Maximum height': variables_y,
-    #                     'Growth form' : color,
-    #                     'Family' : family,
-    #                     'Function':function,
-    #                     'Time before harvest':time_to_fh,
-    #                     'Life history':life_hist,
-    #                     'Longevity':longev_prod,
-    #                     'Graph height':graph_y,
-    #                 })
-    #         dataframe['Graph color'] = dataframe['Growth form']
-    #         dataframe.loc[dataframe['Plant Name'].isin(color_change), 'Graph color'] = 'Dead'
-    #         fig = px.bar(dataframe, 
-    #             x='Plant Name', 
-    #             y='Graph height', 
-    #             color='Graph color', 
-    #             labels={'Plant Name':'Plant Name', 'Graph height':'Graph Height (m)'},
-    #             category_orders={'Plant Name' : variables_x},
-    #             hover_name="Plant Name",
-    #             hover_data={'Maximum height':True, 'Family':True, 'Growth form':True, 'Function':True,'Time before harvest':True,'Life history':True,'Longevity':True,'Graph height':False})
-            
-    #         fig.update_layout(height=650)
-            
-    #         return fig
     def plot_plants():
-        if input.database_choice() == "Practitioner's Database":
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
             size = input.life_time()
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
@@ -971,51 +594,208 @@ def server_app(input,output,session):
             fig.update_layout(plot_bgcolor='lightgrey')
             return fig
 
-##Other Species
+## * Results
+    # Define available columns based on database choice
+    def get_available_columns():
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+            # Columns for Practitioner's Database
+            return [
+                "common_en", "growth_form", "plant_max_height", "stratum", 
+                "family", "function", "yrs_ini_prod", "life_hist", 
+                "longev_prod", "threat_status", "ref"
+            ]
+        else:
+            # Columns for GIFT Database
+            # Adjust these based on your actual GIFT database structure
+            gift_columns = [
+                "work_species", "taxon_name", "taxon_rank", "family", 
+                "genus", "endemic", "native", "naturalized"
+            ]
+            # Add any other columns that exist in SPECIES_GIFT_DATAFRAME
+            if not SPECIES_GIFT_DATAFRAME.empty:
+                # Get all columns except those that are typically unnecessary
+                unnecessary = ['ref_ID', 'list_ID', 'entity_ID', 'work_ID', 'genus_ID', 
+                            'questionable', 'quest_native', 'endemic_ref', 
+                            'quest_end_ref', 'quest_end_list']
+                all_cols = [col for col in SPECIES_GIFT_DATAFRAME.columns 
+                            if col not in unnecessary]
+                # Update gift_columns with any missing columns
+                for col in all_cols:
+                    if col not in gift_columns:
+                        gift_columns.append(col)
+            return gift_columns
 
-    #This function return the table of all the species that are not selected. For the Practitioner's Database, it makes suggestion, incompatible plants won't be shown, and for the GIFT one, it just shows the list
+    # Update checkbox options based on database selection
+    @reactive.effect
+    @reactive.event(input.database_choice, input.update_map)
+    def update_column_choices():
+        available_cols = get_available_columns()
+        
+        # Get readable column names for display
+        readable_cols = {col: col.replace('_', ' ').title() for col in available_cols}
+        
+        # Set default selections (first few columns)
+        default_selected = available_cols[:5] if len(available_cols) >= 5 else available_cols
+        
+        ui.update_checkbox_group(
+            "selected_columns",
+            choices=readable_cols,
+            selected=default_selected
+        )
+
+    # Modified suggestion_plants function to use selected columns
     @output
     @render.ui
+    @reactive.event(input.update_map, input.selected_columns)
     def suggestion_plants():
-        if input.database_choice()=="Practitioner's Database":
-            df=open_csv(FILE_NAME)
-            plants=input.overview_plants()
-            cards_suggestion=[]
-            true_plants=[]
-            stratums=[]
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+            df = open_csv(FILE_NAME)
+            plants = input.overview_plants()
             
-            for plant in plants:
-                query=df.query("common_en == '%s'" % plant)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+            # Filter the dataframe to only include the selected plants
+            selected_plants_df = df[df['common_en'].isin(plants)]
+            
+            # Get selected columns (convert from readable back to actual column names if needed)
+            columns = input.selected_columns()
+            
+            # Ensure "common_en" is always included for identification
+            if "common_en" not in columns and "common_en" in df.columns:
+                columns = ["common_en"] + columns
                 
-                if str(query[3])!='nan' and str(query[2])!='nan' and str(query[1])!='nan':
-                    true_plants.append(query)
-                    stratums.append(query[3])
+            # Filter to only include columns that exist in the dataframe
+            valid_columns = [col for col in columns if col in selected_plants_df.columns]
+            
+            if not valid_columns:
+                return ui.p("Please select at least one valid column to display.")
                 
-            first_sgg = df[~df['stratum'].isin(stratums)]
-            first_sgg = first_sgg[first_sgg['stratum'].notna()]
-            first_sgg = first_sgg[['common_en','growth_form','plant_max_height','stratum','family','function','yrs_ini_prod','life_hist','longev_prod','threat_status']]
+            # Select only the desired columns
+            selected_plants_df = selected_plants_df[valid_columns]
             
-            total_sgg = first_sgg[~df['common_en'].isin(plants)]
+            # Fill NA values with "-" for better display
+            table = selected_plants_df.fillna("-")
             
-            table = total_sgg.fillna("-")  # Nice looking na values
-            table = table.sort_values(by='common_en')
-            table=table.reset_index(drop=True)
-
+            # Sort by common_en for consistent ordering (if available)
+            if "common_en" in valid_columns:
+                table = table.sort_values(by='common_en')
+            table = table.reset_index(drop=True)
+            
+            # Display the table with DataTable
+            with pd.option_context("display.float_format", "{:,.2f}".format):
+                return ui.HTML(DT(table))
+        
+        else:  # For GIFT database
+            if SPECIES_GIFT_DATAFRAME.empty:
+                return ui.p("No species data available. Please update your location.")
+            
+            # Filter GIFT dataframe to only include selected plants
+            selected_plants = input.overview_plants()
+            
+            # Check if we have plant names in the work_species column
+            if 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
+                selected_gift_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
+            else:
+                # If not, we might need to adapt this based on your GIFT dataframe structure
+                return ui.p("Unable to filter GIFT database. Please check column structure.")
+            
+            # Get selected columns from input
+            columns = input.selected_columns()
+            
+            # Ensure species identifier column is always included
+            id_column = 'work_species' if 'work_species' in selected_gift_df.columns else None
+            if id_column and id_column not in columns:
+                columns = [id_column] + columns
+                
+            # Filter to only include valid columns
+            valid_columns = [col for col in columns if col in selected_gift_df.columns]
+            
+            if not valid_columns:
+                return ui.p("Please select at least one valid column to display.")
+                
+            # Select only the chosen columns
+            selected_gift_df = selected_gift_df[valid_columns]
+            
+            # Clean up the dataframe
+            table = selected_gift_df.fillna("-")
+            
+            # Sort by appropriate column
+            if id_column and id_column in valid_columns:
+                table = table.sort_values(id_column)
+            elif 'family' in valid_columns:
+                table = table.sort_values('family')
+                
+            table = table.reset_index(drop=True)
+            
             with pd.option_context("display.float_format", "{:,.2f}".format):
                 return ui.HTML(DT(table))
 
-        else:
-            print(SPECIES_GIFT_DATAFRAME)
+    # Also update the export function to use selected columns
+    @output
+    @render.download(filename=lambda: f"selected_{input.database_choice().replace(' ', '_').lower()}_data.csv")
+    def export_df_os():
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+            df = open_csv(FILE_NAME)
+            plants = input.overview_plants()
             
-            table = SPECIES_GIFT_DATAFRAME.fillna("-")
-            table = table.sort_values("family")
-            unecessary_columns=['ref_ID','list_ID','entity_ID','work_ID','genus_ID','questionable','quest_native','endemic_ref','quest_end_ref','quest_end_list']
-            table=table.drop(columns=unecessary_columns)
-            table=table.reset_index(drop=True)
-
-            with pd.option_context("display.float_format", "{:,.2f}".format):
-                    return ui.HTML(DT(table))
-
+            # Filter to only include selected plants
+            selected_df = df[df['common_en'].isin(plants)]
+            
+            # Get selected columns
+            columns = input.selected_columns()
+            
+            # Ensure "common_en" is always included
+            if "common_en" not in columns and "common_en" in df.columns:
+                columns = ["common_en"] + columns
+                
+            # Only use columns that exist
+            valid_columns = [col for col in columns if col in selected_df.columns]
+            
+            if valid_columns:
+                selected_df = selected_df[valid_columns]
+            
+            # Format the dataframe
+            selected_df = selected_df.fillna("-")
+            
+            if "common_en" in valid_columns:
+                selected_df = selected_df.sort_values(by='common_en')
+            
+            yield selected_df.to_csv(index=False)
+        else:
+            global SPECIES_GIFT_DATAFRAME
+            if SPECIES_GIFT_DATAFRAME.empty:
+                print("SPECIES_GIFT_DATAFRAME is not populated.")
+                yield "Data not available."
+            else:
+                # Filter by selected plants
+                selected_plants = input.overview_plants()
+                
+                if 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
+                    selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
+                    
+                    # Get selected columns
+                    columns = input.selected_columns()
+                    
+                    # Ensure species identifier is always included
+                    if "work_species" not in columns and "work_species" in selected_df.columns:
+                        columns = ["work_species"] + columns
+                    
+                    # Only use columns that exist
+                    valid_columns = [col for col in columns if col in selected_df.columns]
+                    
+                    if valid_columns:
+                        selected_df = selected_df[valid_columns]
+                    
+                    # Format the dataframe
+                    selected_df = selected_df.fillna("-")
+                    
+                    if "work_species" in valid_columns:
+                        selected_df = selected_df.sort_values("work_species")
+                    elif "family" in valid_columns:
+                        selected_df = selected_df.sort_values("family")
+                    
+                    yield selected_df.to_csv(index=False)
+                else:
+                    yield "Unable to filter GIFT database. Column structure may be different than expected."
+                    
     @render.image
     def climate_image():
         img_path = "data/img/climate.png"  # Replace with your image file name
@@ -1031,8 +811,3 @@ def server_app(input,output,session):
     def growth_form_image():
         img_path = "data/img/growth_form_graph.png"  # Replace with your image file name
         return {"src": img_path, "alt": "Growth Form"}
-
-    # @render.image
-    # def homepage_image():
-    #     img_path = "data/img/homepage.jpg"
-    #     return {"src": img_path}

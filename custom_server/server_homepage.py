@@ -1,27 +1,18 @@
-import os
-import numpy as np
-import pandas as pd
-from pathlib import Path
-import plotly.express as px
-from shinywidgets import render_widget
-from shiny import render, ui, reactive
-import plotly.graph_objects as go
-from itables.shiny import DT
-from custom_server.agroforestry_server import open_csv, get_Plants
-import geopandas as gpd
-import folium
-from folium import plugins
-from rpy2.robjects.conversion import localconverter
-from rpy2 import robjects
-from rpy2.robjects.packages import importr
-from rpy2.robjects.vectors import StrVector
-import rpy2.robjects.packages as rpackages, data
-from rpy2.robjects import r, pandas2ri 
-from collections import Counter
+# This would go in your custom_server/server_homepage.py file
 
+from shiny import reactive, ui
 
 def server_homepage(input, output, session):
-        @render.image
-        def homepage_image():
-            img_path = "data/img/homepage.jpg"
-            return {"src": img_path}
+    # This function will handle the begin button click
+    @reactive.effect
+    @reactive.event(input.begin_button)
+    def _handle_begin_button():
+        # Check which database is selected
+        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+            # If using Practitioner's Database, navigate to the Species tab
+            # using JavaScript
+            session.send_custom_message("navigate_to_tab", "Main Species")
+        else:
+            # If using GIFT Database, navigate to the Location tab
+            # using JavaScript
+            session.send_custom_message("navigate_to_tab", "Location (GIFT Database)")

@@ -10,12 +10,12 @@ from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 sys.dont_write_bytecode = True
 
-from custom_ui.details_tabs import details
-from custom_ui.homepage_tabs import homepage
-from custom_ui.os_tabs import other_species
-from custom_ui.location_tabs import location
-from custom_ui.climate_tabs import climate
-from custom_ui.ms_tabs import main_species
+# from custom_ui.details_tabs import details
+from custom_ui.start import start
+from custom_ui.results import results
+from custom_ui.location import location
+from custom_ui.climate import climate
+from custom_ui.species import main_species
 
 from custom_server.server_app import server_app
 from custom_server.server_homepage import server_homepage
@@ -28,15 +28,16 @@ css_file = os.path.join(Path(__file__).parent,"data","ui.css")
 app_ui=ui.page_fluid(
     ui.include_css(css_file),
     ui.page_navbar(
-    homepage,
+    start,
     location,
     climate,
     main_species,
     # details,
-    other_species,
+    results,
     title=ui.div("DiversiPlant", class_="title"),
     )
 )
+
 
 
 static_dir = Path(__file__).parent / "data"
@@ -58,4 +59,3 @@ app.add_middleware(SessionMiddleware, secret_key="feur")
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host='127.0.0.1', port=8001, workers=16, ws_ping_interval = 48000, ws_ping_timeout= None)
-    
