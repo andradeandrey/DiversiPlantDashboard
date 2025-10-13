@@ -27,7 +27,7 @@ main_species = ui.nav_panel(
                         ui.p("Which species do you want to plant?", class_="bold-text"),
                         ui.input_selectize("overview_plants", 
                                         "", 
-                                        choices=get_Plants(FILE_NAME),  # Populate dynamically in server
+                                        choices=get_Plants(FILE_NAME),
                                         multiple=True,
                                         options={
                                             "placeholder": "Type name here...",
@@ -43,29 +43,42 @@ main_species = ui.nav_panel(
                             ),
                         class_="right-section-sm"
                     ),
-                    class_="flex-container-ms"  # Flexbox container for layout
+                    class_="flex-container-ms"
                 ),
-                class_="grey-container"  # Apply the grey background
+                class_="grey-container"
             ),
+            
+            # NEW: Y-axis resolution control
+            ui.div(
+                ui.div(
+                    ui.p("Stratum Resolution", class_="bold-text"),
+                    ui.help_text("Control the number of vertical layers displayed (2-9)"),
+                    ui.input_slider("stratum_bins", "", min=2, max=9, value=4, step=1),
+                    class_="center-content"
+                ),
+                class_="grey-container"
+            ),
+            
             # Visualization Output
             ui.div(
                 output_widget("intercrops"),
             ),
             ui.p(""),
-            # New Grey Container for Lifetime Section
+            
+            # Lifetime Section
             ui.div(
                 ui.div(
                     ui.p("Lifetime", class_="bold-text"),
                     ui.help_text("Visualize the growth of selected species over time"),
-                    ui.input_slider("life_time", "", min=0, max=101, value=1, step = 0.5), 
+                    ui.input_slider("life_time", "", min=0, max=101, value=1, step=0.5), 
                     class_="center-content"
                 ),
                 class_="grey-container"
             ),
+            
             # Growth Visualization Output
             ui.div(
                 output_widget("plot_plants"),
-                ui.output_image("growth_form_image", height="auto", width="100%"),
                 class_="main-content",
             ),
         )

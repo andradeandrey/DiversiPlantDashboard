@@ -126,53 +126,111 @@ def server_app(input,output,session):
 ##Main Species
 
     @render_widget
+    @reactive.event(input.overview_plants, input.stratum_bins)
     def intercrops():
         if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":  
-            data = tri()[0]  # Fetch Data
-            print(data)
-            if not data:
-                return None  # Return empty figure if no data
-
-            # Determine dynamic range for bins
-            min_x = round(min([plant[2] for plant in data]), 2)  
-            max_x = round(max([plant[2] + plant[3] for plant in data]), 2)  
-
-            min_y = round(min([plant[4] for plant in data]), 2)  
-            max_y = round(max([plant[4] for plant in data]), 2)  
-
-            num_x_bins = 4  
-            num_y_bins = 4  
-
-            # Create rounded bins
+            df = open_csv(FILE_NAME)
+            plants = input.overview_plants()
+            
+            if not plants:
+                return go.Figure().update_layout(
+                    title="No species selected",
+                    height=600
+                )
+            
+            # Categorize species by available data
+            complete_data = []
+            missing_harvest = []
+            missing_stratum = []
+            missing_both = []
+            
+            for plant in plants:
+                query = df.query("common_en == '%s'" % plant)[
+                    ['common_en', 'growth_form', 'yrs_ini_prod', 'longev_prod', 'stratum']
+                ].values.tolist()
+                
+                if not query:
+                    continue
+                
+                query = query[0]
+                name, growth_type, x_start, duration, y_position = query
+                
+                has_harvest = str(x_start) != 'nan'
+                has_stratum = str(y_position) != 'nan'
+                
+                # Use default duration if missing
+                if str(duration) == 'nan':
+                    duration = 5.0
+                
+                if has_harvest and has_stratum:
+                    complete_data.append([name, growth_type, x_start, duration, y_position])
+                elif has_harvest and not has_stratum:
+                    missing_stratum.append([name, growth_type, x_start, duration, None])
+                elif not has_harvest and has_stratum:
+                    missing_harvest.append([name, growth_type, None, None, y_position])
+                else:
+                    missing_both.append([name, growth_type, None, None, None])
+            
+            # Get stratum resolution from slider
+            num_y_bins = input.stratum_bins()
+            stratum_config = STRATUM[num_y_bins]
+            y_bins = stratum_config[0]
+            y_labels = stratum_config[1]
+            
+            # Determine X range from complete data and missing_stratum
+            all_x_values = []
+            if complete_data:
+                for plant in complete_data:
+                    all_x_values.append(plant[2])
+                    all_x_values.append(plant[2] + plant[3])
+            if missing_stratum:
+                for plant in missing_stratum:
+                    all_x_values.append(plant[2])
+                    all_x_values.append(plant[2] + plant[3])
+            
+            if all_x_values:
+                min_x = round(min(all_x_values), 2)
+                max_x = round(max(all_x_values), 2)
+            else:
+                min_x, max_x = 0, 10
+            
+            if max_x - min_x < 1:
+                max_x = min_x + 10
+            
+            num_x_bins = 4
             x_bins = [round(x, 2) for x in np.linspace(min_x, max_x, num_x_bins).tolist()]
-            y_bins = [round(y, 2) for y in np.linspace(min_y, max_y, num_y_bins).tolist()]
-
+            
+            # Calculate bin dimensions for offset calculations
+            x_bin_width = (max_x - min_x) / num_x_bins
+            y_bin_height = 9 / len(y_bins)
+            
             # Growth Form Mappings
             growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
             colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
             symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
-
+            
             color_map = dict(zip(growth_forms, colors))
             symbol_map = dict(zip(growth_forms, symbols))
-
+            
             fig = go.Figure()
-
-            # 🎯 ADD FIXED LEGEND (TOP - SEPARATE FROM PLOTLY'S LEGEND)
-            fixed_legend_x = np.linspace(min_x, max_x, len(growth_forms)).tolist()  # Spread symbols evenly
-            fixed_legend_y = [round(max_y + (max_y * 0.1), 2)] * len(growth_forms)  # Position above plot
-
+            
+            # === FIXED LEGEND AT TOP ===
+            fixed_legend_x = np.linspace(min_x, max_x, len(growth_forms)).tolist()
+            fixed_legend_y = [10.5] * len(growth_forms)
+            
             for i, growth in enumerate(growth_forms):
                 fig.add_trace(go.Scatter(
-                    x=[round(fixed_legend_x[i], 2)],  
-                    y=[fixed_legend_y[i]],  
+                    x=[round(fixed_legend_x[i], 2)],
+                    y=[fixed_legend_y[i]],
                     mode="markers+text",
                     marker=dict(size=15, color=color_map[growth], symbol=symbol_map[growth]),
-                    text=growth,  # Growth form name
+                    text=growth,
                     textposition="top center",
-                    showlegend=False  # Hide from plotly legend
+                    showlegend=False,
+                    hoverinfo='skip'
                 ))
-
-            # Add Background Grid
+            
+            # === MAIN GRID BACKGROUND ===
             for i in range(len(x_bins) - 1):
                 for j in range(len(y_bins) - 1):
                     fig.add_shape(
@@ -180,98 +238,385 @@ def server_app(input,output,session):
                         x0=x_bins[i], x1=x_bins[i+1],
                         y0=y_bins[j], y1=y_bins[j+1],
                         line=dict(color="black", width=1),
-                        fillcolor="rgba(100,100,100,0.2)",
+                        fillcolor="rgba(150,150,150,0.2)",
                     )
-
-            # Place Plants Inside Bins (Dynamic Legend)
-            for plant in data:
-                name, growth_type, x_start, duration, y_position = plant[0], plant[1], plant[2], plant[3], plant[4]
-
-                x_bin = min([xb for xb in x_bins if xb >= x_start], default=x_bins[-1])
-                y_bin = min([yb for yb in y_bins if yb >= y_position], default=y_bins[-1])
-
-                x_bin_index = x_bins.index(x_bin)
-                y_bin_index = y_bins.index(y_bin)
-
-                x_center = round((x_bin + x_bins[x_bin_index + 1]) / 2 if x_bin_index < len(x_bins) - 1 else x_bin, 2)
-                y_center = round((y_bin + y_bins[y_bin_index + 1]) / 2 if y_bin_index < len(y_bins) - 1 else y_bin, 2)
-
-                # Add Plant Symbols with Tooltip
+            
+            # === LEFT MARGIN BACKGROUND (for species with unknown harvest) ===
+            fig.add_shape(
+                type="rect",
+                x0=min_x - (max_x - min_x) * 0.2,
+                x1=min_x,
+                y0=0,
+                y1=9,
+                fillcolor="rgba(255,200,150,0.15)",
+                line=dict(color="orange", width=2, dash="dash"),
+                layer="below"
+            )
+            
+            # === BOTTOM MARGIN BACKGROUND (for species with unknown stratum) ===
+            fig.add_shape(
+                type="rect",
+                x0=min_x,
+                x1=max_x,
+                y0=-2,
+                y1=0,
+                fillcolor="rgba(255,150,150,0.15)",
+                line=dict(color="red", width=2, dash="dash"),
+                layer="below"
+            )
+            
+            added_species = set()
+            
+            # Helper function to calculate offset positions in a grid pattern
+            # def get_offset_position(count):
+            #     """
+            #     Returns offset (dx, dy) for the nth item in a grid pattern.
+            #     Pattern spreads items in a grid around the center point.
+            #     """
+            #     if count == 0:
+            #         return (0, 0)
+                
+            #     # Create a spiral/grid pattern with INCREASED spacing
+            #     positions = [
+            #         (0, 0),          # Center
+            #         (0.25, 0),       # Right - INCREASED from 0.25
+            #         (-0.25, 0),      # Left - INCREASED from 0.25
+            #         (0, 0.5),       # Top - INCREASED from 0.25
+            #         (0, -0.5),      # Bottom - INCREASED from 0.25
+            #         (0.35, 0.35),    # Top-right - INCREASED
+            #         (-0.35, 0.35),   # Top-left - INCREASED
+            #         (0.35, -0.35),   # Bottom-right - INCREASED
+            #         (-0.35, -0.35),  # Bottom-left - INCREASED
+            #         (0.5, 0),        # Far right - INCREASED from 0.4
+            #         (-0.5, 0),       # Far left - INCREASED from 0.4
+            #         (0, 0.5),        # Far top - INCREASED from 0.4
+            #         (0, -0.5),       # Far bottom - INCREASED from 0.4
+            #     ]
+                
+            #     if count < len(positions):
+            #         return positions[count]
+            #     else:
+            #         # For more than 13 items, create a tighter grid
+            #         angle = (count - len(positions)) * 45
+            #         radius = 0.35 + (count - len(positions)) * 0.05  # INCREASED from 0.3
+            #         dx = radius * np.cos(np.radians(angle))
+            #         dy = radius * np.sin(np.radians(angle))
+            #         return (dx, dy)
+            def get_offset_position(count):
+                """
+                Returns offset (dx, dy) for the nth item in a horizontal line pattern.
+                Since bins are wider than tall, we spread species horizontally.
+                """
+                
+                if count == 0:
+                    return (0, 0)  # First species at center
+                
+                # Arrange in a horizontal line, alternating left and right
+                # Pattern: center, right, left, right, left, right, left...
+                if count % 2 == 1:  # Odd positions go right
+                    position = (count + 1) // 2
+                    return (0.2 * position, 0)
+                else:  # Even positions go left
+                    position = count // 2
+                    return (-0.2 * position, 0)
+            # === 1. PLACE SPECIES WITH COMPLETE DATA (in main grid) ===
+            # Track how many species in each bin
+            bin_counters = {}
+            
+            for plant in complete_data:
+                name, growth_type, x_start, duration, y_position = plant
+                
+                if name in added_species:
+                    continue
+                
+                # Find X bin
+                x_bin_index = 0
+                for i in range(len(x_bins) - 1):
+                    if x_start >= x_bins[i] and x_start < x_bins[i+1]:
+                        x_bin_index = i
+                        break
+                if x_start >= x_bins[-1]:
+                    x_bin_index = len(x_bins) - 2
+                
+                # Find Y bin
+                y_bin_index = 0
+                for i in range(len(y_bins) - 1):
+                    if y_position >= y_bins[i] and y_position < y_bins[i+1]:
+                        y_bin_index = i
+                        break
+                if y_position >= y_bins[-1]:
+                    y_bin_index = len(y_bins) - 2
+                
+                # Track which species is in which bin
+                bin_key = (x_bin_index, y_bin_index)
+                if bin_key not in bin_counters:
+                    bin_counters[bin_key] = 0
+                else:
+                    bin_counters[bin_key] += 1
+                
+                # Get offset for this species
+                offset_x, offset_y = get_offset_position(bin_counters[bin_key])
+                
+                # Calculate center with offset
+                x_center = round((x_bins[x_bin_index] + x_bins[x_bin_index + 1]) / 2, 2)
+                y_center = round((y_bins[y_bin_index] + y_bins[y_bin_index + 1]) / 2, 2)
+                
+                # Apply offset (scaled by bin size)
+                x_final = x_center + offset_x * x_bin_width * 0.3
+                y_final = y_center + offset_y * y_bin_height * 0.3
+                
                 fig.add_trace(go.Scatter(
-                    x=[x_center],  
-                    y=[y_center],  
+                    x=[x_final],
+                    y=[y_final],
                     mode="markers",
                     marker=dict(
-                        size=15, 
-                        color=color_map.get(growth_type, "grey"), 
+                        size=15,
+                        color=color_map.get(growth_type, "grey"),
                         symbol=symbol_map.get(growth_type, "circle")
                     ),
-                    name=name,  # Only plant name appears in dynamic legend
+                    name=name,
                     showlegend=True,
+                    legendgroup=name,
                     hoverinfo="text",
-                    text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {round(x_start, 2)} yrs<br> Duration: {round(duration, 2)} yrs<br> Stratum: {round(y_position, 2)}"
+                    text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {round(x_start, 2)} yrs<br>Duration: {round(duration, 2)} yrs<br>Stratum: {round(y_position, 2)}"
                 ))
-
-            # Configure Axes with Rounded Tick Values
+                added_species.add(name)
+            
+            # === 2. PLACE SPECIES WITH MISSING HARVEST (left side - at their ACTUAL stratum level) ===
+            if missing_harvest:
+                # Add label at top of left margin
+                fig.add_annotation(
+                    x=min_x - (max_x - min_x) * 0.1,
+                    y=9.5,
+                    text="⚠️ Unknown harvest period",
+                    showarrow=False,
+                    font=dict(size=11, color="darkorange"),
+                    bgcolor="rgba(255,255,255,0.8)",
+                    bordercolor="orange",
+                    borderwidth=1
+                )
+                
+                # Track species at each stratum level for offsetting
+                stratum_counters = {}
+                
+                for plant in missing_harvest:
+                    name, growth_type, _, _, y_position = plant
+                    
+                    if name in added_species:
+                        continue
+                    
+                    # Round stratum to bin it
+                    y_rounded = round(y_position, 1)
+                    if y_rounded not in stratum_counters:
+                        stratum_counters[y_rounded] = 0
+                    else:
+                        stratum_counters[y_rounded] += 1
+                    
+                    # Calculate offset
+                    y_offset = (stratum_counters[y_rounded] % 3 - 1) * 0.3  # -0.3, 0, 0.3
+                    x_offset = (stratum_counters[y_rounded] // 3) * 0.02 * (max_x - min_x)
+                    
+                    fig.add_trace(go.Scatter(
+                        x=[min_x - (max_x - min_x) * 0.1 - x_offset],
+                        y=[y_position + y_offset],
+                        mode="markers",
+                        marker=dict(
+                            size=15,
+                            color=color_map.get(growth_type, "grey"),
+                            symbol=symbol_map.get(growth_type, "circle"),
+                            line=dict(width=2, color="orange")
+                        ),
+                        name=name,
+                        showlegend=True,
+                        legendgroup=name,
+                        hoverinfo="text",
+                        text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>⚠️ Harvest period: Unknown<br>Stratum: {round(y_position, 2)}"
+                    ))
+                    added_species.add(name)
+            
+            # === 3. PLACE SPECIES WITH MISSING STRATUM (bottom - at their ACTUAL harvest time) ===
+            if missing_stratum:
+                # Add label at left of bottom margin
+                fig.add_annotation(
+                    x=min_x,
+                    y=-0.5,
+                    text="⚠️ Unknown stratum",
+                    showarrow=False,
+                    xanchor="left",
+                    font=dict(size=11, color="darkred"),
+                    bgcolor="rgba(255,255,255,0.8)",
+                    bordercolor="red",
+                    borderwidth=1
+                )
+                
+                # Track species at each x position for offsetting
+                x_position_counters = {}
+                
+                for plant in missing_stratum:
+                    name, growth_type, x_start, duration, _ = plant
+                    
+                    if name in added_species:
+                        continue
+                    
+                    # Find X bin
+                    x_bin_index = 0
+                    for i in range(len(x_bins) - 1):
+                        if x_start >= x_bins[i] and x_start < x_bins[i+1]:
+                            x_bin_index = i
+                            break
+                    if x_start >= x_bins[-1]:
+                        x_bin_index = len(x_bins) - 2
+                    
+                    # Track by bin
+                    if x_bin_index not in x_position_counters:
+                        x_position_counters[x_bin_index] = 0
+                    else:
+                        x_position_counters[x_bin_index] += 1
+                    
+                    x_center = round((x_bins[x_bin_index] + x_bins[x_bin_index + 1]) / 2, 2)
+                    
+                    # Calculate offset
+                    x_offset = (x_position_counters[x_bin_index] % 3 - 1) * 0.15 * x_bin_width
+                    y_offset = -(x_position_counters[x_bin_index] // 3) * 0.3
+                    
+                    fig.add_trace(go.Scatter(
+                        x=[x_center + x_offset],
+                        y=[-1 + y_offset],
+                        mode="markers",
+                        marker=dict(
+                            size=15,
+                            color=color_map.get(growth_type, "grey"),
+                            symbol=symbol_map.get(growth_type, "circle"),
+                            line=dict(width=2, color="red")
+                        ),
+                        name=name,
+                        showlegend=True,
+                        legendgroup=name,
+                        hoverinfo="text",
+                        text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {round(x_start, 2)} yrs<br>Duration: {round(duration, 2)} yrs<br>⚠️ Stratum: Unknown"
+                    ))
+                    added_species.add(name)
+            
+            # === 4. PLACE SPECIES WITH MISSING BOTH (bottom-left corner) ===
+            if missing_both:
+                # Add label
+                fig.add_annotation(
+                    x=min_x - (max_x - min_x) * 0.15,
+                    y=-1.5,
+                    text="⚠️ Missing<br>both values",
+                    showarrow=False,
+                    font=dict(size=9, color="darkred"),
+                    bgcolor="rgba(255,255,255,0.8)",
+                    bordercolor="darkred",
+                    borderwidth=1
+                )
+                
+                # Arrange in a grid pattern
+                cols = 2
+                for idx, plant in enumerate(missing_both):
+                    name, growth_type = plant[0], plant[1]
+                    
+                    if name in added_species:
+                        continue
+                    
+                    row = idx // cols
+                    col = idx % cols
+                    
+                    x_pos = min_x - (max_x - min_x) * 0.15 + col * 0.03 * (max_x - min_x)
+                    y_pos = -1 - row * 0.4
+                    
+                    fig.add_trace(go.Scatter(
+                        x=[x_pos],
+                        y=[y_pos],
+                        mode="markers",
+                        marker=dict(
+                            size=15,
+                            color=color_map.get(growth_type, "grey"),
+                            symbol=symbol_map.get(growth_type, "circle"),
+                            line=dict(width=2, color="darkred")
+                        ),
+                        name=name,
+                        showlegend=True,
+                        legendgroup=name,
+                        hoverinfo="text",
+                        text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>⚠️ Harvest period: Unknown<br>⚠️ Stratum: Unknown"
+                    ))
+                    added_species.add(name)
+                    
+            # === CONFIGURE AXES ===
             fig.update_xaxes(
-                title_text="Harvest Period (Years After Planting)", 
-                zeroline=False, 
+                title_text="Harvest Period (Years After Planting)",
+                zeroline=False,
                 tickvals=x_bins,
-                tickformat=".2f"  # Display ticks rounded to 2 decimal places
-            )
-            fig.update_yaxes(
-                title_text="Light Demand (Stratum)", 
-                zeroline=False, 
-                tickvals=y_bins,
-                tickformat=".2f"  # Display ticks rounded to 2 decimal places
+                tickformat=".2f",
+                range=[min_x - (max_x - min_x) * 0.25, max_x + (max_x - min_x) * 0.05]
             )
 
-            # Set Graph Layout
+            # === CONFIGURE Y-AXIS WITH STRATUM TEXT LABELS ===
+            # Extract tick positions and labels from STRATUM configuration
+            # y_labels is a dict like {1.5: "Low", 4: "Medium", 6: "High", 8: "Emergent"}
+            sorted_label_items = sorted(y_labels.items(), key=lambda x: x[0])  # Sort by position
+            y_tick_positions = [pos for pos, label in sorted_label_items]
+            y_tick_text = [label for pos, label in sorted_label_items]
+
+            fig.update_yaxes(
+                title_text="Light Demand (Stratum)",
+                zeroline=False,
+                range=[-2.5, 11],  # Always show full range 0-9 plus margins
+                tickmode='array',  # Use custom tick positions
+                tickvals=y_tick_positions,  # Numeric positions
+                ticktext=y_tick_text,  # Text labels
+                showgrid=True,
+                gridcolor='lightgray'
+            )
+            
+            # === LAYOUT ===
+            complete_count = len(complete_data)
+            missing_h_count = len(missing_harvest)
+            missing_s_count = len(missing_stratum)
+            missing_b_count = len(missing_both)
+
+            title_parts = [f"Showing all {len(added_species)} selected species"]
+            if complete_count:
+                title_parts.append(f"{complete_count} complete")
+            if missing_h_count:
+                title_parts.append(f"{missing_h_count} missing harvest")
+            if missing_s_count:
+                title_parts.append(f"{missing_s_count} missing stratum")
+            if missing_b_count:
+                title_parts.append(f"{missing_b_count} missing both")
+
             fig.update_layout(
-                height=600,
+                height=700,
                 plot_bgcolor="white",
                 showlegend=True,
                 legend=dict(
-                    orientation="v",  # Dynamic legend remains vertical (on right)
+                    orientation="v",
                     yanchor="top",
-                    y=0.98,  
+                    y=0.98,
                     xanchor="left",
-                    x=1.02,  # Moves the dynamic legend to the right
-                    tracegroupgap=5
-                )
+                    x=1.02,
+                    tracegroupgap=5,
+                    title=dict(
+                        text="<b>Plants selected</b>",  # Add title to right legend
+                        font=dict(size=14)
+                    )
+                ),
+                title=" | ".join(title_parts)
             )
 
+            # === ADD "GROWTH FORMS" LABEL ABOVE TOP LEGEND ===
+            fig.add_annotation(
+                x=sum(fixed_legend_x) / len(fixed_legend_x),  # Center of the growth form symbols
+                y=11.2,  # Above the growth form symbols
+                text="<b>Growth forms</b>",
+                showarrow=False,
+                font=dict(size=14, color="black"),
+                xanchor="center",
+                yanchor="bottom"
+            )
             return fig
-
-    #This function creates the cards for the missing informations on growth and strata
-    @output
-    @render.ui
-    def card_wrong_plant():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.": #Ignore the creation of the graph if the we don't select the good data source
-            cards = []
-            card_one,card_two=tri()[1],tri()[2]
-            first_list,second_list=[],[]
-            for name in card_one:
-                first_list.append(ui.h6(f"{name}"))
-            for name in card_two:
-                second_list.append(ui.h6(f"{name}"))
-            first_card = ui.card(
-                ui.div(
-                    ui.h5("Missing growth years informations :"),
-                    *first_list
-                )
-            )
-            cards.append(first_card)
-            second_card = ui.card(
-                ui.div(
-                    ui.h5("Missing stratum informations :"),
-                    *second_list
-                )
-            )
-            cards.append(second_card)
-            
-            return ui.layout_columns(*cards,col_widths=[6,6])
-    
+        
     #This function creates a card showing what species are incompatible with each other
     @output
     @render.ui
@@ -467,86 +812,73 @@ def server_app(input,output,session):
                     yield "Unable to filter GIFT database. Column structure may be different than expected."
 ##Growth Form
 
-    # # This functions creates the barchart and make it evolve depending on the lifetime chosen
+    #  This functions creates the barchart and make it evolve depending on the lifetime chosen
+
+    @render_widget
+    @reactive.event(input.life_time, input.overview_plants)
     def plot_plants():
         if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
             size = input.life_time()
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
 
-            # Growth form -> color mapping:
-            growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
-            colors = ['#53c5ff', '#49d1d5', '#dbb448', '#f8827a', '#ff8fda', '#45d090', '#779137', '#d7a0ff']
-            
-            # Create a dictionary from growth form to color:
-            color_discrete_map = dict(zip(growth_forms, colors))
-            # Add the "Dead" color mapping:
-            color_discrete_map['Dead'] = 'black'
+            # Growth form -> color mapping
+            color_discrete_map = color_mapping.copy()
+            color_discrete_map['removed'] = 'black'
             
             if not plants:
-                print("No plants selected. Returning an empty figure.")
-                return None
+                return go.Figure().update_layout(
+                    title="No plants selected",
+                    height=650
+                )
 
             # Prepare data containers
             variables_x, variables_y = [], []
             color, family, function = [], [], []
             time_to_fh, life_hist, longev_prod = [], [], []
-            links, graph_y, color_change = [], [], []
+            graph_y, color_change = [], []
 
             for plant in plants:
                 query = df.query("common_en == '%s'" % plant)[
                     [
-                        'common_en',     # 0
-                        'growth_form',   # 1
-                        'plant_max_height',
-                        'family',
-                        'function',
-                        'yrs_ini_prod',
-                        'life_hist',
-                        'longev_prod',
-                        'threat_status', # 8
-                        'ref'           # 9
+                        'common_en', 'growth_form', 'plant_max_height',
+                        'family', 'function', 'yrs_ini_prod',
+                        'life_hist', 'longev_prod', 'threat_status', 'ref'
                     ]
-                ].values.tolist()[0]
+                ].values.tolist()
+                
+                if not query:
+                    continue
+                    
+                query = query[0]
 
-                variables_x.append(query[0])  # Plant name
-                color.append(str(query[1]))   # Growth form
+                variables_x.append(query[0])
+                color.append(str(query[1]))
                 family.append(str(query[3]))
                 function.append(str(query[4]))
                 time_to_fh.append(str(query[5]))
                 life_hist.append(str(query[6]))
                 longev_prod.append(str(query[7]))
-                links.append([query[8]])
 
                 # Handle missing max height
-                if pd.isna(query[2]):
-                    variables_y.append(3)
-                else:
-                    variables_y.append(query[2])
+                max_height = 3 if pd.isna(query[2]) else query[2]
+                variables_y.append(max_height)
 
                 # Calculate expected longevity
-                if pd.isna(query[7]) or query[7] == 0:
-                    expect = 7
-                else:
-                    expect = query[7]
+                expect = 7 if pd.isna(query[7]) or query[7] == 0 else query[7]
 
-                # graph_y_max is the "full" height
-                if pd.isna(query[2]):
-                    graph_y_max = 3
-                else:
-                    graph_y_max = query[2]
-
-                # Scale the bar height by size relative to expect
-                graph_y_value = min(graph_y_max, size * graph_y_max / expect)
+                # Scale bar height by lifetime
                 if size == 0:
                     graph_y_value = 0.1
+                else:
+                    graph_y_value = min(max_height, size * max_height / expect)
                 graph_y.append(graph_y_value)
 
-                # Check if size > expect => "Dead"
+                # Mark dead plants
                 if size > expect:
                     color_change.append(query[0])
 
-            # Build final dataframe
+            # Build dataframe
             dataframe = pd.DataFrame({
                 'Plant Name': variables_x,
                 'Maximum height': variables_y,
@@ -559,11 +891,11 @@ def server_app(input,output,session):
                 'Graph height': graph_y
             })
 
-            # Default color is 'Growth form', but mark dead plants
+            # Set color (mark dead plants)
             dataframe['Graph color'] = dataframe['Growth form']
-            dataframe.loc[dataframe['Plant Name'].isin(color_change), 'Graph color'] = 'Dead'
+            dataframe.loc[dataframe['Plant Name'].isin(color_change), 'Graph color'] = 'removed'
 
-            # Create the bar chart
+            # Create bar chart
             fig = px.bar(
                 dataframe,
                 x='Plant Name',
@@ -588,12 +920,16 @@ def server_app(input,output,session):
                 color_discrete_map=color_discrete_map
             )
 
-            fig.update_layout(height=650)
+            fig.update_layout(
+                height=650,
+                plot_bgcolor='lightgrey',
+                title=f"Species Growth at Year {size}"
+            )
             fig.update_xaxes(showgrid=False)
-            fig.update_yaxes(showgrid=False)
-            fig.update_layout(plot_bgcolor='lightgrey')
+            fig.update_yaxes(showgrid=False, title_text="Height (m)")
+            
             return fig
-
+        
 ## * Results
     # Define available columns based on database choice
     def get_available_columns():
