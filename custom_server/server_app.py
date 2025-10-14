@@ -21,6 +21,9 @@ from collections import Counter
 
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
+# FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","practitioners.csv")
+
+# data/practitioners.csv
 
 COLOR = {'herb' : '#f8827a','climber':"#dbb448",'subshrub' : "#779137",'shrub' :'#45d090','cactus' : '#49d1d5','bamboo' : '#53c5ff','tree' : '#d7a0ff','palm' : '#ff8fda'}
 
@@ -126,7 +129,7 @@ def server_app(input,output,session):
 ##Main Species
 
     @render_widget
-    @reactive.event(input.overview_plants, input.stratum_bins)
+    @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins)
     def intercrops():
         if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":  
             df = open_csv(FILE_NAME)
@@ -172,7 +175,7 @@ def server_app(input,output,session):
                     missing_both.append([name, growth_type, None, None, None])
             
             # Get stratum resolution from slider
-            num_y_bins = input.stratum_bins()
+            num_y_bins = int(input.stratum_bins())
             stratum_config = STRATUM[num_y_bins]
             y_bins = stratum_config[0]
             y_labels = stratum_config[1]
@@ -197,8 +200,8 @@ def server_app(input,output,session):
             if max_x - min_x < 1:
                 max_x = min_x + 10
             
-            num_x_bins = 4
-            x_bins = [round(x, 2) for x in np.linspace(min_x, max_x, num_x_bins).tolist()]
+            num_x_bins = int(input.harvest_bins()) 
+            x_bins = [round(x, 2) for x in np.linspace(min_x, max_x, num_x_bins + 1).tolist()]
             
             # Calculate bin dimensions for offset calculations
             x_bin_width = (max_x - min_x) / num_x_bins
