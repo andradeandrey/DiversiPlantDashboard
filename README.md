@@ -137,12 +137,12 @@ DiversiPlantDashboard/
 ├── runtime.txt             # Runtime version specifications
 │
 ├── custom_ui/              # Frontend UI components
-│   ├── start.py            # Homepage tab
-│   ├── location.py         # Location selection tab
-│   ├── climate.py          # Climate filtering tab
-│   ├── species.py          # Species selection tab
-│   ├── results.py          # Results display tab
-│   └── details_tabs.py     # Additional details tab
+│   ├── tab_00_start.py            # Homepage tab
+│   ├── tab_01_location.py         # Location selection tab
+│   ├── tab_02_climate.py          # Climate filtering tab
+│   ├── tab_03_species.py          # Species selection tab
+│   ├── tab_04_results.py          # Results display tab
+│   └── tab_details_tabs.py        # Additional details tab
 │
 ├── custom_server/          # Backend server logic
 │   ├── server_app.py       # Main server functions

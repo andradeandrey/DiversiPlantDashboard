@@ -11,11 +11,11 @@ from starlette.middleware.sessions import SessionMiddleware
 sys.dont_write_bytecode = True
 
 # from custom_ui.details_tabs import details
-from custom_ui.start import start
-from custom_ui.results import results
-from custom_ui.location import location
-from custom_ui.climate import climate
-from custom_ui.species import main_species
+from custom_ui.tab_00_start import start
+from custom_ui.tab_04_results import results
+from custom_ui.tab_01_location import location
+from custom_ui.tab_02_climate import climate
+from custom_ui.tab_03_species import main_species
 
 from custom_server.server_app import server_app
 from custom_server.server_homepage import server_homepage
@@ -23,7 +23,6 @@ css_file = os.path.join(Path(__file__).parent,"data","ui.css")
 
 
 # TODO: mount each tab like litefarm dashboard.
-
 
 app_ui=ui.page_fluid(
     ui.include_css(css_file),
@@ -37,8 +36,6 @@ app_ui=ui.page_fluid(
     title=ui.div("DiversiPlant", class_="title"),
     )
 )
-
-
 
 static_dir = Path(__file__).parent / "data"
 shiny_app = App(app_ui, server_app, static_assets=static_dir)

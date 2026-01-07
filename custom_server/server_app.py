@@ -23,7 +23,6 @@ from collections import Counter
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 # FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","practitioners.csv")
 
-# data/practitioners.csv
 
 COLOR = {'herb' : '#f8827a','climber':"#dbb448",'subshrub' : "#779137",'shrub' :'#45d090','cactus' : '#49d1d5','bamboo' : '#53c5ff','tree' : '#d7a0ff','palm' : '#ff8fda'}
 
@@ -269,42 +268,7 @@ def server_app(input,output,session):
             )
             
             added_species = set()
-            
-            # Helper function to calculate offset positions in a grid pattern
-            # def get_offset_position(count):
-            #     """
-            #     Returns offset (dx, dy) for the nth item in a grid pattern.
-            #     Pattern spreads items in a grid around the center point.
-            #     """
-            #     if count == 0:
-            #         return (0, 0)
-                
-            #     # Create a spiral/grid pattern with INCREASED spacing
-            #     positions = [
-            #         (0, 0),          # Center
-            #         (0.25, 0),       # Right - INCREASED from 0.25
-            #         (-0.25, 0),      # Left - INCREASED from 0.25
-            #         (0, 0.5),       # Top - INCREASED from 0.25
-            #         (0, -0.5),      # Bottom - INCREASED from 0.25
-            #         (0.35, 0.35),    # Top-right - INCREASED
-            #         (-0.35, 0.35),   # Top-left - INCREASED
-            #         (0.35, -0.35),   # Bottom-right - INCREASED
-            #         (-0.35, -0.35),  # Bottom-left - INCREASED
-            #         (0.5, 0),        # Far right - INCREASED from 0.4
-            #         (-0.5, 0),       # Far left - INCREASED from 0.4
-            #         (0, 0.5),        # Far top - INCREASED from 0.4
-            #         (0, -0.5),       # Far bottom - INCREASED from 0.4
-            #     ]
-                
-            #     if count < len(positions):
-            #         return positions[count]
-            #     else:
-            #         # For more than 13 items, create a tighter grid
-            #         angle = (count - len(positions)) * 45
-            #         radius = 0.35 + (count - len(positions)) * 0.05  # INCREASED from 0.3
-            #         dx = radius * np.cos(np.radians(angle))
-            #         dy = radius * np.sin(np.radians(angle))
-            #         return (dx, dy)
+
             def get_offset_position(count):
                 """
                 Returns offset (dx, dy) for the nth item in a horizontal line pattern.
@@ -660,7 +624,7 @@ def server_app(input,output,session):
             return ui.layout_columns(*cards, col_widths=[4,4,4])
 
 
-    #This function is an auxiliary function used to separate a list of plants to make others function (card_wrong_plants and intercrops) run faster
+    # This function is an auxiliary function used to separate a list of plants to make others function (card_wrong_plants and intercrops) run faster
     def tri():
         df=open_csv(FILE_NAME)
         plants=input.overview_plants()
@@ -675,7 +639,7 @@ def server_app(input,output,session):
                 bad_year.append(query[0])
         return [good,bad_year,bad_stratum]
 
-    #This function run the R code to get the new species list if the GIFT database is chosen. Otherwise it returns the Practitioner's Database
+    # This function run the R code to get the new species list if the GIFT database is chosen. Otherwise it returns the Practitioner's Database
     @reactive.event(input.update_map)
     def get_new_species():
         if input.database_choice() == "✔️ Most known species. ✔️ Botanical details. ✔️ Filtered for your location. ❌ Slow.":
@@ -720,7 +684,7 @@ def server_app(input,output,session):
         else:
             return get_Plants(FILE_NAME)
 
-    #This function updates the choices on the sidebar of main species
+    # This function updates the choices on the sidebar of main species
     @reactive.effect
     @reactive.event(input.update_map)
     def update_main_species():
