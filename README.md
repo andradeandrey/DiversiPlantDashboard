@@ -1,94 +1,226 @@
-﻿# Agroforestry
+# DiversiPlant Dashboard
 
-Welcome to the Github repository of the Agroforestry Dashboard
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Python 3.11](https://img.shields.io/badge/python-3.11.9-blue.svg)](https://www.python.org/downloads/) [![Shiny for Python](https://img.shields.io/badge/Shiny-for%20Python-green.svg)](https://shiny.posit.co/py/)
+
+An interactive dashboard for discovering compatible plant species for agroforestry, ecological restoration, and sustainable agriculture projects.
+
+## Overview
+
+DiversiPlant Dashboard helps practitioners, researchers, and farmers identify plant species that thrive together in specific locations and climates. The application integrates botanical databases with interactive visualizations to support decision-making for polyculture and agroforestry systems.
+
+### Key Features
+
+- **Location-Based Species Filtering** - Find species native, endemic, or naturalized to your region using GPS coordinates
+- **Interactive World Map** - Visualize and select project locations with OpenStreetMap and satellite imagery
+- **Climate Zone Integration** - Filter species based on climate compatibility
+- **Species Compatibility Analysis** - Visualize species coexistence based on growth forms, light requirements, and vertical stratification
+- **Growth Visualization** - See how selected species develop over time with adjustable stratum resolution
+- **GIFT Database Integration** - Access the Global Inventory of Floras and Traits for comprehensive botanical data
+- **Exportable Results** - Download filtered species lists for further analysis
+
+### Use Cases
+
+- Agroforestry system design
+- Forest restoration planning
+- Polyculture garden design
+- Native species identification
+- Biodiversity conservation projects
+
+## Prerequisites
+
+### System Requirements
+
+- **Operating System**: macOS, Linux, or Windows
+- **Python**: 3.11.9
+- **R**: 3.2.3 or later
+
+### System Dependencies
+
+Install required geospatial libraries for your operating system:
+
+**Ubuntu/Debian:**
+
+```bash
+sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev
+```
+
+**macOS (Homebrew):**
+
+```bash
+brew install gdal proj geos udunits
+```
+
+**RHEL/CentOS/Fedora:**
+
+```bash
+sudo dnf install -y gdal-devel proj-devel geos-devel udunits2-devel
+```
+
+### R Setup
+
+Install R and the required GIFT package:
+
+```r
+install.packages("GIFT")
+```
+
+Ensure R is on your system PATH so Python can access it via rpy2.
 
 ## Installation
 
-Clone the repository to your local machine:
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Anto1n/Agroforestry.git
+git clone https://github.com/ilyas-siddique/DiversiPlantDashboard.git
+cd DiversiPlantDashboard
 ```
 
-Ensure you have Python installed on your machine. The version used is detailed in `runtime.txt`. The Python dependecies for this project are listed in `requirements.txt` for `virtualenv`-based package managers. Create a virtual environment (venv or conda) and install them.
+### 2. Create Virtual Environment
 
-<details>
-  <summary>R-lang</summary>
+**Using venv:**
 
- Since this project relies on the R ecosystem, make sure R itself is installed and the `GIFT` package within the R libraries is on `PATH` for the python dependencies to pick it up.
-`GIFT` relies on some geospatial libraries like `sf`, `units` etc., so some further system installation might be required.  (eg. `dnf install udunits2-devel proj-devel` on RHEL/CentOS).
-
-</details>
-
-<details>
-  <summary>Virtualenv/venv</summary>
-
-
-Create your virtual environment (make sure it ends with `..venv`, e.g. `agroforestry_venv` for git to ignore it). 
+```bash
+python3 -m venv diversiplant_venv
+source diversiplant_venv/bin/activate  # Windows: diversiplant_venv\Scripts\activate
 ```
-python3 -m venv agroforestry_venv
-```
-Activate it
-```
-source agroforestry_venv/bin/activate
-```
-Install the dependencies using the `requirements.txt` file
-```
-pip3 install -r requirements.txt
-```
--------------
-  
-</details>
 
-### Shiny for Python
+**Using Conda:**
 
-In order to launch the app locally and be able to use as expected, you should install the shiny app of your IDE.
+```bash
+conda env create -f environment.yml
+conda activate agroforestry_env
+```
 
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Verify R Integration
+
+```bash
+python -c "import rpy2.robjects as ro; print(ro.r('R.version.string'))"
+```
 
 ## Running the Application
 
-With the environment set up and active, launch the app directly on the top right of your window. You should see in the launch options :
-```Run Shiny App```
+### Development Mode
 
-You should see something similar to the following output:
+**Using IDE (VS Code/PyCharm):**
 
-```
-INFO:     Uvicorn running on http://127.0.0.1:63101 (Press CTRL+C to quit)
-INFO:     Started reloader process [15928] using WatchFiles
-INFO:     Started server process [28932]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     127.0.0.1:61812 - "GET /?vscodeBrowserReqId=1724454833017 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61812 - "GET /ui.css HTTP/1.1" 304 Not Modified
-INFO:     ('127.0.0.1', 61817) - "WebSocket /websocket/" [accepted]
-INFO:     connection open
+1. Install the Shiny extension for your IDE
+2. Open `app.py`
+3. Click "Run Shiny App"
+
+**Using command line:**
+
+```bash
+uvicorn app:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-Alternatively, use `uvicorn app:app --port <PORT>  --reload <WORKERS CONFIGURATION>` with any of `screen`,`tmux`,`nohup` or similar to background a multithreaded process running the app.   
+### Production Mode
 
-## Structure
-
-- **Custom_UI**: Frontend functions for each tab, prefixed with `tabs_`.
-- **Custom_Server**: Backend server functions, prefixed with `serv_`.
-- **App**: Core application function managing imports and integrating the components into Shiny Apps.
-
-## Features
-
-- **Custom UI**: Each tab is managed by a unique function, suffixed with `_tabs` for identification (ex: climate_tabs).
-- **Custom Server**: Two functions, `agroforestry_server` is a function dealing with the import of data from the first datasource. Then, `server_app` is the backend of the app. It deals with the different output of the dashboard.
-
-The connection between the UI and the Server is done by the IDs of the differents input. For example :
-
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8001 --workers 16
 ```
-    ui.input_text(
-          "longitude",
-          "Longitude :",
-          '0'
-      )
+
+Access the dashboard at: **http://127.0.0.1:8001/diversiplant**
+
+## Project Structure
+
+```text
+DiversiPlantDashboard/
+├── app.py                  # Main application entry point
+├── requirements.txt        # Python dependencies
+├── environment.yml         # Conda environment specification
+├── runtime.txt             # Runtime version specifications
+│
+├── custom_ui/              # Frontend UI components
+│   ├── start.py            # Homepage tab
+│   ├── location.py         # Location selection tab
+│   ├── climate.py          # Climate filtering tab
+│   ├── species.py          # Species selection tab
+│   ├── results.py          # Results display tab
+│   └── details_tabs.py     # Additional details tab
+│
+├── custom_server/          # Backend server logic
+│   ├── server_app.py       # Main server functions
+│   ├── server_homepage.py  # Homepage server logic
+│   └── agroforestry_server.py  # Data processing utilities
+│
+├── data/                   # Data files and assets
+│   ├── MgmtTraitData_updated.csv  # Plant management traits
+│   ├── practitioners.csv          # Practitioner data
+│   ├── ui.css                     # Custom styles
+│   └── img/                       # Image assets
+│
+└── R_code/                 # R scripts for GIFT integration
+    └── Growth form GIFT.R
 ```
-In this example "longitude" is the id, and if it changes, it should change also in the `server_app`, but the "Longitude :" appears on top of the text input. If you want to change the appearance of such an input, then you should change the second one.
-Changing the first one might be a risk to break some functions.
+
+## Architecture
+
+### UI Components
+
+Each tab is managed by a dedicated function suffixed with `_tabs` (e.g., `climate_tabs`). UI elements use unique IDs that connect to server functions.
+
+### Server Components
+
+- `agroforestry_server.py` - Handles data import from CSV sources
+- `server_app.py` - Main backend logic managing dashboard outputs and reactivity
+
+### Data Flow
+
+1. User inputs location/climate/species preferences
+2. Server processes inputs using Python and R (GIFT database)
+3. Returns interactive visualizations (Plotly charts, Folium maps)
+4. Results displayed in dynamic DataTables
+
+## Data Sources
+
+| Source                                        | Description                                            |
+| --------------------------------------------- | ------------------------------------------------------ |
+| Management Traits Database                    | Local CSV with plant management information            |
+| [GIFT Database](https://gift.uni-goettingen.de/) | Global Inventory of Floras and Traits - accessed via R |
+
+## Technology Stack
+
+| Category                  | Technologies                                                                             |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| **Frontend**        | [Shiny for Python](https://shiny.posit.co/py/), Custom CSS                                  |
+| **Backend**         | [Starlette](https://www.starlette.io/), [Uvicorn](https://www.uvicorn.org/)                    |
+| **Data Processing** | [Pandas](https://pandas.pydata.org/), [GeoPandas](https://geopandas.org/)                      |
+| **Visualization**   | [Plotly](https://plotly.com/python/), [Folium](https://python-visualization.github.io/folium/) |
+| **R Integration**   | [rpy2](https://rpy2.github.io/)                                                             |
 
 ## Contributing
 
-Contributions are welcome. Please open an issue to propose changes or submit a pull request directly.
+Contributions are welcome! To contribute:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Make your changes following the existing code style
+4. Test your changes locally
+5. Commit with clear messages (`git commit -m "Add: description"`)
+6. Push to your fork (`git push origin feature/your-feature`)
+7. Open a Pull Request
+
+### Development Guidelines
+
+- **UI functions**: Suffix with `_tabs` (e.g., `climate_tabs`)
+- **Server functions**: Prefix with `serv_` (e.g., `serv_climate`)
+- **IDs**: Use descriptive, consistent IDs that match between UI and server
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [GIFT Database](https://gift.uni-goettingen.de/) - Global Inventory of Floras and Traits
+- All contributors and the open-source community
+
+---
+
+*DiversiPlant Dashboard - Supporting biodiversity in sustainable agriculture*
