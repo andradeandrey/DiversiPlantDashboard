@@ -177,4 +177,21 @@ def whittaker_diagram():
 - [x] Visual similar à imagem de referência
 - [x] Diagrama Whittaker interativo com Plotly
 - [x] Hover mostra nome do bioma
+- [x] **Dados reais do pacote R `plotbiomes`** (775 vértices, Ricklefs 2008)
 - [ ] Seleção persiste entre tabs (pendente integração com Location)
+
+---
+
+## Atualização: Dados Reais Implementados (2026-01-08)
+
+### Fonte dos Dados
+- **Pacote R**: `plotbiomes` (valentinitnelav/plotbiomes)
+- **Citação**: Valentin Ștefan & Sam Levin (2018). Zenodo. https://doi.org/10.5281/zenodo.7145245
+- **Referência Original**: Ricklefs, R. E. (2008). The economy of nature. Figure 5.5
+
+### Arquivos Criados
+- `data/whittaker_biomes.csv` - 775 vértices de polígonos para 9 biomas
+- `docs/003_WHITTAKER_DATA_SOURCES.md` - Documentação completa das fontes
+
+### Implementação
+O diagrama agora usa coordenadas reais extraídas do pacote R, resultando em formas precisas que correspondem ao diagrama clássico de Whittaker.
