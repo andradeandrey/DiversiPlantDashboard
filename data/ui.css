@@ -613,3 +613,155 @@ background-color: #ff1a1a; /* Darker red on hover */
     text-align: center;
     width: 100%;
 }
+
+/* =============================================== */
+/* Climate Tab Styles                              */
+/* =============================================== */
+
+.climate-explanation {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid #6c757d;
+    margin-bottom: 20px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.climate-explanation p {
+    margin: 0;
+    color: #555;
+    line-height: 1.6;
+}
+
+.climate-biome-container {
+    display: flex;
+    gap: 40px;
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 1200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.climate-column, .biome-column {
+    flex: 1;
+    padding: 15px;
+}
+
+.climate-column h4, .biome-column h4 {
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #6c757d;
+    padding-bottom: 8px;
+}
+
+/* Chips/Badge styles for checkbox groups */
+.climate-column .shiny-input-checkboxgroup,
+.biome-column .shiny-input-checkboxgroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.climate-column .shiny-input-checkboxgroup .checkbox,
+.biome-column .shiny-input-checkboxgroup .checkbox {
+    margin: 0;
+}
+
+.climate-column .shiny-input-checkboxgroup label,
+.biome-column .shiny-input-checkboxgroup label {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    margin: 0;
+    border: 2px solid #ccc;
+    border-radius: 25px;
+    cursor: pointer;
+    background: #f5f5f5;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    user-select: none;
+}
+
+.climate-column .shiny-input-checkboxgroup label:hover,
+.biome-column .shiny-input-checkboxgroup label:hover {
+    border-color: #6c757d;
+    background: #e9ecef;
+}
+
+.climate-column .shiny-input-checkboxgroup input[type="checkbox"],
+.biome-column .shiny-input-checkboxgroup input[type="checkbox"] {
+    display: none;
+}
+
+.climate-column .shiny-input-checkboxgroup input[type="checkbox"]:checked + span,
+.biome-column .shiny-input-checkboxgroup input[type="checkbox"]:checked + span {
+    /* This won't work directly, we need a different approach */
+}
+
+/* Selected state - using has() selector for modern browsers */
+.climate-column .shiny-input-checkboxgroup label:has(input:checked),
+.biome-column .shiny-input-checkboxgroup label:has(input:checked) {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+/* Fallback for browsers without :has() support */
+.climate-column .shiny-input-checkboxgroup .checkbox.checked label,
+.biome-column .shiny-input-checkboxgroup .checkbox.checked label {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+/* Climate type specific colors when selected */
+.climate-column .shiny-input-checkboxgroup label:has(input:checked)[for*="Continental"] {
+    background: #5D4E6D;
+    border-color: #5D4E6D;
+}
+
+.climate-column .shiny-input-checkboxgroup label:has(input:checked)[for*="Polar"] {
+    background: #A8D5E5;
+    border-color: #A8D5E5;
+    color: #333;
+}
+
+.climate-column .shiny-input-checkboxgroup label:has(input:checked)[for*="Temperate"] {
+    background: #6B8E5A;
+    border-color: #6B8E5A;
+}
+
+.climate-column .shiny-input-checkboxgroup label:has(input:checked)[for*="Dry"] {
+    background: #E8C07D;
+    border-color: #E8C07D;
+    color: #333;
+}
+
+.climate-column .shiny-input-checkboxgroup label:has(input:checked)[for*="Highland"] {
+    background: #8B7355;
+    border-color: #8B7355;
+}
+
+.climate-column .shiny-input-checkboxgroup label:has(input:checked)[for*="Tropical"] {
+    background: #2E7D4A;
+    border-color: #2E7D4A;
+}
+
+/* Whittaker diagram container */
+.whittaker-container {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.whittaker-container h4 {
+    margin-bottom: 10px;
+    color: #333;
+}

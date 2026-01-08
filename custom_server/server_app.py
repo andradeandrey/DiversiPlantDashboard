@@ -122,7 +122,209 @@ def server_app(input,output,session):
 
 ##Climate
 
-    #As long as we can't create a graph, nothing should appears except the wireframes
+    # Mapping from Climate Types to Whittaker biomes
+    CLIMATE_TO_BIOMES = {
+        "Continental": ["Boreal Forest (Taiga)", "Temperate Seasonal Forest"],
+        "Polar": ["Tundra"],
+        "Temperate": ["Temperate Rain Forest", "Temperate Seasonal Forest", "Temperate Grassland / Desert"],
+        "Dry": ["Subtropical Desert", "Temperate Grassland / Desert", "Woodland / Shrubland"],
+        "Highland": ["Tundra", "Boreal Forest (Taiga)"],
+        "Tropical Rainy": ["Tropical Rain Forest", "Tropical Seasonal Forest"]
+    }
+
+    # Mapping from Biome Types (UI) to Whittaker biomes
+    BIOME_TYPE_TO_WHITTAKER = {
+        "Boreal Forest (Taiga)": ["Boreal Forest (Taiga)"],
+        "Deserts & Xeric Shrublands": ["Subtropical Desert"],
+        "Mangroves": ["Tropical Rain Forest"],
+        "Mediterranean Forests, Woodlands & Scrub": ["Woodland / Shrubland"],
+        "Montane Grasslands & Shrublands": ["Temperate Grassland / Desert", "Tundra"],
+        "Rock and Ice": ["Tundra"],
+        "Temperate Broadleaf & Mixed Forests": ["Temperate Seasonal Forest", "Temperate Rain Forest"],
+        "Temperate Conifer Forests": ["Boreal Forest (Taiga)", "Temperate Seasonal Forest"],
+        "Tropical & Subtropical Moist Broadleaf Forests": ["Tropical Rain Forest"],
+        "Tropical & Subtropical Dry Broadleaf Forests": ["Tropical Seasonal Forest"],
+        "Tropical & Subtropical Grasslands, Savannas & Shrublands": ["Tropical Seasonal Forest", "Woodland / Shrubland"],
+        "Temperate Grasslands, Savannas & Shrublands": ["Temperate Grassland / Desert"]
+    }
+
+    # Whittaker Biomes Diagram - Interactive Plotly visualization
+    @render_widget
+    def whittaker_diagram():
+        # Get selected climate and biome types
+        selected_climates = input.climate_types() or []
+        selected_biomes = input.biome_types() or []
+
+        # Determine which Whittaker biomes should be highlighted
+        highlighted_biomes = set()
+
+        for climate in selected_climates:
+            if climate in CLIMATE_TO_BIOMES:
+                highlighted_biomes.update(CLIMATE_TO_BIOMES[climate])
+
+        for biome in selected_biomes:
+            if biome in BIOME_TYPE_TO_WHITTAKER:
+                highlighted_biomes.update(BIOME_TYPE_TO_WHITTAKER[biome])
+
+        # Whittaker biome polygon data
+        biomes = [
+            {
+                "name": "Tropical Rain Forest",
+                "color": "#1B5E3B",
+                "temp": [20, 30, 30, 20, 20],
+                "precip": [200, 200, 450, 450, 200]
+            },
+            {
+                "name": "Tropical Seasonal Forest",
+                "color": "#8BA870",
+                "temp": [20, 30, 30, 20, 20],
+                "precip": [100, 100, 200, 200, 100]
+            },
+            {
+                "name": "Subtropical Desert",
+                "color": "#E8D4A0",
+                "temp": [15, 30, 30, 15, 15],
+                "precip": [0, 0, 30, 30, 0]
+            },
+            {
+                "name": "Temperate Rain Forest",
+                "color": "#2E7D4A",
+                "temp": [5, 20, 20, 5, 5],
+                "precip": [200, 200, 450, 450, 200]
+            },
+            {
+                "name": "Temperate Seasonal Forest",
+                "color": "#6B8E5A",
+                "temp": [0, 20, 20, 0, 0],
+                "precip": [75, 75, 200, 200, 75]
+            },
+            {
+                "name": "Woodland / Shrubland",
+                "color": "#C17F59",
+                "temp": [10, 25, 25, 10, 10],
+                "precip": [30, 30, 100, 100, 30]
+            },
+            {
+                "name": "Temperate Grassland / Desert",
+                "color": "#F5E6B8",
+                "temp": [0, 20, 20, 0, 0],
+                "precip": [0, 0, 75, 75, 0]
+            },
+            {
+                "name": "Boreal Forest (Taiga)",
+                "color": "#A8D5A2",
+                "temp": [-10, 5, 5, -10, -10],
+                "precip": [30, 30, 150, 150, 30]
+            },
+            {
+                "name": "Tundra",
+                "color": "#B8E0E0",
+                "temp": [-15, 5, 5, -15, -15],
+                "precip": [0, 0, 50, 50, 0]
+            },
+        ]
+
+        fig = go.Figure()
+
+        # Check if any selection is made
+        has_selection = len(highlighted_biomes) > 0
+
+        # Add each biome as a filled polygon
+        for biome in biomes:
+            is_highlighted = biome["name"] in highlighted_biomes
+
+            # Determine colors based on selection state
+            if has_selection:
+                if is_highlighted:
+                    fill_color = biome["color"]
+                    line_color = "rgba(0,0,0,0.8)"
+                    line_width = 3
+                    opacity = 1.0
+                else:
+                    # Dim non-selected biomes
+                    fill_color = f"rgba(200,200,200,0.3)"
+                    line_color = "rgba(150,150,150,0.3)"
+                    line_width = 1
+                    opacity = 0.4
+            else:
+                # No selection - show all normally
+                fill_color = biome["color"]
+                line_color = "rgba(0,0,0,0.3)"
+                line_width = 1
+                opacity = 1.0
+
+            fig.add_trace(go.Scatter(
+                x=biome["temp"],
+                y=biome["precip"],
+                fill="toself",
+                fillcolor=fill_color,
+                line=dict(color=line_color, width=line_width),
+                name=biome["name"],
+                mode="lines",
+                hoverinfo="name+text",
+                text=f"<b>{biome['name']}</b>",
+                hoveron="fills+points",
+                opacity=opacity
+            ))
+
+        # Build title based on selection
+        if has_selection:
+            title_text = f"<b>Whittaker Biomes - {len(highlighted_biomes)} Selected</b>"
+        else:
+            title_text = "<b>Whittaker Biomes Classification</b>"
+
+        # Update layout
+        fig.update_layout(
+            title=dict(
+                text=title_text,
+                x=0.5,
+                font=dict(size=16)
+            ),
+            xaxis=dict(
+                title="Mean Annual Temperature (°C)",
+                range=[-20, 35],
+                gridcolor="rgba(128,128,128,0.2)",
+                zeroline=True,
+                zerolinecolor="rgba(0,0,0,0.3)",
+                zerolinewidth=1
+            ),
+            yaxis=dict(
+                title="Mean Annual Precipitation (cm)",
+                range=[0, 500],
+                gridcolor="rgba(128,128,128,0.2)"
+            ),
+            plot_bgcolor="white",
+            height=500,
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=1.02,
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="rgba(0,0,0,0.1)",
+                borderwidth=1
+            ),
+            margin=dict(r=200)
+        )
+
+        # Add annotation
+        if has_selection:
+            annotation_text = f"<i>Selected: {', '.join(sorted(highlighted_biomes))}</i>"
+        else:
+            annotation_text = "<i>Select climate or biome types above to highlight regions</i>"
+
+        fig.add_annotation(
+            x=7,
+            y=480,
+            text=annotation_text,
+            showarrow=False,
+            font=dict(size=10, color="gray"),
+            xanchor="center"
+        )
+
+        return fig
 
 
 ##Main Species
