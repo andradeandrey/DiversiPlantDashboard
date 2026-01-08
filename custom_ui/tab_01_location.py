@@ -65,11 +65,52 @@ location = ui.nav_panel(
                     ui.help_text("OR")),
                 ui.input_action_button(
                     "current_location",
-                    "🚧 Current Location 🚧",
-                    # class_="btn-warning",  # Adding a warning color class
-                    disabled=True  # Disable the button to indicate it's not functional
+                    "📍 Current Location",
+                    class_="btn-primary",
                 ),
-                ui.p("The feature above is currently unavailable."),
+                ui.tags.script("""
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Wait for Shiny to be ready
+                        setTimeout(function() {
+                            var btn = document.getElementById('current_location');
+                            if (btn) {
+                                btn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    if (navigator.geolocation) {
+                                        btn.disabled = true;
+                                        btn.textContent = '⏳ Locating...';
+                                        navigator.geolocation.getCurrentPosition(
+                                            function(position) {
+                                                var lat = position.coords.latitude.toFixed(6);
+                                                var lon = position.coords.longitude.toFixed(6);
+                                                var input = document.getElementById('longitude_latitude');
+                                                if (input) {
+                                                    input.value = lat + ', ' + lon;
+                                                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                                                }
+                                                btn.disabled = false;
+                                                btn.textContent = '📍 Current Location';
+                                                // Auto-click Send button
+                                                setTimeout(function() {
+                                                    var sendBtn = document.getElementById('update_map');
+                                                    if (sendBtn) sendBtn.click();
+                                                }, 100);
+                                            },
+                                            function(error) {
+                                                alert('Geolocation error: ' + error.message);
+                                                btn.disabled = false;
+                                                btn.textContent = '📍 Current Location';
+                                            },
+                                            { enableHighAccuracy: true, timeout: 10000 }
+                                        );
+                                    } else {
+                                        alert('Geolocation is not supported by your browser');
+                                    }
+                                });
+                            }
+                        }, 1000);
+                    });
+                """),
                 ui.div(
                     ui.p(""),
                     ui.help_text("For this region display"),
