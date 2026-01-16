@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "DiversiPlant",
+    "subtitle": "Painel de Seleção de Espécies"
+  },
+  "nav": {
+    "start": "Início",
+    "location": "Localização",
+    "climate": "Clima",
+    "species": "Espécies",
+    "results": "Resultados",
+    "admin": "Admin"
+  },
+  "start": {
+    "title": "Descubra espécies compatíveis para seu projeto de plantio",
+    "description": "Encontre informações práticas sobre plantas que provavelmente prosperarão juntas em seu terreno agrícola, florestal ou de restauração",
+    "filter_info": "De centenas de milhares de espécies de plantas, filtre aquelas não adequadas para sua localização e propósitos",
+    "skip_info": "Pule as abas se quiser manter todas as opções disponíveis abertas. Volte para alterar seleções de filtragem anteriores a qualquer momento em qualquer aba.",
+    "share_info": "Compartilhe a lista de espécies selecionadas para encontrar sementes ou mudas em sua região.",
+    "choose_database": "Escolha um Banco de Dados:",
+    "database_gift": "Características práticas de manejo. Rápido. Poucas espécies comuns. Ignora localização.",
+    "database_gbif": "Maioria das espécies conhecidas. Detalhes botânicos. Filtrado para sua localização. Lento.",
+    "under_construction": "Em construção: Integrando e expandindo ambos os bancos de dados para um fluxo de busca único",
+    "disclaimer": "Este aplicativo (ainda) não aborda espaçamento, arranjos espaciais, fisiologia radicular, nem interações inseto/micróbio."
+  },
+  "location": {
+    "title": "Localização",
+    "paste_coords": "Cole suas coordenadas:",
+    "current_location": "Localização Atual",
+    "send": "Enviar",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "floristic_group": "Para esta região exibir",
+    "all_species": "Todas as Espécies",
+    "endemic": "Endêmicas",
+    "native": "Nativas",
+    "naturalized": "Naturalizadas",
+    "ecoregion": "Ecorregião",
+    "tdwg_region": "Região Florística",
+    "biome": "Bioma"
+  },
+  "climate": {
+    "title": "Clima",
+    "annual_temp": "Temperatura Média Anual",
+    "annual_precip": "Precipitação Anual",
+    "temp_range": "Amplitude Térmica",
+    "whittaker_title": "Diagrama de Whittaker",
+    "whittaker_description": "Visualize a classificação de biomas baseada em temperatura e precipitação"
+  },
+  "species": {
+    "title": "Espécies",
+    "search": "Buscar espécies...",
+    "filters": "Filtros",
+    "growth_form": "Forma de Crescimento",
+    "family": "Família",
+    "genus": "Gênero",
+    "common_name": "Nome Popular",
+    "scientific_name": "Nome Científico",
+    "traits": "Características",
+    "distribution": "Distribuição",
+    "conservation": "Status de Conservação"
+  },
+  "results": {
+    "title": "Resultados",
+    "selected_species": "Espécies Selecionadas",
+    "export": "Exportar",
+    "export_csv": "Exportar como CSV",
+    "export_pdf": "Exportar como PDF",
+    "share": "Compartilhar",
+    "copy_link": "Copiar Link",
+    "total_species": "Total de Espécies",
+    "clear_selection": "Limpar Seleção"
+  },
+  "admin": {
+    "title": "Painel Administrativo",
+    "crawler_status": "Status dos Crawlers",
+    "last_run": "Última Execução",
+    "last_success": "Último Sucesso",
+    "records": "Registros",
+    "errors": "Erros",
+    "run_now": "Executar Agora",
+    "logs": "Logs",
+    "species_count": "Contagem de Espécies",
+    "common_names_count": "Nomes Populares",
+    "traits_coverage": "Cobertura de Características",
+    "user_metrics": "Métricas de Usuário (24h)",
+    "page_views": "Visualizações de Página",
+    "unique_sessions": "Sessões Únicas"
+  },
+  "growth_forms": {
+    "tree": "Árvore",
+    "shrub": "Arbusto",
+    "herb": "Erva",
+    "climber": "Trepadeira",
+    "vine": "Cipó",
+    "palm": "Palmeira",
+    "bamboo": "Bambu",
+    "fern": "Samambaia",
+    "grass": "Gramínea",
+    "succulent": "Suculenta",
+    "aquatic": "Aquática",
+    "epiphyte": "Epífita"
+  },
+  "strata": {
+    "emergent": "Emergente",
+    "canopy": "Dossel",
+    "understory": "Sub-bosque",
+    "shrub_layer": "Estrato Arbustivo",
+    "ground_layer": "Estrato Herbáceo"
+  },
+  "dispersal": {
+    "zoochory": "Dispersão por animais",
+    "anemochory": "Dispersão pelo vento",
+    "hydrochory": "Dispersão pela água",
+    "autochory": "Autodispersão",
+    "barochory": "Dispersão por gravidade"
+  },
+  "iucn": {
+    "EX": "Extinta",
+    "EW": "Extinta na Natureza",
+    "CR": "Criticamente em Perigo",
+    "EN": "Em Perigo",
+    "VU": "Vulnerável",
+    "NT": "Quase Ameaçada",
+    "LC": "Menos Preocupante",
+    "DD": "Dados Insuficientes",
+    "NE": "Não Avaliada"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpar",
+    "refresh": "Atualizar",
+    "download": "Baixar",
+    "upload": "Enviar",
+    "yes": "Sim",
+    "no": "Não",
+    "none": "Nenhum",
+    "all": "Todos",
+    "select": "Selecionar",
+    "selected": "Selecionado",
+    "unknown": "Desconhecido"
+  }
+}

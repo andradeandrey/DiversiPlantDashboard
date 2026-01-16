@@ -1,0 +1,153 @@
+{
+  "app": {
+    "title": "DiversiPlant",
+    "subtitle": "Species Selection Dashboard"
+  },
+  "nav": {
+    "start": "Start",
+    "location": "Location",
+    "climate": "Climate",
+    "species": "Species",
+    "results": "Results",
+    "admin": "Admin"
+  },
+  "start": {
+    "title": "Discover compatible species for your planting project",
+    "description": "Find practical information about plants that are likely to thrive together in your agricultural, forestry or restoration plot",
+    "filter_info": "From 100,000s of plant species filter out those not suited for your location and purposes",
+    "skip_info": "Skip tabs if you want to keep all available options open. Revert to change previous filtering selections at any time on any tab.",
+    "share_info": "Share list of your selected species to find seeds or seedlings in your region.",
+    "choose_database": "Choose a Database:",
+    "database_gift": "Practical management traits. Fast. Few common species. Ignores location.",
+    "database_gbif": "Most known species. Botanical details. Filtered for your location. Slow.",
+    "under_construction": "Under construction: Integrating & expanding both databases for single search flow",
+    "disclaimer": "This app does not (yet) tackle spacing, spatial arrangements, rooting physiology, nor insect/microbe interactions."
+  },
+  "location": {
+    "title": "Location",
+    "paste_coords": "Paste your coordinates:",
+    "current_location": "Current Location",
+    "send": "Send",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "floristic_group": "For this region display",
+    "all_species": "All Species",
+    "endemic": "Endemic",
+    "native": "Native",
+    "naturalized": "Naturalized",
+    "ecoregion": "Ecoregion",
+    "tdwg_region": "Floristic Region",
+    "biome": "Biome"
+  },
+  "climate": {
+    "title": "Climate",
+    "annual_temp": "Annual Mean Temperature",
+    "annual_precip": "Annual Precipitation",
+    "temp_range": "Temperature Range",
+    "whittaker_title": "Whittaker Diagram",
+    "whittaker_description": "Visualize biome classification based on temperature and precipitation"
+  },
+  "species": {
+    "title": "Species",
+    "search": "Search species...",
+    "filters": "Filters",
+    "growth_form": "Growth Form",
+    "family": "Family",
+    "genus": "Genus",
+    "common_name": "Common Name",
+    "scientific_name": "Scientific Name",
+    "traits": "Traits",
+    "distribution": "Distribution",
+    "conservation": "Conservation Status"
+  },
+  "results": {
+    "title": "Results",
+    "selected_species": "Selected Species",
+    "export": "Export",
+    "export_csv": "Export as CSV",
+    "export_pdf": "Export as PDF",
+    "share": "Share",
+    "copy_link": "Copy Link",
+    "total_species": "Total Species",
+    "clear_selection": "Clear Selection"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "crawler_status": "Crawler Status",
+    "last_run": "Last Run",
+    "last_success": "Last Success",
+    "records": "Records",
+    "errors": "Errors",
+    "run_now": "Run Now",
+    "logs": "Logs",
+    "species_count": "Species Count",
+    "common_names_count": "Common Names",
+    "traits_coverage": "Traits Coverage",
+    "user_metrics": "User Metrics (24h)",
+    "page_views": "Page Views",
+    "unique_sessions": "Unique Sessions"
+  },
+  "growth_forms": {
+    "tree": "Tree",
+    "shrub": "Shrub",
+    "herb": "Herb",
+    "climber": "Climber",
+    "vine": "Vine",
+    "palm": "Palm",
+    "bamboo": "Bamboo",
+    "fern": "Fern",
+    "grass": "Grass",
+    "succulent": "Succulent",
+    "aquatic": "Aquatic",
+    "epiphyte": "Epiphyte"
+  },
+  "strata": {
+    "emergent": "Emergent",
+    "canopy": "Canopy",
+    "understory": "Understory",
+    "shrub_layer": "Shrub Layer",
+    "ground_layer": "Ground Layer"
+  },
+  "dispersal": {
+    "zoochory": "Animal-dispersed",
+    "anemochory": "Wind-dispersed",
+    "hydrochory": "Water-dispersed",
+    "autochory": "Self-dispersed",
+    "barochory": "Gravity-dispersed"
+  },
+  "iucn": {
+    "EX": "Extinct",
+    "EW": "Extinct in the Wild",
+    "CR": "Critically Endangered",
+    "EN": "Endangered",
+    "VU": "Vulnerable",
+    "NT": "Near Threatened",
+    "LC": "Least Concern",
+    "DD": "Data Deficient",
+    "NE": "Not Evaluated"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "refresh": "Refresh",
+    "download": "Download",
+    "upload": "Upload",
+    "yes": "Yes",
+    "no": "No",
+    "none": "None",
+    "all": "All",
+    "select": "Select",
+    "selected": "Selected",
+    "unknown": "Unknown"
+  }
+}

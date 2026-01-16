@@ -1,0 +1,162 @@
+name: Crawler Scheduler
+
+on:
+  schedule:
+    # REFLORA - Sunday 2:00 AM UTC
+    - cron: '0 2 * * 0'
+    # GBIF - Sunday 3:00 AM UTC
+    - cron: '0 3 * * 0'
+    # GIFT - 1st of month 4:00 AM UTC
+    - cron: '0 4 1 * *'
+    # WCVP - 1st of month 5:00 AM UTC
+    - cron: '0 5 1 * *'
+    # TreeGOER - 15th of month 2:00 AM UTC
+    - cron: '0 2 15 * *'
+    # IUCN - 1st of month 3:00 AM UTC
+    - cron: '0 3 1 * *'
+
+  workflow_dispatch:
+    inputs:
+      crawler:
+        description: 'Crawler to run'
+        required: true
+        type: choice
+        options:
+          - reflora
+          - gbif
+          - gift
+          - wcvp
+          - worldclim
+          - treegoer
+          - iucn
+          - all
+      mode:
+        description: 'Run mode'
+        required: true
+        type: choice
+        options:
+          - incremental
+          - full
+        default: 'incremental'
+
+jobs:
+  determine-crawler:
+    runs-on: ubuntu-latest
+    outputs:
+      crawler: ${{ steps.set-crawler.outputs.crawler }}
+    steps:
+      - id: set-crawler
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "crawler=${{ github.event.inputs.crawler }}" >> $GITHUB_OUTPUT
+          else
+            # Determine crawler based on schedule
+            HOUR=$(date -u +%H)
+            DAY=$(date -u +%d)
+            DOW=$(date -u +%u)
+
+            if [ "$DOW" == "7" ] && [ "$HOUR" == "02" ]; then
+              echo "crawler=reflora" >> $GITHUB_OUTPUT
+            elif [ "$DOW" == "7" ] && [ "$HOUR" == "03" ]; then
+              echo "crawler=gbif" >> $GITHUB_OUTPUT
+            elif [ "$DAY" == "01" ] && [ "$HOUR" == "04" ]; then
+              echo "crawler=gift" >> $GITHUB_OUTPUT
+            elif [ "$DAY" == "01" ] && [ "$HOUR" == "05" ]; then
+              echo "crawler=wcvp" >> $GITHUB_OUTPUT
+            elif [ "$DAY" == "15" ] && [ "$HOUR" == "02" ]; then
+              echo "crawler=treegoer" >> $GITHUB_OUTPUT
+            elif [ "$DAY" == "01" ] && [ "$HOUR" == "03" ]; then
+              echo "crawler=iucn" >> $GITHUB_OUTPUT
+            else
+              echo "crawler=none" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  run-crawler:
+    runs-on: ubuntu-latest
+    needs: determine-crawler
+    if: needs.determine-crawler.outputs.crawler != 'none'
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: diversiplant
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install R (for GIFT crawler)
+        if: needs.determine-crawler.outputs.crawler == 'gift' || needs.determine-crawler.outputs.crawler == 'all'
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3'
+
+      - name: Install R packages (for GIFT crawler)
+        if: needs.determine-crawler.outputs.crawler == 'gift' || needs.determine-crawler.outputs.crawler == 'all'
+        run: |
+          Rscript -e 'install.packages(c("GIFT", "jsonlite"), repos="https://cloud.r-project.org")'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev libgdal-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run crawler
+        env:
+          DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/diversiplant
+          IUCN_API_TOKEN: ${{ secrets.IUCN_API_TOKEN }}
+        run: |
+          MODE=${{ github.event.inputs.mode || 'incremental' }}
+          python -m crawlers.run --source ${{ needs.determine-crawler.outputs.crawler }} --mode $MODE --verbose
+
+      - name: Check crawler status
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          psql -h localhost -U ${{ secrets.DB_USER }} -d diversiplant -c "SELECT * FROM crawler_status WHERE crawler_name='${{ needs.determine-crawler.outputs.crawler }}'"
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawler-logs
+          path: logs/
+          retention-days: 7
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: run-crawler
+    if: always()
+
+    steps:
+      - name: Notify on success
+        if: needs.run-crawler.result == 'success'
+        run: |
+          echo "Crawler completed successfully"
+          # Add Slack/Discord/Email notification here if needed
+
+      - name: Notify on failure
+        if: needs.run-crawler.result == 'failure'
+        run: |
+          echo "Crawler failed!"
+          # Add Slack/Discord/Email notification here if needed

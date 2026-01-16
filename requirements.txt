@@ -1,8 +1,12 @@
+# DiversiPlant Dashboard Requirements
+# Core dependencies
 anyio== 4.4.0
 appdirs== 1.4.4
+APScheduler== 3.10.4
 asgiref== 3.8.1
 asttokens== 2.4.1
 attrs== 24.2.0
+beautifulsoup4== 4.12.3
 branca== 0.8.1
 certifi== 2024.8.30
 cffi== 1.17.1
@@ -45,6 +49,8 @@ pexpect== 4.9.0
 platformdirs== 4.3.1
 plotly== 5.22.0
 prompt-toolkit== 3.0.36
+psycopg2-binary== 2.9.9
+pygbif== 0.6.4
 ptyprocess== 0.7.0
 pure-eval== 0.2.3
 pycparser== 2.22
@@ -63,6 +69,7 @@ shiny== 0.9.0
 shinywidgets== 0.3.2
 six== 1.16.0
 sniffio== 1.3.1
+SQLAlchemy== 2.0.25
 stack-data== 0.6.3
 starlette== 0.38.4
 tenacity== 9.0.0
