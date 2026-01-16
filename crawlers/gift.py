@@ -1,9 +1,14 @@
-"""GIFT (Global Inventory of Floras and Traits) crawler."""
+"""GIFT (Global Inventory of Floras and Traits) crawler.
+
+Implements growth form determination logic based on Climber.R (Renata Rodrigues Lucas).
+See docs/gift.md for detailed documentation on the priority rules.
+"""
 from typing import Generator, Dict, Any, List, Optional
 import subprocess
 import json
 import tempfile
 import os
+from collections import defaultdict
 from .base import BaseCrawler
 
 
@@ -14,19 +19,31 @@ class GIFTCrawler(BaseCrawler):
     Uses the GIFT R package via rpy2 or subprocess.
     Coverage: ~350,000 species with functional traits
     Traits: growth_form, height, dispersal, nitrogen fixation, etc.
+
+    Growth form determination follows Climber.R logic:
+    - liana/vine always take priority over trait_1.2.2
+    - self-supporting defers to trait_1.2.2
+    - herb is normalized to forb
     """
 
     name = 'gift'
 
     # GIFT trait IDs for the traits we need
+    # Reference: https://gift.uni-goettingen.de/
     TRAIT_IDS = {
-        'growth_form': '1.2.1',
-        'climber_type': '1.4.2',
+        'growth_form': '1.2.2',      # Primary growth form (tree, shrub, herb, etc.)
+        'climber_type': '1.4.2',     # Climber classification (liana, vine, self-supporting)
         'dispersal_syndrome': '3.3.1',
         'nitrogen_fixer': '4.5.1',
         'max_height': '3.1.1',
-        'woodiness': '1.2.2',
         'life_form': '1.1.1',
+    }
+
+    # Valid growth form values after normalization (aligned with Climber.R)
+    VALID_GROWTH_FORMS = {
+        'tree', 'shrub', 'subshrub', 'palm', 'liana', 'vine',
+        'forb', 'graminoid', 'fern', 'bamboo', 'succulent',
+        'aquatic', 'epiphyte', 'other'
     }
 
     def __init__(self, db_url: str):
@@ -163,17 +180,16 @@ class GIFTCrawler(BaseCrawler):
         traits = {}
 
         if trait_name == 'growth_form' and trait_value:
-            traits['growth_form'] = self._normalize_growth_form(trait_value)
+            # Store raw value; will be combined with climber_type later
+            traits['_raw_growth_form'] = trait_value.lower().strip()
         elif trait_name == 'climber_type' and trait_value:
-            if trait_value.lower() not in ['self-supporting', 'self supporting']:
-                traits['growth_form'] = 'climber'
+            # Store raw value; will be combined with growth_form later
+            traits['_raw_climber_type'] = trait_value.lower().strip()
         elif trait_name == 'max_height' and trait_value:
             try:
                 traits['max_height_m'] = float(trait_value)
             except (ValueError, TypeError):
                 pass
-        elif trait_name == 'woodiness' and trait_value:
-            traits['woodiness'] = trait_value.lower()
         elif trait_name == 'nitrogen_fixer' and trait_value:
             traits['nitrogen_fixer'] = trait_value.lower() in ['yes', 'true', '1']
         elif trait_name == 'dispersal_syndrome' and trait_value:
@@ -186,6 +202,160 @@ class GIFTCrawler(BaseCrawler):
 
         return transformed
 
+    def determine_growth_form(
+        self,
+        trait_1_4_2: Optional[str],
+        trait_1_2_2: Optional[str]
+    ) -> str:
+        """
+        Determine growth_form based on Climber.R logic (Renata Rodrigues Lucas).
+
+        Priority rules:
+        1. liana (trait_1.4.2) ALWAYS takes priority → "liana"
+        2. vine (trait_1.4.2) ALWAYS takes priority → "vine"
+        3. self-supporting (trait_1.4.2) defers to trait_1.2.2
+        4. NA (trait_1.4.2) defers to trait_1.2.2
+        5. herb is normalized to forb
+
+        Args:
+            trait_1_4_2: Value from GIFT trait_value_1.4.2 (climber type)
+            trait_1_2_2: Value from GIFT trait_value_1.2.2 (growth form)
+
+        Returns:
+            Normalized growth form value
+
+        Reference:
+            docs/gift.md - Complete documentation of the logic
+        """
+        # Normalize inputs
+        climber = trait_1_4_2.lower().strip() if trait_1_4_2 else None
+        growth = trait_1_2_2.lower().strip() if trait_1_2_2 else None
+
+        # Normalize herb → forb
+        if growth == 'herb':
+            growth = 'forb'
+        elif growth == 'herbaceous':
+            growth = 'forb'
+
+        # Rule 1: liana ALWAYS takes priority (woody climber)
+        if climber == 'liana':
+            return 'liana'
+
+        # Rule 2: vine ALWAYS takes priority (herbaceous climber)
+        if climber == 'vine':
+            return 'vine'
+
+        # Rule 3: self-supporting defers to trait_1.2.2
+        if climber == 'self-supporting':
+            if growth:
+                return self._normalize_growth_form_value(growth)
+            return 'other'
+
+        # Rule 4: When climber_type is None/NA, use growth_form
+        if climber is None:
+            if growth:
+                return self._normalize_growth_form_value(growth)
+            return 'other'
+
+        # Fallback: use climber_type if it has a value
+        if climber:
+            return self._normalize_growth_form_value(climber)
+
+        return 'other'
+
+    def _normalize_growth_form_value(self, value: str) -> str:
+        """
+        Normalize a single growth form value to standard categories.
+
+        Aligned with Climber.R output values.
+
+        Args:
+            value: Raw growth form value
+
+        Returns:
+            Normalized value from VALID_GROWTH_FORMS
+        """
+        if not value:
+            return 'other'
+
+        value = value.lower().strip()
+
+        # Direct mappings
+        direct_map = {
+            'tree': 'tree',
+            'shrub': 'shrub',
+            'subshrub': 'subshrub',
+            'palm': 'palm',
+            'liana': 'liana',
+            'vine': 'vine',
+            'forb': 'forb',
+            'herb': 'forb',           # herb → forb (Climber.R)
+            'herbaceous': 'forb',     # herbaceous → forb
+            'graminoid': 'graminoid',
+            'grass': 'graminoid',     # grass → graminoid
+            'fern': 'fern',
+            'bamboo': 'bamboo',
+            'succulent': 'succulent',
+            'aquatic': 'aquatic',
+            'epiphyte': 'epiphyte',
+            'other': 'other',
+        }
+
+        if value in direct_map:
+            return direct_map[value]
+
+        # Partial matching for edge cases
+        for key, normalized in direct_map.items():
+            if key in value:
+                return normalized
+
+        return 'other'
+
+    def combine_species_traits(self, species_data: Dict[str, Dict]) -> Generator[Dict, None, None]:
+        """
+        Combine growth_form and climber_type for each species using Climber.R logic.
+
+        This method should be called after fetching both trait_1.2.2 and trait_1.4.2
+        to properly determine the final growth_form.
+
+        Args:
+            species_data: Dict mapping species name to trait data
+
+        Yields:
+            Combined species records with determined growth_form
+        """
+        for species_name, data in species_data.items():
+            trait_1_2_2 = data.get('_raw_growth_form')
+            trait_1_4_2 = data.get('_raw_climber_type')
+
+            # Determine final growth_form using Climber.R logic
+            final_growth_form = self.determine_growth_form(trait_1_4_2, trait_1_2_2)
+
+            # Build output record
+            result = {
+                'canonical_name': species_name,
+                'gift_work_id': data.get('gift_work_id'),
+                'genus': data.get('genus'),
+                'taxonomic_status': 'accepted',
+                'traits': {
+                    'growth_form': final_growth_form,
+                    'source': 'gift',
+                }
+            }
+
+            # Add other traits if present
+            for key in ['max_height_m', 'nitrogen_fixer', 'dispersal_syndrome', 'life_form']:
+                if key in data:
+                    result['traits'][key] = data[key]
+
+            # Store raw values for debugging/audit
+            if trait_1_2_2:
+                result['traits']['_gift_trait_1_2_2'] = trait_1_2_2
+            if trait_1_4_2:
+                result['traits']['_gift_trait_1_4_2'] = trait_1_4_2
+
+            yield result
+
     def _clean_species_name(self, name: str) -> str:
         """Clean species name."""
         if not name:
@@ -197,34 +367,6 @@ class GIFTCrawler(BaseCrawler):
             return f"{parts[0]} {parts[1]}"
         return name.strip()
 
-    def _normalize_growth_form(self, form: str) -> str:
-        """Normalize growth form values."""
-        form = form.lower().strip()
-
-        growth_form_map = {
-            'tree': 'tree',
-            'shrub': 'shrub',
-            'subshrub': 'shrub',
-            'herb': 'herb',
-            'herbaceous': 'herb',
-            'grass': 'herb',
-            'graminoid': 'herb',
-            'climber': 'climber',
-            'vine': 'climber',
-            'liana': 'climber',
-            'palm': 'palm',
-            'fern': 'fern',
-            'bamboo': 'bamboo',
-            'succulent': 'succulent',
-            'aquatic': 'aquatic',
-            'epiphyte': 'epiphyte',
-        }
-
-        for key, value in growth_form_map.items():
-            if key in form:
-                return value
-
-        return form
 
     def get_species_by_region(self, region_id: int) -> List[Dict]:
         """
@@ -307,3 +449,53 @@ class GIFTCrawler(BaseCrawler):
             os.unlink(script_path)
 
         return []
+
+    def run_with_climber_logic(self, mode: str = 'incremental') -> None:
+        """
+        Run the GIFT crawler with full Climber.R logic.
+
+        This method:
+        1. Fetches trait_1.2.2 (growth_form) and trait_1.4.2 (climber_type)
+        2. Combines them per species using determine_growth_form()
+        3. Saves to database with the properly determined growth_form
+
+        Args:
+            mode: 'full' or 'incremental'
+        """
+        self._log_start()
+
+        try:
+            # Collect all species data
+            species_data: Dict[str, Dict] = defaultdict(dict)
+
+            # Fetch growth_form (1.2.2) and climber_type (1.4.2)
+            for trait_name in ['growth_form', 'climber_type']:
+                self.logger.info(f"Fetching {trait_name}...")
+
+                for raw_record in self.fetch_data(mode=mode, traits=[trait_name]):
+                    transformed = self.transform(raw_record)
+                    if not transformed:
+                        continue
+
+                    species_name = transformed['canonical_name']
+                    traits = transformed.get('traits', {})
+
+                    # Merge into species_data
+                    if 'gift_work_id' not in species_data[species_name]:
+                        species_data[species_name]['gift_work_id'] = transformed.get('gift_work_id')
+                        species_data[species_name]['genus'] = transformed.get('genus')
+
+                    species_data[species_name].update(traits)
+
+            self.logger.info(f"Combining traits for {len(species_data)} species...")
+
+            # Combine traits using Climber.R logic and save
+            for record in self.combine_species_traits(species_data):
+                self._save(record)
+                self.stats['processed'] += 1
+
+            self._log_success()
+
+        except Exception as e:
+            self._log_error(str(e))
+            raise

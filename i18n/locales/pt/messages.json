@@ -90,16 +90,21 @@
   "growth_forms": {
     "tree": "Árvore",
     "shrub": "Arbusto",
+    "subshrub": "Subarbusto",
+    "palm": "Palmeira",
+    "liana": "Liana (trepadeira lenhosa)",
+    "vine": "Cipó (trepadeira herbácea)",
+    "forb": "Erva não-graminoide",
+    "graminoid": "Graminoide",
     "herb": "Erva",
     "climber": "Trepadeira",
-    "vine": "Cipó",
-    "palm": "Palmeira",
     "bamboo": "Bambu",
     "fern": "Samambaia",
     "grass": "Gramínea",
     "succulent": "Suculenta",
     "aquatic": "Aquática",
-    "epiphyte": "Epífita"
+    "epiphyte": "Epífita",
+    "other": "Outro"
   },
   "strata": {
     "emergent": "Emergente",

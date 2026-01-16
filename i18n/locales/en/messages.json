@@ -90,16 +90,21 @@
   "growth_forms": {
     "tree": "Tree",
     "shrub": "Shrub",
+    "subshrub": "Subshrub",
+    "palm": "Palm",
+    "liana": "Liana (woody climber)",
+    "vine": "Vine (herbaceous climber)",
+    "forb": "Forb (non-graminoid herb)",
+    "graminoid": "Graminoid (grass-like)",
     "herb": "Herb",
     "climber": "Climber",
-    "vine": "Vine",
-    "palm": "Palm",
     "bamboo": "Bamboo",
     "fern": "Fern",
     "grass": "Grass",
     "succulent": "Succulent",
     "aquatic": "Aquatic",
-    "epiphyte": "Epiphyte"
+    "epiphyte": "Epiphyte",
+    "other": "Other"
   },
   "strata": {
     "emergent": "Emergent",
