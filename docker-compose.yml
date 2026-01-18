@@ -1,0 +1,52 @@
+# DiversiPlant Dashboard - Docker Compose
+# PostgreSQL 16 + PostGIS 3.4
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: diversiplant-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-diversiplant}
+      POSTGRES_USER: ${POSTGRES_USER:-diversiplant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-diversiplant_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-diversiplant} -d ${POSTGRES_DB:-diversiplant}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin para gerenciamento visual (opcional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: diversiplant-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@diversiplant.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - admin
+
+volumes:
+  postgres_data:
+    name: diversiplant_postgres_data
+  pgadmin_data:
+    name: diversiplant_pgadmin_data
+
+networks:
+  default:
+    name: diversiplant_network

@@ -41,6 +41,9 @@ CREATE TABLE species_traits (
     deciduousness VARCHAR(50),
     source VARCHAR(50), -- 'gift', 'wcvp', 'practitioners'
     confidence DECIMAL(3,2),
+    -- Raw GIFT trait values for audit (Climber.R logic)
+    _gift_trait_1_2_2 VARCHAR(100), -- Original growth form from GIFT
+    _gift_trait_1_4_2 VARCHAR(100), -- Original climber type from GIFT
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

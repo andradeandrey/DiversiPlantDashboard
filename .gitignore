@@ -2,20 +2,40 @@
 **/test_js/
 
 # Environments
+.env
 *.env
+!.env.example
+
+# Virtual environments
+*venv
+venv/
+.venv/
 
 # Ignore data files
 *.db
 
 *.ipynb
 **/rsconnect-pyton/
-*.env
-*venv
 .DS_Store
 *DS_Store
 
+# Data files (local)
 data/GIFT_practitioners.csv
 data/GIFT_practitioners.xlsx
 data/practitioners.xlsx
 
+# Contract documents
 contrato/*
+
+# Docker volumes (if mounted locally)
+postgres_data/
+pgadmin_data/
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+logs/
