@@ -19,7 +19,8 @@ class WorldClimCrawler(BaseCrawler):
 
     name = 'worldclim'
 
-    BASE_URL = 'https://biogeo.ucdavis.edu/data/worldclim/v2.1/base'
+    # Updated URL (changed from biogeo.ucdavis.edu to geodata.ucdavis.edu)
+    BASE_URL = 'https://geodata.ucdavis.edu/climate/worldclim/2_1/base'
 
     # Bioclimatic variables
     BIOCLIM_VARS = {
@@ -145,7 +146,8 @@ class WorldClimCrawler(BaseCrawler):
             with zipfile.ZipFile(bio_zip, 'r') as z:
                 for i in range(1, 20):
                     var_name = f'bio{i}'
-                    tif_name = f"wc2.1_{resolution}_{var_name}.tif"
+                    # WorldClim uses underscore before number: wc2.1_10m_bio_1.tif
+                    tif_name = f"wc2.1_{resolution}_bio_{i}.tif"
 
                     if tif_name not in z.namelist():
                         continue

@@ -127,23 +127,15 @@ class BaseCrawler(ABC):
             self.logger.warning(f"Error processing item: {e}")
 
     def _save(self, data: Dict):
-        """Save or update a species record."""
+        """Save or update a species record using UPSERT."""
         with Session(self.engine) as session:
-            # Check if species exists
-            result = session.execute(
-                text("SELECT id FROM species WHERE canonical_name = :name"),
-                {'name': data['canonical_name']}
-            ).fetchone()
+            # Use UPSERT to handle duplicates atomically
+            species_id, was_inserted = self._upsert_species(session, data)
 
-            if result:
-                # Update existing
-                species_id = result[0]
-                self._update_species(session, species_id, data)
-                self.stats['updated'] += 1
-            else:
-                # Insert new
-                species_id = self._insert_species(session, data)
+            if was_inserted:
                 self.stats['inserted'] += 1
+            else:
+                self.stats['updated'] += 1
 
             # Handle traits if present
             if 'traits' in data:
@@ -155,8 +147,75 @@ class BaseCrawler(ABC):
 
             session.commit()
 
+    def _upsert_species(self, session: Session, data: Dict) -> tuple:
+        """
+        Insert or update a species record atomically using UPSERT.
+
+        Returns:
+            Tuple of (species_id, was_inserted)
+        """
+        # Build the field mappings
+        fields = ['canonical_name']
+        values = {'canonical_name': data['canonical_name']}
+
+        for col in ['genus', 'family', 'taxonomic_status']:
+            if data.get(col):
+                fields.append(col)
+                values[col] = data[col]
+
+        # Add source-specific ID
+        id_field, id_value = self._get_source_id_field(data)
+        if id_field and id_value:
+            fields.append(id_field)
+            values[id_field] = id_value
+
+        cols_str = ', '.join(fields)
+        vals_str = ', '.join(f':{f}' for f in fields)
+
+        # Build UPDATE clause for conflict (exclude canonical_name from updates)
+        update_fields = [f for f in fields if f != 'canonical_name']
+        if id_field in update_fields:
+            # Only update source ID if it was NULL
+            update_clause = ', '.join(
+                f"{f} = COALESCE(species.{f}, EXCLUDED.{f})" if f == id_field
+                else f"{f} = EXCLUDED.{f}"
+                for f in update_fields
+            )
+        else:
+            update_clause = ', '.join(f"{f} = EXCLUDED.{f}" for f in update_fields)
+
+        # Use INSERT ... ON CONFLICT for atomic upsert
+        # xmax = 0 means it was inserted, xmax > 0 means it was updated
+        result = session.execute(
+            text(f"""
+                INSERT INTO species ({cols_str})
+                VALUES ({vals_str})
+                ON CONFLICT (canonical_name) DO UPDATE SET
+                    {update_clause},
+                    updated_at = NOW()
+                RETURNING id, (xmax = 0) as was_inserted
+            """),
+            values
+        ).fetchone()
+
+        return result[0], result[1]
+
+    def _get_source_id_field(self, data: Dict) -> tuple:
+        """Get the source-specific ID field and value."""
+        if self.name == 'gbif' and data.get('gbif_taxon_key'):
+            return 'gbif_taxon_key', data['gbif_taxon_key']
+        elif self.name == 'reflora' and data.get('reflora_id'):
+            return 'reflora_id', data['reflora_id']
+        elif self.name == 'gift' and data.get('gift_work_id'):
+            return 'gift_work_id', data['gift_work_id']
+        elif self.name == 'wcvp' and data.get('wcvp_id'):
+            return 'wcvp_id', data['wcvp_id']
+        elif self.name == 'iucn' and data.get('iucn_taxon_id'):
+            return 'iucn_taxon_id', data['iucn_taxon_id']
+        return None, None
+
     def _insert_species(self, session: Session, data: Dict) -> int:
-        """Insert a new species record."""
+        """Insert a new species record (legacy method, use _upsert_species instead)."""
         columns = ['canonical_name', 'genus', 'family', 'taxonomic_status']
         source_cols = [f'{self.name}_id' if self.name != 'gbif' else 'gbif_taxon_key']
 
@@ -267,8 +326,18 @@ class BaseCrawler(ABC):
             )
 
     def _save_common_names(self, session: Session, species_id: int, names: list):
-        """Save common names for a species."""
+        """Save common names for a species using savepoints for error isolation."""
         for name_data in names:
+            name = name_data.get('name', '')
+            if not name:
+                continue
+
+            # Truncate very long names (some GBIF names are concatenated lists)
+            if len(name) > 500:
+                name = name[:500]
+
+            # Use a savepoint so failures don't abort the entire transaction
+            savepoint = session.begin_nested()
             try:
                 session.execute(
                     text("""
@@ -278,13 +347,15 @@ class BaseCrawler(ABC):
                     """),
                     {
                         'sid': species_id,
-                        'name': name_data['name'],
+                        'name': name,
                         'lang': name_data.get('language', 'en'),
                         'src': self.name
                     }
                 )
+                savepoint.commit()
             except Exception as e:
-                self.logger.warning(f"Error saving common name: {e}")
+                savepoint.rollback()
+                self.logger.debug(f"Skipped common name (error): {name[:50]}...")
 
     def _log_start(self):
         """Log crawler start to database."""

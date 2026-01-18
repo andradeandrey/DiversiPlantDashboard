@@ -74,6 +74,12 @@ def parse_args():
         help='Start the scheduler daemon'
     )
 
+    parser.add_argument(
+        '--by-family',
+        action='store_true',
+        help='[GBIF] Paginate by family to get ALL species (bypasses 100k limit)'
+    )
+
     return parser.parse_args()
 
 
@@ -168,6 +174,8 @@ def main():
         kwargs = {}
         if args.max_records:
             kwargs['max_records'] = args.max_records
+        if args.by_family:
+            kwargs['by_family'] = True
 
         if args.source == 'all':
             run_all_crawlers(args.mode, db_url, **kwargs)

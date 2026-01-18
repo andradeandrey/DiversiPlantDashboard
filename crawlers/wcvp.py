@@ -5,8 +5,12 @@ import zipfile
 import csv
 import io
 import os
+import sys
 import tempfile
 from .base import BaseCrawler
+
+# Increase CSV field size limit for large WCVP fields
+csv.field_size_limit(sys.maxsize)
 
 
 class WCVPCrawler(BaseCrawler):
@@ -66,7 +70,8 @@ class WCVPCrawler(BaseCrawler):
         count = 0
 
         with open(names_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
+            # WCVP uses pipe delimiter
+            reader = csv.DictReader(f, delimiter='|')
 
             for row in reader:
                 # Only process accepted species
@@ -77,6 +82,9 @@ class WCVPCrawler(BaseCrawler):
 
                 yield row
                 count += 1
+
+                if count % 10000 == 0:
+                    self.logger.info(f"Progress: {count} species processed")
 
                 if max_records and count >= max_records:
                     break
@@ -184,7 +192,8 @@ class WCVPCrawler(BaseCrawler):
             return
 
         with open(dist_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
+            # WCVP uses pipe delimiter
+            reader = csv.DictReader(f, delimiter='|')
 
             for row in reader:
                 yield {
@@ -213,7 +222,8 @@ class WCVPCrawler(BaseCrawler):
         names_file = os.path.join(self._data_dir, self.NAMES_FILE)
 
         with open(names_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
+            # WCVP uses pipe delimiter
+            reader = csv.DictReader(f, delimiter='|')
 
             for row in reader:
                 if row.get('accepted_plant_name_id') == wcvp_id:

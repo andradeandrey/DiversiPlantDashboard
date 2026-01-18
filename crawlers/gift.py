@@ -103,17 +103,22 @@ class GIFTCrawler(BaseCrawler):
 
     def _fetch_trait_data(self, trait_id: str, region: str = None) -> List[Dict]:
         """Fetch trait data from GIFT using R."""
-        # Create R script
+        # Create R script with output to temp file to avoid progress bar interference
+        output_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+        output_path = output_file.name
+        output_file.close()
+
         r_script = f'''
-        library(GIFT)
-        library(jsonlite)
+        suppressPackageStartupMessages(library(GIFT))
+        suppressPackageStartupMessages(library(jsonlite))
 
-        # Fetch trait data
-        traits <- GIFT_traits(trait_IDs = "{trait_id}")
+        # Fetch trait data (suppress messages)
+        traits <- suppressMessages(GIFT_traits(trait_IDs = "{trait_id}"))
 
-        # Convert to JSON
+        # Write JSON to file to avoid stdout pollution from progress bars
         json_data <- toJSON(traits, auto_unbox = TRUE)
-        cat(json_data)
+        writeLines(json_data, "{output_path}")
+        cat("OK")
         '''
 
         # Write R script to temp file
@@ -127,25 +132,32 @@ class GIFTCrawler(BaseCrawler):
                 ['Rscript', script_path],
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=600  # GIFT queries can take a while
             )
 
             if result.returncode != 0:
                 self.logger.error(f"R error: {result.stderr}")
                 return []
 
-            # Parse JSON output
+            # Read JSON from output file
             try:
-                data = json.loads(result.stdout)
+                with open(output_path, 'r') as f:
+                    data = json.load(f)
                 if isinstance(data, list):
+                    self.logger.info(f"Fetched {len(data)} records for trait")
                     return data
                 return []
             except json.JSONDecodeError as e:
                 self.logger.error(f"JSON parse error: {e}")
                 return []
+            except FileNotFoundError:
+                self.logger.error("R script did not produce output file")
+                return []
 
         finally:
             os.unlink(script_path)
+            if os.path.exists(output_path):
+                os.unlink(output_path)
 
     def transform(self, raw_data: Dict) -> Dict:
         """
@@ -175,16 +187,18 @@ class GIFTCrawler(BaseCrawler):
 
         # Build traits
         trait_name = raw_data.get('_trait_name', '')
-        trait_value = raw_data.get('trait_value')
+        # GIFT columns are named trait_value_X.X.X (e.g., trait_value_1.2.2)
+        trait_id = self.TRAIT_IDS.get(trait_name, '')
+        trait_value = raw_data.get(f'trait_value_{trait_id}') or raw_data.get('trait_value')
 
         traits = {}
 
         if trait_name == 'growth_form' and trait_value:
             # Store raw value; will be combined with climber_type later
-            traits['_raw_growth_form'] = trait_value.lower().strip()
+            traits['_raw_growth_form'] = str(trait_value).lower().strip()
         elif trait_name == 'climber_type' and trait_value:
             # Store raw value; will be combined with growth_form later
-            traits['_raw_climber_type'] = trait_value.lower().strip()
+            traits['_raw_climber_type'] = str(trait_value).lower().strip()
         elif trait_name == 'max_height' and trait_value:
             try:
                 traits['max_height_m'] = float(trait_value)
@@ -449,6 +463,14 @@ class GIFTCrawler(BaseCrawler):
             os.unlink(script_path)
 
         return []
+
+    def run(self, mode: str = 'incremental', **kwargs) -> None:
+        """
+        Run the GIFT crawler with full Climber.R logic.
+
+        Overrides BaseCrawler.run() to use the proper trait combination logic.
+        """
+        return self.run_with_climber_logic(mode)
 
     def run_with_climber_logic(self, mode: str = 'incremental') -> None:
         """

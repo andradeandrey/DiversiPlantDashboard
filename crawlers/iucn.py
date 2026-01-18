@@ -1,4 +1,11 @@
-"""IUCN Red List crawler."""
+"""IUCN Red List crawler (API v4).
+
+Data source: IUCN Red List of Threatened Species
+API: https://api.iucnredlist.org/api/v4
+Registration: https://api.iucnredlist.org/users/sign_up
+
+Note: API v3 discontinued after March 2025. This uses v4.
+"""
 from typing import Generator, Dict, Any, List, Optional
 import requests
 import os
@@ -7,17 +14,17 @@ from .base import BaseCrawler
 
 class IUCNCrawler(BaseCrawler):
     """
-    Crawler for IUCN Red List of Threatened Species.
+    Crawler for IUCN Red List of Threatened Species (API v4).
 
-    API: https://apiv3.iucnredlist.org
+    API: https://api.iucnredlist.org/api/v4
     Coverage: ~150,000 species assessments
     Data: Conservation status, threats, habitats
-    Note: Requires API token from IUCN
+    Note: Requires API token from IUCN (register at api.iucnredlist.org)
     """
 
     name = 'iucn'
 
-    BASE_URL = 'https://apiv3.iucnredlist.org/api/v3'
+    BASE_URL = 'https://api.iucnredlist.org/api/v4'
 
     # IUCN Red List categories
     CATEGORIES = {
@@ -38,14 +45,15 @@ class IUCNCrawler(BaseCrawler):
         self.session = requests.Session()
 
     def _get_headers(self) -> Dict:
-        """Get request headers with API token."""
+        """Get request headers with Bearer token (v4 API)."""
         return {
-            'Authorization': f'Token {self.api_token}'
+            'Authorization': f'Bearer {self.api_token}',
+            'Accept': 'application/json'
         }
 
     def fetch_data(self, mode='incremental', **kwargs) -> Generator[Dict[str, Any], None, None]:
         """
-        Fetch species data from IUCN Red List.
+        Fetch plant species data from IUCN Red List v4 API.
 
         Args:
             mode: 'full' or 'incremental'
@@ -55,49 +63,56 @@ class IUCNCrawler(BaseCrawler):
             Species conservation data
         """
         if not self.api_token:
-            self.logger.error("IUCN API token not set. Set IUCN_API_TOKEN environment variable.")
+            self.logger.error(
+                "IUCN API token not set. "
+                "Register at https://api.iucnredlist.org/users/sign_up "
+                "and set IUCN_API_TOKEN environment variable."
+            )
             return
 
-        region = kwargs.get('region', None)
         category = kwargs.get('category', None)
         max_records = kwargs.get('max_records', None)
 
-        # Fetch plant species
+        # Fetch plant species from v4 API
+        # Endpoint: /api/v4/taxa/kingdom/Plantae
         page = 0
         count = 0
 
         while True:
             try:
-                # Get species list
-                url = f"{self.BASE_URL}/speciescount/kingdom/plantae"
-                if region:
-                    url = f"{self.BASE_URL}/species/region/{region}/page/{page}"
-                else:
-                    url = f"{self.BASE_URL}/species/page/{page}"
+                url = f"{self.BASE_URL}/taxa/kingdom/Plantae"
+                params = {
+                    'page': page,
+                    'latest': 'true'  # Only latest assessments
+                }
 
                 response = self.session.get(
                     url,
                     headers=self._get_headers(),
-                    params={'token': self.api_token},
+                    params=params,
                     timeout=60
                 )
+
+                if response.status_code == 401:
+                    self.logger.error("IUCN API authentication failed. Check your token.")
+                    return
+
                 response.raise_for_status()
                 data = response.json()
 
-                species_list = data.get('result', [])
-                if not species_list:
+                # v4 API returns 'assessments' list
+                assessments = data.get('assessments', [])
+                if not assessments:
                     break
 
-                for species in species_list:
-                    # Filter to plants only
-                    if species.get('kingdom_name', '').lower() != 'plantae':
-                        continue
-
+                for assessment in assessments:
                     # Filter by category if specified
-                    if category and species.get('category') != category:
-                        continue
+                    if category:
+                        red_list_cat = assessment.get('red_list_category', {})
+                        if red_list_cat.get('code') != category:
+                            continue
 
-                    yield species
+                    yield assessment
                     count += 1
 
                     if max_records and count >= max_records:
@@ -106,29 +121,35 @@ class IUCNCrawler(BaseCrawler):
                 page += 1
                 self.logger.info(f"Fetched page {page}, {count} plant species so far")
 
+                # v4 API paginates at 100 per page
+                if len(assessments) < 100:
+                    break
+
             except requests.exceptions.RequestException as e:
                 self.logger.error(f"IUCN API error: {e}")
                 raise
 
     def transform(self, raw_data: Dict) -> Dict:
         """
-        Transform IUCN data to internal schema.
+        Transform IUCN v4 API data to internal schema.
 
         Args:
-            raw_data: Raw species data from IUCN
+            raw_data: Raw assessment data from IUCN v4 API
 
         Returns:
             Transformed data
         """
-        scientific_name = raw_data.get('scientific_name', '')
+        # v4 API returns taxon info nested
+        taxon = raw_data.get('taxon', {})
+        scientific_name = taxon.get('scientific_name', '')
 
         if not scientific_name:
             return {}
 
         transformed = {
             'canonical_name': self._clean_species_name(scientific_name),
-            'family': raw_data.get('family_name'),
-            'iucn_taxon_id': raw_data.get('taxonid'),
+            'family': taxon.get('family_name'),
+            'iucn_taxon_id': taxon.get('taxon_id'),
             'taxonomic_status': 'accepted',
         }
 
@@ -140,24 +161,37 @@ class IUCNCrawler(BaseCrawler):
         # Store conservation data as traits
         traits = {}
 
-        category = raw_data.get('category')
+        # v4 API: red_list_category is nested
+        red_list_cat = raw_data.get('red_list_category', {})
+        category = red_list_cat.get('code')
         if category:
             traits['iucn_category'] = category
-            traits['iucn_category_name'] = self.CATEGORIES.get(category, category)
+            traits['iucn_category_name'] = self.CATEGORIES.get(category, red_list_cat.get('name', category))
 
-        if raw_data.get('population_trend'):
-            traits['population_trend'] = raw_data['population_trend']
+        # Population trend
+        pop_trend = raw_data.get('population_trend', {})
+        if pop_trend.get('code'):
+            traits['population_trend'] = pop_trend.get('code')
+
+        # Assessment year
+        if raw_data.get('year_published'):
+            traits['assessment_year'] = raw_data['year_published']
 
         if traits:
             transformed['traits'] = traits
 
-        # Common names
-        main_common = raw_data.get('main_common_name')
-        if main_common:
-            transformed['common_names'] = [{
-                'name': main_common,
-                'language': 'en'
-            }]
+        # Common names (may need separate API call in v4)
+        # v4 API may include vernacular names differently
+        vernacular_names = raw_data.get('vernacular_names', [])
+        if vernacular_names:
+            common_names = []
+            for vn in vernacular_names[:5]:  # Limit to 5
+                common_names.append({
+                    'name': vn.get('name', ''),
+                    'language': vn.get('language', 'en')
+                })
+            if common_names:
+                transformed['common_names'] = common_names
 
         return transformed
 
