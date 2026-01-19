@@ -18,9 +18,9 @@ echo "📊 TOTAL DE ESPÉCIES:"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -t -c "SELECT COUNT(*) FROM species;"
 
 echo ""
-echo "📊 POR FORMA DE CRESCIMENTO:"
+echo "📊 POR FORMA DE CRESCIMENTO (espécies únicas):"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
-SELECT growth_form, COUNT(*) as qtd
+SELECT growth_form, COUNT(DISTINCT species_id) as qtd
 FROM species_traits
 WHERE growth_form IS NOT NULL
 GROUP BY growth_form
@@ -69,7 +69,7 @@ echo ""
 echo "📈 QUALIDADE DOS DADOS:"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
 SELECT 'Espécies totais' as metrica, COUNT(*)::text as valor FROM species
-UNION ALL SELECT 'Árvores', COUNT(*)::text FROM species_traits WHERE growth_form = 'tree'
+UNION ALL SELECT 'Árvores', COUNT(DISTINCT species_id)::text FROM species_traits WHERE growth_form = 'tree'
 UNION ALL SELECT 'Com REFLORA (Brasil)', COUNT(*)::text FROM species WHERE reflora_id IS NOT NULL
 UNION ALL SELECT 'Com traits GIFT', COUNT(*)::text FROM species WHERE gift_work_id IS NOT NULL
 UNION ALL SELECT 'Nomes em português', COUNT(DISTINCT species_id)::text FROM common_names WHERE language = 'pt'

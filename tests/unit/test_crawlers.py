@@ -221,6 +221,87 @@ class TestGIFTCrawler:
 
         assert GIFTCrawler.VALID_GROWTH_FORMS == expected
 
+    # ══════════════════════════════════════════════════════════════
+    # EXTENDED CLIMBER TYPES (based on docs/climber_logic.md)
+    # ══════════════════════════════════════════════════════════════
+
+    def test_determine_growth_form_scrambler(self):
+        """Test scrambler → liana (exclusively woody, Sperotto 2020)."""
+        crawler = self._get_mock_crawler()
+
+        # Scramblers are ALWAYS liana (woody) regardless of trait_1.2.2
+        assert crawler.determine_growth_form('scrambler', 'tree') == 'liana'
+        assert crawler.determine_growth_form('scrambler', 'shrub') == 'liana'
+        assert crawler.determine_growth_form('scrambler', 'herb') == 'liana'
+        assert crawler.determine_growth_form('scrambler', None) == 'liana'
+
+    def test_determine_growth_form_hook_climber(self):
+        """Test hook climber → liana (lignified structures like Bougainvillea)."""
+        crawler = self._get_mock_crawler()
+
+        # Hook climbers are ALWAYS liana (woody)
+        assert crawler.determine_growth_form('hook climber', 'shrub') == 'liana'
+        assert crawler.determine_growth_form('hook climber', 'herb') == 'liana'
+        assert crawler.determine_growth_form('hook climber', None) == 'liana'
+
+    def test_determine_growth_form_root_climber(self):
+        """Test root climber → liana (Hedera, Ficus, Philodendron)."""
+        crawler = self._get_mock_crawler()
+
+        # Root climbers are ALWAYS liana (woody)
+        assert crawler.determine_growth_form('root climber', 'tree') == 'liana'
+        assert crawler.determine_growth_form('root climber', 'shrub') == 'liana'
+        assert crawler.determine_growth_form('root climber', 'herb') == 'liana'
+        assert crawler.determine_growth_form('root climber', None) == 'liana'
+
+    def test_determine_growth_form_twining(self):
+        """Test twining → vine (default) or liana (if woody)."""
+        crawler = self._get_mock_crawler()
+
+        # Twining defaults to vine (Ipomoea 700+ spp)
+        assert crawler.determine_growth_form('twining', 'herb') == 'vine'
+        assert crawler.determine_growth_form('twining', 'forb') == 'vine'
+        assert crawler.determine_growth_form('twining', None) == 'vine'
+
+        # But if woody (Wisteria, Lonicera), becomes liana
+        assert crawler.determine_growth_form('twining', 'tree') == 'liana'
+        assert crawler.determine_growth_form('twining', 'shrub') == 'liana'
+
+    def test_determine_growth_form_tendril_climber(self):
+        """Test tendril climber → depends on trait_1.2.2 (Vitis=liana, Passiflora=vine)."""
+        crawler = self._get_mock_crawler()
+
+        # Tendril climbers with woody trait → liana
+        assert crawler.determine_growth_form('tendril climber', 'tree') == 'liana'
+        assert crawler.determine_growth_form('tendril climber', 'shrub') == 'liana'
+
+        # Tendril climbers with herbaceous trait → vine
+        assert crawler.determine_growth_form('tendril climber', 'herb') == 'vine'
+        assert crawler.determine_growth_form('tendril climber', 'forb') == 'vine'
+
+        # No trait info → default to vine (conservative)
+        assert crawler.determine_growth_form('tendril climber', None) == 'vine'
+
+    def test_determine_growth_form_leaning(self):
+        """Test leaning → consults trait_1.2.2 (behavior, not structure)."""
+        crawler = self._get_mock_crawler()
+
+        # Leaning uses trait_1.2.2 directly
+        assert crawler.determine_growth_form('leaning', 'tree') == 'tree'
+        assert crawler.determine_growth_form('leaning', 'shrub') == 'shrub'
+        assert crawler.determine_growth_form('leaning', 'herb') == 'forb'
+        assert crawler.determine_growth_form('leaning', None) == 'other'
+
+    def test_determine_growth_form_epiphytic_climber(self):
+        """Test epiphytic climber → liana (Philodendron, Monstera)."""
+        crawler = self._get_mock_crawler()
+
+        # Epiphytic climbers are ALWAYS liana (hemiepiphytes are woody)
+        assert crawler.determine_growth_form('epiphytic climber', 'tree') == 'liana'
+        assert crawler.determine_growth_form('epiphytic climber', 'shrub') == 'liana'
+        assert crawler.determine_growth_form('epiphytic climber', 'herb') == 'liana'
+        assert crawler.determine_growth_form('epiphytic climber', None) == 'liana'
+
 
 class TestTreeGOERCrawler:
     """Test cases for TreeGOER crawler."""

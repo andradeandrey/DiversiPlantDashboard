@@ -296,7 +296,8 @@ class BaseCrawler(ABC):
             values = {'id': existing[0]}
 
             for key in ['growth_form', 'max_height_m', 'stratum', 'life_form',
-                        'woodiness', 'nitrogen_fixer', 'dispersal_syndrome', 'deciduousness']:
+                        'woodiness', 'nitrogen_fixer', 'dispersal_syndrome', 'deciduousness',
+                        '_gift_trait_1_2_2', '_gift_trait_1_4_2']:
                 if traits.get(key) is not None:
                     updates.append(f"{key} = :{key}")
                     values[key] = traits[key]
@@ -313,7 +314,8 @@ class BaseCrawler(ABC):
 
             fields = ['species_id', 'source']
             for key in ['growth_form', 'max_height_m', 'stratum', 'life_form',
-                        'woodiness', 'nitrogen_fixer', 'dispersal_syndrome', 'deciduousness']:
+                        'woodiness', 'nitrogen_fixer', 'dispersal_syndrome', 'deciduousness',
+                        '_gift_trait_1_2_2', '_gift_trait_1_4_2']:
                 if traits.get(key) is not None:
                     fields.append(key)
 

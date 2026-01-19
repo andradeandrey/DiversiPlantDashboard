@@ -112,6 +112,9 @@ class GIFTCrawler(BaseCrawler):
         suppressPackageStartupMessages(library(GIFT))
         suppressPackageStartupMessages(library(jsonlite))
 
+        # Set longer timeout for large downloads (10 minutes)
+        options(timeout = 600)
+
         # Fetch trait data (suppress messages)
         traits <- suppressMessages(GIFT_traits(trait_IDs = "{trait_id}"))
 
@@ -224,12 +227,24 @@ class GIFTCrawler(BaseCrawler):
         """
         Determine growth_form based on Climber.R logic (Renata Rodrigues Lucas).
 
-        Priority rules:
+        Extended to handle additional climber types based on botanical literature.
+        See docs/climber_logic.md for full analysis and references.
+
+        Priority rules (original Climber.R):
         1. liana (trait_1.4.2) ALWAYS takes priority → "liana"
         2. vine (trait_1.4.2) ALWAYS takes priority → "vine"
         3. self-supporting (trait_1.4.2) defers to trait_1.2.2
         4. NA (trait_1.4.2) defers to trait_1.2.2
         5. herb is normalized to forb
+
+        Extended rules (based on literature):
+        - scrambler → liana (exclusively woody, Sperotto 2020)
+        - hook climber → liana (lignified structures)
+        - root climber → liana (Hedera, Ficus, Philodendron)
+        - twining → vine (Ipomoea 700+ spp, mostly herbaceous)
+        - tendril climber → consult trait_1.2.2 (mixed)
+        - leaning → consult trait_1.2.2 (behavior, not structure)
+        - epiphytic climber → liana (Araceae, Moraceae)
 
         Args:
             trait_1_4_2: Value from GIFT trait_value_1.4.2 (climber type)
@@ -239,7 +254,7 @@ class GIFTCrawler(BaseCrawler):
             Normalized growth form value
 
         Reference:
-            docs/gift.md - Complete documentation of the logic
+            docs/climber_logic.md - Complete documentation of the logic
         """
         # Normalize inputs
         climber = trait_1_4_2.lower().strip() if trait_1_4_2 else None
@@ -251,27 +266,70 @@ class GIFTCrawler(BaseCrawler):
         elif growth == 'herbaceous':
             growth = 'forb'
 
-        # Rule 1: liana ALWAYS takes priority (woody climber)
+        # ══════════════════════════════════════════════════════════════
+        # DIRECT MAPPINGS (no need to consult trait_1.2.2)
+        # ══════════════════════════════════════════════════════════════
+
+        # Original Climber.R rules
         if climber == 'liana':
             return 'liana'
-
-        # Rule 2: vine ALWAYS takes priority (herbaceous climber)
         if climber == 'vine':
             return 'vine'
 
-        # Rule 3: self-supporting defers to trait_1.2.2
+        # Extended: Passive climbers - predominantly woody (Sperotto 2020)
+        if climber == 'scrambler':
+            return 'liana'  # Exclusively woody
+        if climber == 'hook climber':
+            return 'liana'  # Lignified structures (Bougainvillea)
+        if climber == 'root climber':
+            return 'liana'  # Hedera, Ficus, Philodendron - woody
+
+        # Extended: Active climbers - predominantly herbaceous
+        if climber == 'twining':
+            # Check if woody (minority case: Wisteria, Lonicera)
+            if growth in ['tree', 'shrub']:
+                return 'liana'
+            return 'vine'  # Default: Ipomoea (700+ spp), Convolvulus
+
+        # Extended: Hemiepiphytes
+        if climber == 'epiphytic climber':
+            return 'liana'  # Philodendron, Monstera - woody
+
+        # ══════════════════════════════════════════════════════════════
+        # CASES REQUIRING trait_1.2.2 CONSULTATION
+        # ══════════════════════════════════════════════════════════════
+
+        # Original Climber.R: self-supporting defers to trait_1.2.2
         if climber == 'self-supporting':
             if growth:
                 return self._normalize_growth_form_value(growth)
             return 'other'
 
-        # Rule 4: When climber_type is None/NA, use growth_form
+        # Extended: tendril climber - mixed (Vitis=liana, Passiflora=vine)
+        if climber == 'tendril climber':
+            if growth in ['tree', 'shrub']:
+                return 'liana'
+            elif growth:
+                return 'vine'
+            return 'vine'  # Default conservative (most common are herbaceous)
+
+        # Extended: leaning - behavior, not structure
+        if climber == 'leaning':
+            if growth:
+                return self._normalize_growth_form_value(growth)
+            return 'other'
+
+        # ══════════════════════════════════════════════════════════════
+        # FALLBACK RULES
+        # ══════════════════════════════════════════════════════════════
+
+        # When climber_type is None/NA, use growth_form
         if climber is None:
             if growth:
                 return self._normalize_growth_form_value(growth)
             return 'other'
 
-        # Fallback: use climber_type if it has a value
+        # Unknown climber type: try to normalize
         if climber:
             return self._normalize_growth_form_value(climber)
 
