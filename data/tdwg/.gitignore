@@ -1,0 +1,2 @@
+# Keep GeoJSON for reference, ignore generated SQL
+*.sql

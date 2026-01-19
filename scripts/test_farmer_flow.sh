@@ -1,5 +1,5 @@
 #!/bin/bash
-# DiversiPlant - Teste de Fluxo do Agricultor
+# DiversiPlant - Teste de Fluxo do Agricultor com Filtragem Geográfica
 # Uso: ./scripts/test_farmer_flow.sh [lat] [lon] [cidade]
 # Exemplo: ./scripts/test_farmer_flow.sh -27.5954 -48.5480 "Florianópolis, SC"
 
@@ -14,68 +14,128 @@ echo ""
 echo "📍 LOCALIZAÇÃO: $CIDADE ($LAT, $LON)"
 echo ""
 
-echo "📊 TOTAL DE ESPÉCIES:"
-docker exec diversiplant-db psql -U diversiplant -d diversiplant -t -c "SELECT COUNT(*) FROM species;"
+# Descobrir região TDWG via PostGIS
+echo "🗺️  REGIÃO TDWG (via PostGIS):"
+TDWG_INFO=$(docker exec diversiplant-db psql -U diversiplant -d diversiplant -t -A -F'|' -c "
+SELECT level3_code, level3_name
+FROM tdwg_level3
+WHERE ST_Contains(geom, ST_SetSRID(ST_Point($LON, $LAT), 4326))
+LIMIT 1;")
 
+TDWG_CODE=$(echo "$TDWG_INFO" | cut -d'|' -f1)
+TDWG_NAME=$(echo "$TDWG_INFO" | cut -d'|' -f2)
+
+if [ -z "$TDWG_CODE" ]; then
+    echo "❌ Coordenadas fora das regiões TDWG conhecidas"
+    exit 1
+fi
+
+echo "   Código: $TDWG_CODE"
+echo "   Nome: $TDWG_NAME"
 echo ""
-echo "📊 POR FORMA DE CRESCIMENTO (espécies únicas):"
+
+# Contar espécies NA REGIÃO
+echo "📊 ESPÉCIES NA REGIÃO $TDWG_NAME:"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
-SELECT growth_form, COUNT(DISTINCT species_id) as qtd
-FROM species_traits
-WHERE growth_form IS NOT NULL
-GROUP BY growth_form
-ORDER BY qtd DESC
-LIMIT 10;"
+SELECT
+    'Total na região' as metrica,
+    COUNT(DISTINCT s.id)::text as valor
+FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+WHERE wd.tdwg_code = '$TDWG_CODE'
+UNION ALL
+SELECT
+    'Árvores',
+    COUNT(DISTINCT s.id)::text
+FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+JOIN species_traits st ON s.id = st.species_id
+WHERE wd.tdwg_code = '$TDWG_CODE'
+  AND st.growth_form = 'tree'
+UNION ALL
+SELECT
+    'Arbustos',
+    COUNT(DISTINCT s.id)::text
+FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+JOIN species_traits st ON s.id = st.species_id
+WHERE wd.tdwg_code = '$TDWG_CODE'
+  AND st.growth_form = 'shrub'
+UNION ALL
+SELECT
+    'Ervas',
+    COUNT(DISTINCT s.id)::text
+FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+JOIN species_traits st ON s.id = st.species_id
+WHERE wd.tdwg_code = '$TDWG_CODE'
+  AND st.growth_form IN ('herb', 'forb')
+ORDER BY 1;"
 
 echo ""
-echo "🌳 ÁRVORES NATIVAS DO BRASIL (amostra para agrofloresta):"
+echo "🌳 ÁRVORES DA REGIÃO (amostra para agrofloresta):"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
 SELECT s.canonical_name as especie,
        s.family as familia,
        COALESCE(cn.common_name, '-') as nome_popular
 FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
 JOIN species_traits st ON s.id = st.species_id
 LEFT JOIN common_names cn ON s.id = cn.species_id AND cn.language = 'pt'
-WHERE st.growth_form = 'tree'
-  AND s.reflora_id IS NOT NULL
+WHERE wd.tdwg_code = '$TDWG_CODE'
+  AND st.growth_form = 'tree'
 ORDER BY RANDOM()
 LIMIT 12;"
 
 echo ""
-echo "🍎 ESPÉCIES COM NOMES POPULARES EM PORTUGUÊS:"
+echo "🍎 ESPÉCIES DA REGIÃO COM NOMES POPULARES:"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
 SELECT cn.common_name as nome_popular,
        s.canonical_name as especie,
        s.family as familia
 FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
 JOIN common_names cn ON s.id = cn.species_id
-WHERE cn.language = 'pt'
+WHERE wd.tdwg_code = '$TDWG_CODE'
+  AND cn.language = 'pt'
 ORDER BY RANDOM()
 LIMIT 12;"
 
 echo ""
-echo "🌿 ARBUSTOS NATIVOS (para sub-bosque):"
+echo "🌿 ARBUSTOS DA REGIÃO (para sub-bosque):"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
 SELECT s.canonical_name as especie,
        s.family as familia
 FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
 JOIN species_traits st ON s.id = st.species_id
-WHERE st.growth_form = 'shrub'
-  AND s.reflora_id IS NOT NULL
+WHERE wd.tdwg_code = '$TDWG_CODE'
+  AND st.growth_form = 'shrub'
 ORDER BY RANDOM()
 LIMIT 8;"
 
 echo ""
-echo "📈 QUALIDADE DOS DADOS:"
+echo "📈 COMPARATIVO (Região vs Global):"
 docker exec diversiplant-db psql -U diversiplant -d diversiplant -c "
-SELECT 'Espécies totais' as metrica, COUNT(*)::text as valor FROM species
-UNION ALL SELECT 'Árvores', COUNT(DISTINCT species_id)::text FROM species_traits WHERE growth_form = 'tree'
-UNION ALL SELECT 'Com REFLORA (Brasil)', COUNT(*)::text FROM species WHERE reflora_id IS NOT NULL
-UNION ALL SELECT 'Com traits GIFT', COUNT(*)::text FROM species WHERE gift_work_id IS NOT NULL
-UNION ALL SELECT 'Nomes em português', COUNT(DISTINCT species_id)::text FROM common_names WHERE language = 'pt'
+SELECT 'Árvores $TDWG_NAME' as metrica,
+       COUNT(DISTINCT s.id)::text as valor
+FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+JOIN species_traits st ON s.id = st.species_id
+WHERE wd.tdwg_code = '$TDWG_CODE' AND st.growth_form = 'tree'
+UNION ALL
+SELECT 'Árvores Global', COUNT(DISTINCT species_id)::text
+FROM species_traits WHERE growth_form = 'tree'
+UNION ALL
+SELECT 'Espécies $TDWG_NAME', COUNT(DISTINCT s.id)::text
+FROM species s
+JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+WHERE wd.tdwg_code = '$TDWG_CODE'
+UNION ALL
+SELECT 'Espécies Global', COUNT(*)::text FROM species
 ORDER BY 1;"
 
 echo ""
 echo "======================================================================"
-echo "✅ Dados prontos para uso pelo agricultor!"
+echo "✅ Dados filtrados por localização usando PostGIS!"
 echo "======================================================================"
