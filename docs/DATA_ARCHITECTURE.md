@@ -97,23 +97,22 @@ Registros: ~80% das árvores globais
 
 ### 2.5 WorldClim
 
-**Papel**: Filtragem CLIMÁTICA de espécies
+**Papel**: Dados climáticos (CRAWLER DISPONÍVEL, FILTRAGEM NÃO IMPLEMENTADA)
 
 ```
-Tabela: Integrado via crawler worldclim
-Campos: 19 variáveis bioclimáticas (BIO1-BIO19)
+Status: Crawler existe em crawlers/worldclim.py
+Campos disponíveis: 19 variáveis bioclimáticas (BIO1-BIO19)
 Resolução: 1km (30 arc-seconds)
 ```
 
-- **O que fornece**: Dados climáticos para filtragem de compatibilidade
+- **O que fornece**: Dados climáticos para futura filtragem de compatibilidade
 - **Variáveis principais**:
   - BIO1: Temperatura média anual
   - BIO5: Temperatura máxima do mês mais quente
   - BIO6: Temperatura mínima do mês mais frio
   - BIO12: Precipitação anual
   - BIO15: Sazonalidade de precipitação
-- **Como é usado**: Espécies são filtradas com base na compatibilidade entre o envelope climático da espécie e o clima da localização do usuário
-- **Impacto**: Reduz as listas de espécies para incluir apenas aquelas climaticamente viáveis
+- **Status atual**: O crawler existe e pode buscar dados climáticos, mas a **filtragem de espécies baseada em clima NÃO está implementada** na aplicação web
 - **URL**: https://worldclim.org/
 
 ### 2.6 GBIF (Global Biodiversity Information Facility)
@@ -185,30 +184,30 @@ WHERE sr.is_native = TRUE OR sr.is_introduced = TRUE
 
 ---
 
-## 4. Filtragem Climática com WorldClim
+## 4. Contagens por Região TDWG
 
 ### O que temos HOJE
 
 ✅ Espécies que **ocorrem naturalmente** em uma região TDWG (segundo WCVP)
-✅ Filtragem climática via **WorldClim** para compatibilidade com a localização
+✅ Traits consolidados com sistema de **prioridade** (reflora > wcvp > gift > treegoer)
+❌ Filtragem climática **NÃO implementada** (crawler existe, mas não integrado)
 
-### Como Funciona a Filtragem Climática
+### Como Funciona a Query Atual
 
-O sistema aplica duas camadas de filtragem:
+O sistema aplica apenas filtragem geográfica:
 
-1. **Filtragem Geográfica (WCVP)**: Espécies registradas para a região TDWG
-2. **Filtragem Climática (WorldClim)**: Espécies compatíveis com o clima local
-
+```sql
+-- Query atual (SEM filtragem climática)
+SELECT COUNT(*)
+FROM species_unified su
+JOIN species_regions sr ON su.species_id = sr.species_id
+WHERE sr.tdwg_code = 'BZS'
+  AND su.is_tree = TRUE;
 ```
-Espécies exibidas = WHERE (
-  especie IN regiao_tdwg (WCVP)
-  AND clima_local WITHIN envelope_climatico_especie (WorldClim)
-)
-```
 
-### Exemplo: BZS (Brazil South) - Florianópolis, SC
+### Exemplo: BZS (Brazil South)
 
-Após aplicação de ambos os filtros (WCVP + WorldClim):
+Contagens brutas da tabela `species_unified` + `species_regions`:
 
 | Tipo | Quantidade |
 |------|------------|
@@ -217,47 +216,63 @@ Após aplicação de ambos os filtros (WCVP + WorldClim):
 | **Ervas** | 4,612 |
 | **Trepadeiras** | 30 |
 
-**Nota**: Estes números são menores que o total de espécies com registro WCVP para BZS porque a filtragem climática remove espécies que, embora registradas na região, não são compatíveis com o microclima específico da localização.
+**Nota sobre os números**: Estes valores representam espécies com `growth_form` definido na tabela `species_unified` após aplicação do sistema de prioridade de fontes. Espécies podem ter classificações diferentes em fontes distintas (ex: *Euterpe edulis* é "palm" no REFLORA mas "tree" no TreeGOER).
 
-### Impacto da Filtragem Climática
+### Sistema de Prioridade de Traits
 
-A filtragem WorldClim considera:
-- **Temperatura**: Espécies de regiões mais frias/quentes são excluídas se fora do range
-- **Precipitação**: Espécies de regiões mais secas/úmidas são filtradas
-- **Sazonalidade**: Compatibilidade com padrões de chuva/seca locais
+Quando múltiplas fontes têm dados para a mesma espécie, usamos esta ordem de prioridade:
 
-### Fontes de dados climáticos utilizadas
+1. **REFLORA** (mais específico para Brasil)
+2. **WCVP** (taxonomia de referência)
+3. **GIFT** (traits funcionais globais)
+4. **TreeGOER** (validação de árvores)
 
-- **WorldClim 2.1**: 19 variáveis bioclimáticas (1km resolução) - **IMPLEMENTADO**
+Isso explica por que os números diferem de queries diretas em `wcvp_distribution` + `species_traits`.
+
+### Filtragem Climática (A IMPLEMENTAR)
+
+Para implementar filtragem climática no futuro:
+
+```
+Espécies filtradas = WHERE (
+  especie IN regiao_tdwg (WCVP)
+  AND clima_local WITHIN envelope_climatico_especie (WorldClim)
+)
+```
+
+**Fontes de dados climáticos disponíveis**:
+- **WorldClim 2.1**: Crawler existe em `crawlers/worldclim.py` - precisa integração
 - **CHELSA**: Dados climáticos de alta resolução - disponível para integração futura
 - **TRY Database**: Traits funcionais incluindo tolerâncias - disponível para integração futura
 
 ---
 
-## 5. Recomendações para Próximos Passos
+## 5. Status de Implementação
 
 ### Implementado
 
 1. ✅ Filtro por região TDWG Level 3
-2. ✅ Distinção nativo/introduzido
-3. ✅ Filtro por growth_form (árvore/arbusto/erva)
+2. ✅ Distinção nativo/introduzido/endêmico
+3. ✅ Filtro por growth_form (árvore/arbusto/erva/trepadeira)
 4. ✅ Query PostGIS por coordenadas
-5. ✅ Integração WorldClim para filtragem climática
-6. ✅ Envelopes climáticos por espécie
-7. ✅ Matching climático baseado em localização
+5. ✅ Tabelas unificadas (`species_unified`, `species_regions`, `species_geometry`)
+6. ✅ Sistema de prioridade de fontes para traits
+7. ✅ Crawler WorldClim (busca dados climáticos)
 
-### Médio Prazo (a discutir)
+### Próximos Passos (a implementar)
 
-1. 🔄 Refinar envelopes climáticos com dados de ocorrência GBIF
-2. 🔄 Adicionar tolerância a geadas como filtro adicional
-3. 🔄 Integrar dados de altitude/elevação
+1. 🔄 **Filtragem climática**: Integrar WorldClim para filtrar espécies por compatibilidade
+2. 🔄 Calcular envelopes climáticos por espécie
+3. 🔄 Matching climático baseado em localização do usuário
+4. 🔄 Adicionar tolerância a geadas como filtro
 
 ### Longo Prazo
 
-1. ⏳ Integrar GBIF para validação de presença
-2. ⏳ Adicionar dados de solo (SoilGrids)
-3. ⏳ Modelagem de nicho com MaxEnt/biomod2
-4. ⏳ Integração com CHELSA para maior resolução climática
+1. ⏳ Refinar envelopes climáticos com dados de ocorrência GBIF
+2. ⏳ Integrar dados de altitude/elevação
+3. ⏳ Adicionar dados de solo (SoilGrids)
+4. ⏳ Modelagem de nicho com MaxEnt/biomod2
+5. ⏳ Integração com CHELSA para maior resolução climática
 
 ---
 
@@ -281,4 +296,4 @@ Referência completa: https://dwc.tdwg.org/terms/
 Para discussão sobre estratégia de espécies climaticamente adaptadas:
 - **Autor**: Stickybit <dev@stickybit.com.br>
 - **Data**: 2026-01-20
-- **Última atualização**: 2026-01-20 (adicionada documentação WorldClim)
+- **Última atualização**: 2026-01-20 (corrigido: WorldClim não está integrado para filtragem)
