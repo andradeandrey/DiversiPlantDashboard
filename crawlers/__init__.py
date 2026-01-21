@@ -8,7 +8,7 @@ from .wcvp import WCVPCrawler
 from .worldclim import WorldClimCrawler
 from .treegoer import TreeGOERCrawler
 from .iucn import IUCNCrawler
-from .try import TRYCrawler
+from .try_db import TRYCrawler
 from .practitioners import PractitionersCrawler
 
 CRAWLERS = {

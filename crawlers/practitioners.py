@@ -166,12 +166,12 @@ class PractitionersCrawler(BaseCrawler):
 
         # Establishment type
         establishment = raw_data.get('establishment')
-        if establishment and pd.notna(establishment):
+        if establishment and pd.notna(establishment) and isinstance(establishment, str):
             traits['establishment'] = establishment.strip().lower()
 
         # Habitat
         habitat = raw_data.get('habitat')
-        if habitat and pd.notna(habitat):
+        if habitat and pd.notna(habitat) and isinstance(habitat, str):
             traits['habitat'] = habitat.strip()
 
         # Max height
@@ -184,7 +184,7 @@ class PractitionersCrawler(BaseCrawler):
 
         # Stratum
         stratum = raw_data.get('stratum')
-        if stratum and pd.notna(stratum):
+        if stratum and pd.notna(stratum) and isinstance(stratum, str):
             traits['stratum'] = stratum.strip()
 
         if traits:
@@ -194,11 +194,11 @@ class PractitionersCrawler(BaseCrawler):
         common_names = []
 
         common_pt = raw_data.get('common_pt')
-        if common_pt and pd.notna(common_pt):
+        if common_pt and pd.notna(common_pt) and isinstance(common_pt, str):
             common_names.append({'name': common_pt.strip(), 'language': 'pt'})
 
         common_en = raw_data.get('common_en')
-        if common_en and pd.notna(common_en):
+        if common_en and pd.notna(common_en) and isinstance(common_en, str):
             common_names.append({'name': common_en.strip(), 'language': 'en'})
 
         if common_names:
