@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS species_unified (
     -- Flags para queries rápidas (STORED = calculado uma vez e armazenado)
     is_tree BOOLEAN GENERATED ALWAYS AS (growth_form = 'tree') STORED,
     is_shrub BOOLEAN GENERATED ALWAYS AS (growth_form = 'shrub') STORED,
-    is_climber BOOLEAN GENERATED ALWAYS AS (growth_form = 'climber') STORED,
+    is_climber BOOLEAN GENERATED ALWAYS AS (growth_form IN ('climber', 'liana', 'vine')) STORED,
     is_herb BOOLEAN GENERATED ALWAYS AS (growth_form IN ('herb', 'forb')) STORED,
     is_palm BOOLEAN GENERATED ALWAYS AS (growth_form = 'palm') STORED,
     is_native_brazil BOOLEAN DEFAULT FALSE,
