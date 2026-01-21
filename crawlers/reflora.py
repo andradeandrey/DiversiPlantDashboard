@@ -263,6 +263,10 @@ class REFLORACrawler(BaseCrawler):
             'erva': 'forb',
             'trepadeira': 'vine',
             'liana': 'liana',
+            'volúvel': 'vine',      # Trepadeira volúvel
+            'voluvel': 'vine',      # Sem acento
+            'hemiepífita': 'vine',  # Hemi-epífitas são frequentemente trepadeiras
+            'hemiepifita': 'vine',  # Sem acento
             'palmeira': 'palm',
             'bambu': 'bamboo',
             'samambaia': 'fern',

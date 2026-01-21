@@ -1,15 +1,15 @@
 #!/bin/bash
 # DiversiPlant - Teste de Fluxo do Agricultor com Filtragem Geográfica
 # Uso: ./scripts/test_farmer_flow.sh [lat] [lon] [cidade]
-# Exemplo: ./scripts/test_farmer_flow.sh -27.5954 -48.5480 "Florianópolis, SC"
+# Exemplo: ./scripts/test_farmer_flow.sh -27.60 -48.65 "Florianópolis, SC"
 #
 # Opções:
 #   --old    Usar queries antigas (wcvp_distribution JOIN)
 #   --new    Usar queries otimizadas (species_regions + species_unified)
 #   --both   Comparar performance de ambas (padrão)
 
-LAT=${1:--27.5954}
-LON=${2:--48.5480}
+LAT=${1:--27.60}
+LON=${2:--48.65}
 CIDADE=${3:-"Florianópolis, SC"}
 MODE=${4:---both}
 
