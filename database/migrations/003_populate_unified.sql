@@ -160,12 +160,16 @@ BEGIN
             nitrogen_fixer,
             dispersal_syndrome,
             deciduousness,
+            lifespan_years,      -- TRY data
+            threat_status,       -- Practitioners data
             CASE source
                 WHEN 'gift' THEN 1       -- Prioridade 1: GIFT (liana/vine distinction)
                 WHEN 'reflora' THEN 2    -- Prioridade 2: REFLORA (espécies BR)
                 WHEN 'wcvp' THEN 3       -- Prioridade 3: WCVP (taxonomia referência)
                 WHEN 'treegoer' THEN 4   -- Prioridade 4: TreeGOER (validação árvores)
-                ELSE 5
+                WHEN 'practitioners' THEN 5 -- Prioridade 5: Practitioners (threat/habitat)
+                WHEN 'try' THEN 6        -- Prioridade 6: TRY (lifespan)
+                ELSE 7
             END as source_priority
         FROM species_traits
         WHERE source IS NOT NULL
@@ -242,6 +246,38 @@ BEGIN
         GROUP BY species_id
     ),
 
+    -- Melhor lifespan por prioridade (try > practitioners)
+    best_lifespan AS (
+        SELECT DISTINCT ON (species_id)
+            species_id,
+            lifespan_years,
+            source as lifespan_source
+        FROM traits_with_priority
+        WHERE lifespan_years IS NOT NULL
+        ORDER BY species_id,
+            CASE source
+                WHEN 'try' THEN 1
+                WHEN 'practitioners' THEN 2
+                ELSE 10
+            END
+    ),
+
+    -- Melhor threat_status por prioridade (practitioners > iucn)
+    best_threat_status AS (
+        SELECT DISTINCT ON (species_id)
+            species_id,
+            threat_status,
+            source as threat_status_source
+        FROM traits_with_priority
+        WHERE threat_status IS NOT NULL
+        ORDER BY species_id,
+            CASE source
+                WHEN 'practitioners' THEN 1
+                WHEN 'iucn' THEN 2
+                ELSE 10
+            END
+    ),
+
     -- Espécies nativas do Brasil
     native_brazil AS (
         SELECT DISTINCT species_id
@@ -264,6 +300,10 @@ BEGIN
         nitrogen_fixer,
         dispersal_syndrome,
         deciduousness,
+        lifespan_years,
+        lifespan_source,
+        threat_status,
+        threat_status_source,
         is_native_brazil,
         sources_count
     )
@@ -277,6 +317,10 @@ BEGIN
         bn.nitrogen_fixer,
         bd.dispersal_syndrome,
         bdec.deciduousness,
+        bl.lifespan_years,
+        bl.lifespan_source,
+        bts.threat_status,
+        bts.threat_status_source,
         COALESCE(nb.species_id IS NOT NULL, FALSE) as is_native_brazil,
         COALESCE(sc.cnt, 0) as sources_count
     FROM species_with_traits swt
@@ -286,6 +330,8 @@ BEGIN
     LEFT JOIN best_nitrogen bn ON swt.species_id = bn.species_id
     LEFT JOIN best_dispersal bd ON swt.species_id = bd.species_id
     LEFT JOIN best_deciduousness bdec ON swt.species_id = bdec.species_id
+    LEFT JOIN best_lifespan bl ON swt.species_id = bl.species_id
+    LEFT JOIN best_threat_status bts ON swt.species_id = bts.species_id
     LEFT JOIN sources_count sc ON swt.species_id = sc.species_id
     LEFT JOIN native_brazil nb ON swt.species_id = nb.species_id
     ON CONFLICT (species_id) DO UPDATE SET
@@ -297,6 +343,10 @@ BEGIN
         nitrogen_fixer = EXCLUDED.nitrogen_fixer,
         dispersal_syndrome = EXCLUDED.dispersal_syndrome,
         deciduousness = EXCLUDED.deciduousness,
+        lifespan_years = EXCLUDED.lifespan_years,
+        lifespan_source = EXCLUDED.lifespan_source,
+        threat_status = EXCLUDED.threat_status,
+        threat_status_source = EXCLUDED.threat_status_source,
         is_native_brazil = EXCLUDED.is_native_brazil,
         sources_count = EXCLUDED.sources_count,
         last_updated = CURRENT_TIMESTAMP;
@@ -415,6 +465,8 @@ DECLARE
     v_trees INTEGER;
     v_shrubs INTEGER;
     v_native_br INTEGER;
+    v_with_lifespan INTEGER;
+    v_with_threat INTEGER;
 BEGIN
     SELECT COUNT(*) INTO v_species_total FROM species;
     SELECT COUNT(*) INTO v_unified_total FROM species_unified;
@@ -423,6 +475,8 @@ BEGIN
     SELECT COUNT(*) INTO v_trees FROM species_unified WHERE is_tree = TRUE;
     SELECT COUNT(*) INTO v_shrubs FROM species_unified WHERE is_shrub = TRUE;
     SELECT COUNT(*) INTO v_native_br FROM species_unified WHERE is_native_brazil = TRUE;
+    SELECT COUNT(*) INTO v_with_lifespan FROM species_unified WHERE lifespan_years IS NOT NULL;
+    SELECT COUNT(*) INTO v_with_threat FROM species_unified WHERE threat_status IS NOT NULL;
 
     RAISE NOTICE '';
     RAISE NOTICE '============================================';
@@ -436,6 +490,8 @@ BEGIN
     RAISE NOTICE 'Trees:                  %', v_trees;
     RAISE NOTICE 'Shrubs:                 %', v_shrubs;
     RAISE NOTICE 'Native to Brazil:       %', v_native_br;
+    RAISE NOTICE 'With lifespan data:     %', v_with_lifespan;
+    RAISE NOTICE 'With threat status:     %', v_with_threat;
     RAISE NOTICE '============================================';
 END $$;
 

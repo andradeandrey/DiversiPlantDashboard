@@ -8,6 +8,8 @@ from .wcvp import WCVPCrawler
 from .worldclim import WorldClimCrawler
 from .treegoer import TreeGOERCrawler
 from .iucn import IUCNCrawler
+from .try import TRYCrawler
+from .practitioners import PractitionersCrawler
 
 CRAWLERS = {
     'gbif': GBIFCrawler,
@@ -17,6 +19,8 @@ CRAWLERS = {
     'worldclim': WorldClimCrawler,
     'treegoer': TreeGOERCrawler,
     'iucn': IUCNCrawler,
+    'try': TRYCrawler,
+    'practitioners': PractitionersCrawler,
 }
 
 
@@ -42,6 +46,8 @@ __all__ = [
     'WorldClimCrawler',
     'TreeGOERCrawler',
     'IUCNCrawler',
+    'TRYCrawler',
+    'PractitionersCrawler',
     'get_crawler',
     'list_crawlers',
 ]

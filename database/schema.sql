@@ -193,7 +193,9 @@ INSERT INTO crawler_status (crawler_name, status) VALUES
     ('wcvp', 'idle'),
     ('worldclim', 'idle'),
     ('treegoer', 'idle'),
-    ('iucn', 'idle');
+    ('iucn', 'idle'),
+    ('try', 'idle'),
+    ('practitioners', 'idle');
 
 -- =============================================
 -- FUNCOES AUXILIARES
