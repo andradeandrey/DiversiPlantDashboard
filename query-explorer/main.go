@@ -586,6 +586,43 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 func handleSources(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	type GrowthFormStats struct {
+		Source   string `json:"source"`
+		Total    int64  `json:"total"`
+		Trees    int64  `json:"trees"`
+		Shrubs   int64  `json:"shrubs"`
+		Herbs    int64  `json:"herbs"`
+		Climbers int64  `json:"climbers"`
+		Palms    int64  `json:"palms"`
+	}
+
+	type ThreatStats struct {
+		Source string `json:"source"`
+		Total  int64  `json:"total"`
+		CR     int64  `json:"cr"`
+		EN     int64  `json:"en"`
+		VU     int64  `json:"vu"`
+		NT     int64  `json:"nt"`
+		LC     int64  `json:"lc"`
+	}
+
+	type LifespanStats struct {
+		Source      string   `json:"source"`
+		Total       int64    `json:"total"`
+		AvgLifespan *float64 `json:"avg_lifespan"`
+		MinLifespan *float64 `json:"min_lifespan"`
+		MaxLifespan *float64 `json:"max_lifespan"`
+	}
+
+	type AllSourcesResponse struct {
+		GrowthForm []GrowthFormStats `json:"growth_form"`
+		Threat     []ThreatStats     `json:"threat_status"`
+		Lifespan   []LifespanStats   `json:"lifespan"`
+	}
+
+	resp := AllSourcesResponse{}
+
+	// Growth form sources
 	rows, err := db.Query(`
 		SELECT
 			growth_form_source as source,
@@ -600,28 +637,60 @@ func handleSources(w http.ResponseWriter, r *http.Request) {
 		GROUP BY growth_form_source
 		ORDER BY COUNT(*) DESC
 	`)
-	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	type SourceStats struct {
-		Source   string `json:"source"`
-		Total    int64  `json:"total"`
-		Trees    int64  `json:"trees"`
-		Shrubs   int64  `json:"shrubs"`
-		Herbs    int64  `json:"herbs"`
-		Climbers int64  `json:"climbers"`
-		Palms    int64  `json:"palms"`
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var s GrowthFormStats
+			rows.Scan(&s.Source, &s.Total, &s.Trees, &s.Shrubs, &s.Herbs, &s.Climbers, &s.Palms)
+			resp.GrowthForm = append(resp.GrowthForm, s)
+		}
 	}
 
-	var sources []SourceStats
-	for rows.Next() {
-		var s SourceStats
-		rows.Scan(&s.Source, &s.Total, &s.Trees, &s.Shrubs, &s.Herbs, &s.Climbers, &s.Palms)
-		sources = append(sources, s)
+	// Threat status sources
+	rows2, err := db.Query(`
+		SELECT
+			threat_status_source as source,
+			COUNT(*) as total,
+			COUNT(*) FILTER (WHERE threat_status = 'CR') as cr,
+			COUNT(*) FILTER (WHERE threat_status = 'EN') as en,
+			COUNT(*) FILTER (WHERE threat_status = 'VU') as vu,
+			COUNT(*) FILTER (WHERE threat_status = 'NT') as nt,
+			COUNT(*) FILTER (WHERE threat_status = 'LC') as lc
+		FROM species_unified
+		WHERE threat_status_source IS NOT NULL
+		GROUP BY threat_status_source
+		ORDER BY COUNT(*) DESC
+	`)
+	if err == nil {
+		defer rows2.Close()
+		for rows2.Next() {
+			var s ThreatStats
+			rows2.Scan(&s.Source, &s.Total, &s.CR, &s.EN, &s.VU, &s.NT, &s.LC)
+			resp.Threat = append(resp.Threat, s)
+		}
 	}
 
-	json.NewEncoder(w).Encode(sources)
+	// Lifespan sources
+	rows3, err := db.Query(`
+		SELECT
+			lifespan_source as source,
+			COUNT(*) as total,
+			ROUND(AVG(lifespan_years)::numeric, 1) as avg_lifespan,
+			ROUND(MIN(lifespan_years)::numeric, 1) as min_lifespan,
+			ROUND(MAX(lifespan_years)::numeric, 1) as max_lifespan
+		FROM species_unified
+		WHERE lifespan_source IS NOT NULL
+		GROUP BY lifespan_source
+		ORDER BY COUNT(*) DESC
+	`)
+	if err == nil {
+		defer rows3.Close()
+		for rows3.Next() {
+			var s LifespanStats
+			rows3.Scan(&s.Source, &s.Total, &s.AvgLifespan, &s.MinLifespan, &s.MaxLifespan)
+			resp.Lifespan = append(resp.Lifespan, s)
+		}
+	}
+
+	json.NewEncoder(w).Encode(resp)
 }
