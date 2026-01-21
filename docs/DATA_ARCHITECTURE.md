@@ -52,24 +52,9 @@ Registros: ~2M registros de distribuição
 - **Cobertura**: Global, todas as plantas vasculares
 - **URL**: https://wcvp.science.kew.org/
 
-### 2.2 REFLORA (Flora do Brasil 2020)
+### 2.2 GIFT (Global Inventory of Floras and Traits)
 
-**Papel**: Fonte PRIORITÁRIA para espécies brasileiras
-
-```
-Tabela: species_traits (source = 'reflora')
-Campos: growth_form, life_form, stratum
-Registros: Espécies brasileiras com traits
-```
-
-- **O que fornece**: Características morfológicas, nomes populares em português
-- **Prioridade**: Quando disponível, REFLORA sobrepõe outras fontes para traits
-- **Cobertura**: ~50.000 espécies brasileiras
-- **URL**: http://floradobrasil.jbrj.gov.br/
-
-### 2.3 GIFT (Global Inventory of Floras and Traits)
-
-**Papel**: Fonte SECUNDÁRIA para traits funcionais
+**Papel**: Fonte PRIORITÁRIA para growth_form (traits funcionais)
 
 ```
 Tabela: species_traits (source = 'gift')
@@ -78,10 +63,42 @@ Registros: ~350K espécies com traits
 ```
 
 - **O que fornece**: Traits funcionais (dispersão, fixação N, altura)
+- **Prioridade**: GIFT é prioritário por usar definições mais consistentes:
+  - Distingue **liana** (trepadeira lenhosa) de **vine** (trepadeira herbácea)
+  - Usa lógica Climber.R de Renata (trait_1.2.2 + trait_1.4.2)
 - **Acesso**: Via pacote R `GIFT`
 - **URL**: https://gift.uni-goettingen.de/
 
-### 2.4 TreeGOER (Tree Global Occurrences and Ecoregions)
+### 2.3 REFLORA (Flora do Brasil 2020)
+
+**Papel**: Fonte SECUNDÁRIA para espécies brasileiras (fallback quando GIFT vazio)
+
+```
+Tabela: species_traits (source = 'reflora')
+Campos: growth_form, life_form, stratum
+Registros: ~50K espécies brasileiras com traits
+```
+
+- **O que fornece**: Características morfológicas, nomes populares em português
+- **Prioridade**: Usado quando GIFT não tem dados para espécies brasileiras
+- **Cobertura**: ~50.000 espécies brasileiras
+- **URL**: http://floradobrasil.jbrj.gov.br/
+
+### 2.4 WCVP (para growth_form)
+
+**Papel**: Fonte TERCIÁRIA para traits (fallback quando GIFT e REFLORA vazios)
+
+```
+Tabela: species_traits (source = 'wcvp')
+Campos: growth_form
+Nota: WCVP usa 'climber' genérico (não distingue liana/vine)
+```
+
+- **O que fornece**: Growth form básico de desambiguação
+- **Limitação**: Usa "climber" genérico sem distinção liana vs vine
+- **URL**: https://wcvp.science.kew.org/
+
+### 2.5 TreeGOER (Tree Global Occurrences and Ecoregions)
 
 **Papel**: Validação de ÁRVORES por ecorregião
 
@@ -95,7 +112,7 @@ Registros: ~80% das árvores globais
 - **Cobertura**: Global, apenas árvores
 - **URL**: https://treegoer.eu/
 
-### 2.5 WorldClim
+### 2.6 WorldClim
 
 **Papel**: Dados climáticos (CRAWLER DISPONÍVEL, FILTRAGEM NÃO IMPLEMENTADA)
 
@@ -115,7 +132,7 @@ Resolução: 1km (30 arc-seconds)
 - **Status atual**: O crawler existe e pode buscar dados climáticos, mas a **filtragem de espécies baseada em clima NÃO está implementada** na aplicação web
 - **URL**: https://worldclim.org/
 
-### 2.6 GBIF (Global Biodiversity Information Facility)
+### 2.7 GBIF (Global Biodiversity Information Facility)
 
 **Papel**: NÃO USADO para listas de distribuição
 
@@ -189,7 +206,7 @@ WHERE sr.is_native = TRUE OR sr.is_introduced = TRUE
 ### O que temos HOJE
 
 ✅ Espécies que **ocorrem naturalmente** em uma região TDWG (segundo WCVP)
-✅ Traits consolidados com sistema de **prioridade** (reflora > wcvp > gift > treegoer)
+✅ Traits consolidados com sistema de **prioridade** (gift > reflora > wcvp > treegoer)
 ❌ Filtragem climática **NÃO implementada** (crawler existe, mas não integrado)
 
 ### Como Funciona a Query Atual
@@ -222,10 +239,12 @@ Contagens brutas da tabela `species_unified` + `species_regions`:
 
 Quando múltiplas fontes têm dados para a mesma espécie, usamos esta ordem de prioridade:
 
-1. **REFLORA** (mais específico para Brasil)
-2. **WCVP** (taxonomia de referência)
-3. **GIFT** (traits funcionais globais)
-4. **TreeGOER** (validação de árvores)
+1. **GIFT** (definições mais consistentes: liana vs vine, lógica Climber.R)
+2. **REFLORA** (fallback para espécies brasileiras sem dados GIFT)
+3. **WCVP** (usa 'climber' genérico, sem distinção liana/vine)
+4. **TreeGOER** (última opção para validação de árvores)
+
+**Motivação da prioridade GIFT**: A definição de growth_form no GIFT é mais coerente com as funcionalidades do DiversiPlant porque distingue **liana** (trepadeira lenhosa) de **vine** (trepadeira herbácea) e usa a lógica Climber.R de Renata que combina `trait_1.2.2` + `trait_1.4.2`.
 
 Isso explica por que os números diferem de queries diretas em `wcvp_distribution` + `species_traits`.
 

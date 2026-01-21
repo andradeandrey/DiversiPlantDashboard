@@ -80,10 +80,22 @@ def parse_args():
         help='[GBIF] Paginate by family to get ALL species (bypasses 100k limit)'
     )
 
+    parser.add_argument(
+        '--refresh-unified',
+        action='store_true',
+        help='Refresh unified tables (species_unified, species_regions) after crawler run'
+    )
+
+    parser.add_argument(
+        '--only-refresh',
+        action='store_true',
+        help='Only refresh unified tables without running crawlers'
+    )
+
     return parser.parse_args()
 
 
-def run_crawler(source: str, mode: str, db_url: str, **kwargs):
+def run_crawler(source: str, mode: str, db_url: str, refresh_unified: bool = False, **kwargs):
     """Run a single crawler."""
     logger.info(f"Running {source} crawler in {mode} mode")
     start_time = datetime.now()
@@ -99,10 +111,38 @@ def run_crawler(source: str, mode: str, db_url: str, **kwargs):
         elapsed = datetime.now() - start_time
         logger.info(f"Completed {source} in {elapsed}")
         logger.info(f"Stats: {crawler.stats}")
+
+        # Refresh unified tables if requested
+        if refresh_unified:
+            crawler.refresh_unified_tables()
+
         return True
 
     except Exception as e:
         logger.error(f"Crawler {source} failed: {e}")
+        return False
+
+
+def refresh_unified_tables(db_url: str):
+    """Refresh unified tables without running a crawler."""
+    logger.info("Refreshing unified tables...")
+    start_time = datetime.now()
+
+    try:
+        # Use any crawler to access the refresh method (all share base class)
+        crawler = get_crawler('gbif', db_url)
+        if crawler is None:
+            logger.error("Failed to initialize crawler for refresh")
+            return False
+
+        crawler.refresh_unified_tables()
+
+        elapsed = datetime.now() - start_time
+        logger.info(f"Refresh completed in {elapsed}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Refresh failed: {e}")
         return False
 
 
@@ -169,6 +209,11 @@ def main():
         start_scheduler(db_url)
         sys.exit(0)
 
+    # Only refresh unified tables
+    if args.only_refresh:
+        success = refresh_unified_tables(db_url)
+        sys.exit(0 if success else 1)
+
     # Run crawler(s)
     if args.source:
         kwargs = {}
@@ -179,11 +224,15 @@ def main():
 
         if args.source == 'all':
             run_all_crawlers(args.mode, db_url, **kwargs)
+            # Refresh unified tables after all crawlers if requested
+            if args.refresh_unified:
+                refresh_unified_tables(db_url)
         else:
-            success = run_crawler(args.source, args.mode, db_url, **kwargs)
+            success = run_crawler(args.source, args.mode, db_url,
+                                  refresh_unified=args.refresh_unified, **kwargs)
             sys.exit(0 if success else 1)
     else:
-        logger.error("No source specified. Use --source or --list")
+        logger.error("No source specified. Use --source, --list, or --only-refresh")
         sys.exit(1)
 
 

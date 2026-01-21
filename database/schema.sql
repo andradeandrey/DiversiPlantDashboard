@@ -105,6 +105,23 @@ CREATE TABLE species_distribution (
 CREATE INDEX idx_distribution_species ON species_distribution(species_id);
 CREATE INDEX idx_distribution_tdwg ON species_distribution(tdwg_code);
 
+-- WCVP Distribution (dados brutos do WCVP para JOINs via taxon_id/wcvp_id)
+CREATE TABLE wcvp_distribution (
+    id SERIAL PRIMARY KEY,
+    taxon_id VARCHAR(50) NOT NULL,  -- wcvp plant_name_id
+    tdwg_code VARCHAR(10) NOT NULL,
+    establishment_means VARCHAR(20), -- 'native', 'introduced'
+    endemic VARCHAR(5),              -- '0' or '1'
+    introduced VARCHAR(5),           -- '0' or '1'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(taxon_id, tdwg_code)
+);
+
+CREATE INDEX idx_wcvp_dist_taxon ON wcvp_distribution(taxon_id);
+CREATE INDEX idx_wcvp_dist_tdwg ON wcvp_distribution(tdwg_code);
+CREATE INDEX idx_wcvp_dist_native ON wcvp_distribution(tdwg_code)
+    WHERE establishment_means = 'native';
+
 -- =============================================
 -- TABELAS DE CRAWLERS
 -- =============================================

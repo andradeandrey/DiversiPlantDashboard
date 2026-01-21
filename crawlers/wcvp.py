@@ -7,6 +7,8 @@ import io
 import os
 import sys
 import tempfile
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from .base import BaseCrawler
 
 # Increase CSV field size limit for large WCVP fields
@@ -231,3 +233,100 @@ class WCVPCrawler(BaseCrawler):
                         synonyms.append(row.get('taxon_name'))
 
         return synonyms
+
+    def run(self, mode: str = 'incremental', **kwargs):
+        """
+        Execute the crawler with distribution data.
+
+        Overrides base run() to also process distribution data.
+
+        Args:
+            mode: 'full' for complete refresh, 'incremental' for updates only
+            **kwargs: Additional arguments
+        """
+        # First run the base crawler for species data
+        super().run(mode=mode, **kwargs)
+
+        # Then process distribution data
+        if kwargs.get('skip_distribution', False):
+            self.logger.info("Skipping distribution data (skip_distribution=True)")
+            return
+
+        self.logger.info("Processing WCVP distribution data...")
+        self._save_distribution_data()
+
+    def _save_distribution_data(self):
+        """
+        Save distribution data to wcvp_distribution table.
+
+        Processes the wcvp_distribution.csv file and saves to database.
+        """
+        if not self._data_dir:
+            self.logger.error("Data directory not set, cannot process distribution")
+            return
+
+        dist_file = os.path.join(self._data_dir, self.DISTRIBUTION_FILE)
+        if not os.path.exists(dist_file):
+            self.logger.warning(f"Distribution file not found: {dist_file}")
+            return
+
+        self.logger.info(f"Processing distribution from: {dist_file}")
+
+        dist_count = 0
+        batch_size = 10000
+        batch = []
+
+        with open(dist_file, 'r', encoding='utf-8') as f:
+            # WCVP uses pipe delimiter
+            reader = csv.DictReader(f, delimiter='|')
+
+            for row in reader:
+                taxon_id = row.get('plant_name_id')
+                tdwg_code = row.get('area_code_l3')
+
+                if not taxon_id or not tdwg_code:
+                    continue
+
+                batch.append({
+                    'taxon_id': taxon_id,
+                    'tdwg_code': tdwg_code,
+                    'establishment_means': 'introduced' if row.get('introduced') == '1' else 'native',
+                    'endemic': row.get('endemic', '0'),
+                    'introduced': row.get('introduced', '0'),
+                })
+
+                if len(batch) >= batch_size:
+                    self._save_distribution_batch(batch)
+                    dist_count += len(batch)
+                    self.logger.info(f"Distribution progress: {dist_count} records")
+                    batch = []
+
+            # Save remaining batch
+            if batch:
+                self._save_distribution_batch(batch)
+                dist_count += len(batch)
+
+        self.logger.info(f"Completed distribution: {dist_count} records saved")
+
+    def _save_distribution_batch(self, batch: list):
+        """Save a batch of distribution records."""
+        with Session(self.engine) as session:
+            for record in batch:
+                try:
+                    session.execute(
+                        text("""
+                            INSERT INTO wcvp_distribution
+                                (taxon_id, tdwg_code, establishment_means, endemic, introduced)
+                            VALUES
+                                (:taxon_id, :tdwg_code, :establishment_means, :endemic, :introduced)
+                            ON CONFLICT (taxon_id, tdwg_code) DO UPDATE SET
+                                establishment_means = EXCLUDED.establishment_means,
+                                endemic = EXCLUDED.endemic,
+                                introduced = EXCLUDED.introduced
+                        """),
+                        record
+                    )
+                except Exception as e:
+                    self.logger.debug(f"Error saving distribution: {e}")
+
+            session.commit()

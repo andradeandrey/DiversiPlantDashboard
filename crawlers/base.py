@@ -465,3 +465,163 @@ class BaseCrawler(ABC):
                 }
             )
             session.commit()
+
+    def refresh_unified_tables(self, species_ids: list = None):
+        """
+        Refresh unified tables (species_unified, species_regions, species_geometry).
+
+        This method updates the denormalized unified tables after crawler runs.
+        Should be called after bulk data imports or when unified tables need sync.
+
+        Args:
+            species_ids: Optional list of species IDs to refresh. If None, refreshes all.
+        """
+        self.logger.info("Refreshing unified tables...")
+
+        with Session(self.engine) as session:
+            # Check if unified tables exist
+            tables_exist = session.execute(text("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_name IN ('species_unified', 'species_regions', 'species_geometry')
+            """)).scalar()
+
+            if tables_exist < 3:
+                self.logger.warning("Unified tables not found. Run migrations first.")
+                return
+
+            # Refresh species_unified for affected species
+            self._refresh_species_unified(session, species_ids)
+
+            # Refresh species_regions from wcvp_distribution
+            self._refresh_species_regions(session, species_ids)
+
+            session.commit()
+
+        self.logger.info("Unified tables refresh complete")
+
+    def _refresh_species_unified(self, session: Session, species_ids: list = None):
+        """Refresh species_unified table with consolidated traits."""
+        self.logger.info("Refreshing species_unified...")
+
+        where_clause = ""
+        params = {}
+        if species_ids:
+            where_clause = "WHERE s.id = ANY(:ids)"
+            params['ids'] = species_ids
+
+        # Upsert species_unified with priority: gift > reflora > wcvp > treegoer
+        # GIFT is prioritized for using more consistent definitions (liana vs vine)
+        # and following Renata's Climber.R logic (trait_1.2.2 + trait_1.4.2)
+        session.execute(text(f"""
+            INSERT INTO species_unified (
+                species_id,
+                growth_form,
+                growth_form_source,
+                max_height_m,
+                height_source,
+                woodiness,
+                nitrogen_fixer,
+                dispersal_syndrome,
+                deciduousness,
+                is_native_brazil,
+                sources_count
+            )
+            SELECT
+                s.id,
+                COALESCE(
+                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'gift' AND growth_form IS NOT NULL LIMIT 1),
+                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'reflora' AND growth_form IS NOT NULL LIMIT 1),
+                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'wcvp' AND growth_form IS NOT NULL LIMIT 1),
+                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'treegoer' AND growth_form IS NOT NULL LIMIT 1)
+                ),
+                CASE
+                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'gift' AND growth_form IS NOT NULL) THEN 'gift'
+                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'reflora' AND growth_form IS NOT NULL) THEN 'reflora'
+                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'wcvp' AND growth_form IS NOT NULL) THEN 'wcvp'
+                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'treegoer' AND growth_form IS NOT NULL) THEN 'treegoer'
+                END,
+                (SELECT max_height_m FROM species_traits WHERE species_id = s.id AND max_height_m IS NOT NULL ORDER BY
+                    CASE source WHEN 'gift' THEN 1 WHEN 'reflora' THEN 2 WHEN 'wcvp' THEN 3 WHEN 'treegoer' THEN 4 ELSE 5 END
+                LIMIT 1),
+                (SELECT source FROM species_traits WHERE species_id = s.id AND max_height_m IS NOT NULL ORDER BY
+                    CASE source WHEN 'gift' THEN 1 WHEN 'reflora' THEN 2 WHEN 'wcvp' THEN 3 WHEN 'treegoer' THEN 4 ELSE 5 END
+                LIMIT 1),
+                (SELECT woodiness FROM species_traits WHERE species_id = s.id AND woodiness IS NOT NULL LIMIT 1),
+                (SELECT nitrogen_fixer FROM species_traits WHERE species_id = s.id AND nitrogen_fixer IS NOT NULL LIMIT 1),
+                (SELECT dispersal_syndrome FROM species_traits WHERE species_id = s.id AND dispersal_syndrome IS NOT NULL LIMIT 1),
+                (SELECT deciduousness FROM species_traits WHERE species_id = s.id AND deciduousness IS NOT NULL LIMIT 1),
+                EXISTS(
+                    SELECT 1 FROM species_regions sr
+                    WHERE sr.species_id = s.id AND sr.tdwg_code LIKE 'BZ%' AND sr.is_native = TRUE
+                ),
+                (SELECT COUNT(DISTINCT source) FROM species_traits WHERE species_id = s.id)
+            FROM species s
+            {where_clause}
+            AND EXISTS (SELECT 1 FROM species_traits WHERE species_id = s.id)
+            ON CONFLICT (species_id) DO UPDATE SET
+                growth_form = EXCLUDED.growth_form,
+                growth_form_source = EXCLUDED.growth_form_source,
+                max_height_m = EXCLUDED.max_height_m,
+                height_source = EXCLUDED.height_source,
+                woodiness = EXCLUDED.woodiness,
+                nitrogen_fixer = EXCLUDED.nitrogen_fixer,
+                dispersal_syndrome = EXCLUDED.dispersal_syndrome,
+                deciduousness = EXCLUDED.deciduousness,
+                is_native_brazil = EXCLUDED.is_native_brazil,
+                sources_count = EXCLUDED.sources_count,
+                last_updated = CURRENT_TIMESTAMP
+        """), params)
+
+        count = session.execute(text("SELECT COUNT(*) FROM species_unified")).scalar()
+        self.logger.info(f"species_unified: {count} records")
+
+    def _refresh_species_regions(self, session: Session, species_ids: list = None):
+        """Refresh species_regions from wcvp_distribution."""
+        self.logger.info("Refreshing species_regions...")
+
+        # Check if wcvp_distribution exists and has data
+        wcvp_exists = session.execute(text("""
+            SELECT EXISTS(
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name = 'wcvp_distribution'
+            )
+        """)).scalar()
+
+        if not wcvp_exists:
+            self.logger.warning("wcvp_distribution table not found")
+            return
+
+        where_clause = ""
+        params = {}
+        if species_ids:
+            where_clause = "AND s.id = ANY(:ids)"
+            params['ids'] = species_ids
+
+        # Insert from wcvp_distribution
+        session.execute(text(f"""
+            INSERT INTO species_regions (species_id, tdwg_code, is_native, is_endemic, is_introduced, source)
+            SELECT DISTINCT
+                s.id,
+                wd.tdwg_code,
+                CASE
+                    WHEN wd.establishment_means = 'native' THEN TRUE
+                    WHEN wd.establishment_means IS NULL THEN TRUE
+                    ELSE FALSE
+                END,
+                CASE WHEN wd.endemic = '1' THEN TRUE ELSE FALSE END,
+                CASE WHEN wd.introduced = '1' THEN TRUE ELSE FALSE END,
+                'wcvp'
+            FROM species s
+            JOIN wcvp_distribution wd ON s.wcvp_id = wd.taxon_id
+            WHERE wd.tdwg_code IS NOT NULL
+              AND LENGTH(TRIM(wd.tdwg_code)) > 0
+              {where_clause}
+            ON CONFLICT (species_id, tdwg_code) DO UPDATE SET
+                is_native = EXCLUDED.is_native,
+                is_endemic = EXCLUDED.is_endemic,
+                is_introduced = EXCLUDED.is_introduced,
+                source = EXCLUDED.source
+        """), params)
+
+        count = session.execute(text("SELECT COUNT(*) FROM species_regions")).scalar()
+        self.logger.info(f"species_regions: {count} records")
