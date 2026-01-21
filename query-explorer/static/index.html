@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiversiPlant Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 50%, #262626 100%);
+        }
+        .card-gradient {
+            background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+        }
+        .stat-gradient {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+        }
+        .glow {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+        }
+        .table-row:hover {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.6);
+        }
+        .query-input {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-gray-100">
+    <!-- Header -->
+    <header class="border-b border-white/10 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                            DiversiPlant
+                        </h1>
+                        <p class="text-sm text-gray-400">Database Admin & Query Explorer</p>
+                    </div>
+                </div>
+                <div id="health-status" class="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+                    <div class="w-2.5 h-2.5 rounded-full bg-gray-500 animate-pulse" id="health-dot"></div>
+                    <span class="text-sm text-gray-400" id="health-text">Verificando...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-10 space-y-10">
+        <!-- Stats Cards -->
+        <section class="animate-fade-in">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Estatisticas do Banco
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5" id="stats-grid">
+                <!-- Stats will be injected here -->
+            </div>
+        </section>
+
+        <!-- Source Breakdown -->
+        <section class="animate-slide-up" style="animation-delay: 0.1s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+                Distribuicao por Fonte
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <div id="sources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Sources will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Location Query -->
+        <section class="animate-slide-up" style="animation-delay: 0.2s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Consulta por Localizacao
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">Latitude</label>
+                        <input type="number" step="0.0001" id="lat-input" value="-27.5954"
+                               class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">Longitude</label>
+                        <input type="number" step="0.0001" id="lon-input" value="-48.5480"
+                               class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">Forma de Crescimento</label>
+                        <select id="growth-form-select"
+                                class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
+                            <option value="">Todas</option>
+                            <option value="tree">Arvores</option>
+                            <option value="shrub">Arbustos</option>
+                            <option value="herb">Ervas</option>
+                            <option value="climber">Trepadeiras</option>
+                            <option value="palm">Palmeiras</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">Limite de Resultados</label>
+                        <input type="number" id="limit-input" value="50" min="1" max="500"
+                               class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
+                    </div>
+                    <div class="flex items-end">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" id="native-only" class="w-5 h-5 rounded bg-white/5 border-white/20 text-emerald-500 focus:ring-emerald-500/20">
+                            <span class="text-gray-300 group-hover:text-white transition-colors">Apenas nativas</span>
+                        </label>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="queryByLocation('tdwg')"
+                                class="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300 transform hover:scale-[1.02]">
+                            Buscar por TDWG
+                        </button>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="queryByLocation('postgis')"
+                                class="w-full px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all duration-300 transform hover:scale-[1.02]">
+                            Buscar por Geometria
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Grid - Side by Side -->
+                <div id="results-container" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- TDWG Results -->
+                        <div id="tdwg-results" class="hidden">
+                            <div class="p-6 bg-emerald-500/5 rounded-xl border border-emerald-500/20 mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gray-400 text-sm">Metodo TDWG (Regiao)</p>
+                                        <p class="text-xl font-semibold text-white" id="tdwg-name">-</p>
+                                        <p class="text-emerald-400 font-mono text-sm" id="tdwg-code">-</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="tdwg-count" class="text-3xl font-bold text-emerald-400">0</span>
+                                        <p class="text-gray-400 text-sm">especies</p>
+                                        <p id="tdwg-time" class="text-xs text-gray-500"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto rounded-xl border border-white/10 max-h-96 overflow-y-auto">
+                                <table class="w-full">
+                                    <thead class="sticky top-0">
+                                        <tr class="bg-gray-900 border-b border-white/10">
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Especie</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Familia</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Forma</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tdwg-tbody" class="divide-y divide-white/5">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- PostGIS Results -->
+                        <div id="postgis-results" class="hidden">
+                            <div class="p-6 bg-amber-500/5 rounded-xl border border-amber-500/20 mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gray-400 text-sm">Metodo PostGIS (Geometria)</p>
+                                        <p class="text-xl font-semibold text-white">Query Espacial Direta</p>
+                                        <p class="text-amber-400 font-mono text-sm" id="postgis-coords">-</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="postgis-count" class="text-3xl font-bold text-amber-400">0</span>
+                                        <p class="text-gray-400 text-sm">especies</p>
+                                        <p id="postgis-time" class="text-xs text-gray-500"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto rounded-xl border border-white/10 max-h-96 overflow-y-auto">
+                                <table class="w-full">
+                                    <thead class="sticky top-0">
+                                        <tr class="bg-gray-900 border-b border-white/10">
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Especie</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Familia</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Forma</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="postgis-tbody" class="divide-y divide-white/5">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Custom Query -->
+        <section class="animate-slide-up" style="animation-delay: 0.3s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                Query Personalizada
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <div class="mb-6">
+                    <label class="text-sm text-gray-400 font-medium mb-2 block">SQL Query (somente SELECT)</label>
+                    <textarea id="custom-query" rows="6" placeholder="SELECT * FROM species_unified LIMIT 10;"
+                              class="query-input w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-emerald-300 placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 resize-none"></textarea>
+                </div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="flex-1">
+                        <label class="text-sm text-gray-400 font-medium mb-2 block">Limite</label>
+                        <input type="number" id="query-limit" value="100" min="1" max="1000"
+                               class="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500/50 transition-all duration-300">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="runCustomQuery()"
+                                class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-[1.02]">
+                            Executar Query
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Query presets -->
+                <div class="mb-8">
+                    <p class="text-sm text-gray-400 mb-3">Queries de exemplo:</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="setQuery('SELECT growth_form, COUNT(*) as total FROM species_unified WHERE growth_form IS NOT NULL GROUP BY growth_form ORDER BY total DESC')"
+                                class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
+                            Growth Forms
+                        </button>
+                        <button onclick="setQuery('SELECT s.family, COUNT(*) as total FROM species s JOIN species_unified su ON s.id = su.species_id WHERE su.is_tree = TRUE GROUP BY s.family ORDER BY total DESC LIMIT 20')"
+                                class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
+                            Top 20 Familias (Arvores)
+                        </button>
+                        <button onclick="setQuery('SELECT level3_code, level3_name, continent FROM tdwg_level3 WHERE level3_code LIKE \\'BZ%\\' ORDER BY level3_code')"
+                                class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
+                            Regioes Brasil
+                        </button>
+                        <button onclick="setQuery('SELECT sr.tdwg_code, COUNT(*) as species_count FROM species_regions sr GROUP BY sr.tdwg_code ORDER BY species_count DESC LIMIT 20')"
+                                class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
+                            Top Regioes
+                        </button>
+                        <button onclick="setQuery('EXPLAIN ANALYZE SELECT COUNT(*) FROM species_unified su JOIN species_regions sr ON su.species_id = sr.species_id WHERE sr.tdwg_code = \\'BZS\\' AND su.is_tree = TRUE')"
+                                class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
+                            EXPLAIN Query
+                        </button>
+                    </div>
+                    <p class="text-sm text-amber-400 mb-3">PostGIS / Geometria:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setQuery('SELECT level3_code, level3_name, ROUND((ST_Distance(geom, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326)) * 111)::numeric, 2) as dist_km FROM tdwg_level3 WHERE ST_DWithin(geom, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.5) ORDER BY dist_km LIMIT 1')"
+                                class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
+                            TDWG por Coordenada (Floripa)
+                        </button>
+                        <button onclick="setQuery('SELECT s.canonical_name, s.family, su.growth_form FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE AND ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.1) LIMIT 20')"
+                                class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
+                            Arvores por Geometria (Floripa)
+                        </button>
+                        <button onclick="setQuery('SELECT s.canonical_name, s.family, sg.native_regions_count as regioes FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE ORDER BY sg.native_regions_count DESC LIMIT 20')"
+                                class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
+                            Arvores Maior Distribuicao
+                        </button>
+                        <button onclick="setQuery('SELECT s.canonical_name, sg.native_regions_count as regioes FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE ORDER BY sg.native_regions_count DESC LIMIT 20')"
+                                class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
+                            Arvores Mais Regioes
+                        </button>
+                        <button onclick="setQuery('SELECT COUNT(*) as arvores_floripa FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE AND ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.1)')"
+                                class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
+                            Count Arvores PostGIS
+                        </button>
+                        <button onclick="setQuery('EXPLAIN ANALYZE SELECT COUNT(*) FROM species_unified su JOIN species_geometry sg ON su.species_id = sg.species_id WHERE su.is_tree = TRUE AND ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.05)')"
+                                class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
+                            EXPLAIN PostGIS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Query Results -->
+                <div id="query-results" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-4">
+                            <h3 class="text-lg font-semibold text-white">Resultado</h3>
+                            <span id="result-count" class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm font-medium">0 rows</span>
+                        </div>
+                        <span id="result-time" class="text-sm text-gray-400"></span>
+                    </div>
+                    <div id="query-error" class="hidden p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 mb-4"></div>
+                    <div class="overflow-x-auto rounded-xl border border-white/10">
+                        <table class="w-full">
+                            <thead id="result-thead" class="bg-white/5 border-b border-white/10">
+                            </thead>
+                            <tbody id="result-tbody" class="divide-y divide-white/5">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Quality Check -->
+        <section class="animate-slide-up" style="animation-delay: 0.4s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Verificacao de Dados
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <button onclick="runDataCheck()"
+                        class="mb-8 px-6 py-3 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-semibold rounded-xl shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 transition-all duration-300 transform hover:scale-[1.02]">
+                    Executar Verificacao
+                </button>
+                <div id="data-checks" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Checks will be injected here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+        <!-- Database Schema -->
+        <section class="animate-slide-up" style="animation-delay: 0.5s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                </svg>
+                Estrutura das Tabelas
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+
+                    <!-- species -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-emerald-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                species
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">Tabela principal de especies</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
+                            <div class="flex justify-between"><span class="text-white">canonical_name</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">genus</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">family</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">wcvp_id</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">gbif_taxon_key</span><span class="text-gray-500">bigint</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">gift_work_id</span><span class="text-gray-500">integer</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">reflora_id</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">wfo_id</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">taxonomic_status</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-purple-400">accepted_name_id</span><span class="text-gray-500">integer FK</span></div>
+                        </div>
+                    </div>
+
+                    <!-- species_unified -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-cyan-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                                species_unified
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">Traits consolidados (prioridade: gift > reflora > wcvp)</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">species_id</span><span class="text-gray-500">integer PK/FK</span></div>
+                            <div class="flex justify-between"><span class="text-white">growth_form</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">growth_form_source</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">max_height_m</span><span class="text-gray-500">numeric</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">woodiness</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">nitrogen_fixer</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">dispersal_syndrome</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">is_tree</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">is_shrub</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">is_climber</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">is_herb</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">is_palm</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">is_native_brazil</span><span class="text-gray-500">boolean</span></div>
+                        </div>
+                    </div>
+
+                    <!-- species_regions -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-purple-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                                species_regions
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">Distribuicao geografica por TDWG Level 3</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
+                            <div class="flex justify-between"><span class="text-purple-400">species_id</span><span class="text-gray-500">integer FK</span></div>
+                            <div class="flex justify-between"><span class="text-white">tdwg_code</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">is_native</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">is_endemic</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-rose-400">is_introduced</span><span class="text-gray-500">boolean</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">source</span><span class="text-gray-500">varchar</span></div>
+                        </div>
+                    </div>
+
+                    <!-- species_geometry -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-amber-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                species_geometry
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">Poligonos PostGIS (uniao das regioes TDWG)</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">species_id</span><span class="text-gray-500">integer PK/FK</span></div>
+                            <div class="flex justify-between"><span class="text-white">native_range</span><span class="text-gray-500">geometry</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">full_range</span><span class="text-gray-500">geometry</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">bbox</span><span class="text-gray-500">geometry</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">centroid</span><span class="text-gray-500">geometry</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">native_area_km2</span><span class="text-gray-500">numeric</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">native_regions_count</span><span class="text-gray-500">integer</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">full_regions_count</span><span class="text-gray-500">integer</span></div>
+                        </div>
+                    </div>
+
+                    <!-- tdwg_level3 -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-rose-500/20 to-red-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-rose-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                tdwg_level3
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">Regioes TDWG (369 regioes globais)</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
+                            <div class="flex justify-between"><span class="text-white">level3_code</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-white">level3_name</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">level2_code</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">continent</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">geom</span><span class="text-gray-500">geometry</span></div>
+                        </div>
+                    </div>
+
+                    <!-- common_names -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-teal-500/20 to-green-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-teal-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                                common_names
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">Nomes populares (pt/en)</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
+                            <div class="flex justify-between"><span class="text-purple-400">species_id</span><span class="text-gray-500">integer FK</span></div>
+                            <div class="flex justify-between"><span class="text-white">common_name</span><span class="text-gray-500">text</span></div>
+                            <div class="flex justify-between"><span class="text-white">language</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">source</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">verified</span><span class="text-gray-500">boolean</span></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Legend -->
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <p class="text-sm text-gray-400 mb-4">Legenda de cores:</p>
+                    <div class="flex flex-wrap gap-6 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-blue-400"></span>
+                            <span class="text-gray-300">Primary Key</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-purple-400"></span>
+                            <span class="text-gray-300">Foreign Key</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-white"></span>
+                            <span class="text-gray-300">NOT NULL</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-emerald-400"></span>
+                            <span class="text-gray-300">Campos de filtro</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-amber-400"></span>
+                            <span class="text-gray-300">IDs externos / Geometria</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded bg-gray-400"></span>
+                            <span class="text-gray-300">Nullable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relationships -->
+                <div class="mt-8 pt-6 border-t border-white/10">
+                    <p class="text-sm text-gray-400 mb-4">Relacionamentos:</p>
+                    <div class="bg-black/30 rounded-xl p-6 font-mono text-sm overflow-x-auto">
+                        <pre class="text-gray-300">
+species (1) ─────┬───── (1) species_unified     [traits consolidados]
+                 │
+                 ├───── (N) species_regions     [N regioes TDWG por especie]
+                 │              │
+                 │              └──── tdwg_level3  [FK: tdwg_code → level3_code]
+                 │
+                 ├───── (1) species_geometry    [poligono = uniao das regioes]
+                 │
+                 └───── (N) common_names        [nomes em pt/en]</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 mt-20">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="flex items-center justify-between text-gray-500 text-sm">
+                <p>DiversiPlant Admin - Database Explorer</p>
+                <p>PostGIS + PostgreSQL 16</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const API_BASE = '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHealth();
+            loadStats();
+            loadSources();
+            setInterval(checkHealth, 30000);
+        });
+
+        // Health Check
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/api/health`);
+                const data = await res.json();
+
+                const dot = document.getElementById('health-dot');
+                const text = document.getElementById('health-text');
+
+                if (data.status === 'ok' && data.database === 'connected') {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse-slow';
+                    text.textContent = `Online - PostGIS ${data.postgis.split(' ')[0]}`;
+                    text.className = 'text-sm text-emerald-400';
+                } else {
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
+                    text.textContent = 'Erro de conexao';
+                    text.className = 'text-sm text-red-400';
+                }
+            } catch (e) {
+                document.getElementById('health-dot').className = 'w-2.5 h-2.5 rounded-full bg-red-500';
+                document.getElementById('health-text').textContent = 'Offline';
+            }
+        }
+
+        // Load Stats
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/stats`);
+                const data = await res.json();
+
+                const stats = [
+                    { label: 'Especies', value: data.total_species, color: 'from-emerald-500 to-teal-500' },
+                    { label: 'Unified', value: data.species_unified, color: 'from-cyan-500 to-blue-500' },
+                    { label: 'Regioes', value: data.species_regions, color: 'from-purple-500 to-pink-500' },
+                    { label: 'Geometrias', value: data.species_geometry, color: 'from-amber-500 to-orange-500' },
+                    { label: 'TDWG', value: data.tdwg_regions, color: 'from-rose-500 to-red-500' },
+                ];
+
+                document.getElementById('stats-grid').innerHTML = stats.map(s => `
+                    <div class="card-gradient rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-105">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} opacity-80"></div>
+                            <span class="text-gray-400 text-sm font-medium">${s.label}</span>
+                        </div>
+                        <p class="text-3xl font-bold text-white">${formatNumber(s.value)}</p>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        // Load Sources
+        async function loadSources() {
+            try {
+                const res = await fetch(`${API_BASE}/api/sources`);
+                const data = await res.json();
+
+                const colors = {
+                    'gift': 'emerald',
+                    'wcvp': 'cyan',
+                    'reflora': 'amber',
+                    'treegoer': 'purple'
+                };
+
+                document.getElementById('sources-grid').innerHTML = data.map(s => {
+                    const color = colors[s.source] || 'gray';
+                    return `
+                        <div class="p-6 bg-white/5 rounded-xl border border-white/10 hover:border-${color}-500/30 transition-all duration-300">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-lg font-semibold text-${color}-400 uppercase">${s.source}</span>
+                                <span class="text-2xl font-bold text-white">${formatNumber(s.total)}</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Arvores</span>
+                                    <span class="text-white">${formatNumber(s.trees)}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Arbustos</span>
+                                    <span class="text-white">${formatNumber(s.shrubs)}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Ervas</span>
+                                    <span class="text-white">${formatNumber(s.herbs)}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-400">
+                                    <span>Trepadeiras</span>
+                                    <span class="text-white">${formatNumber(s.climbers)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Failed to load sources:', e);
+            }
+        }
+
+        // Query by Location
+        async function queryByLocation(method) {
+            const lat = document.getElementById('lat-input').value;
+            const lon = document.getElementById('lon-input').value;
+            const growthForm = document.getElementById('growth-form-select').value;
+            const limit = document.getElementById('limit-input').value;
+            const nativeOnly = document.getElementById('native-only').checked;
+
+            document.getElementById('results-container').classList.remove('hidden');
+
+            if (method === 'tdwg') {
+                await queryByTDWG(lat, lon, growthForm, limit, nativeOnly);
+            } else if (method === 'postgis') {
+                await queryByPostGIS(lat, lon, growthForm, limit);
+            }
+        }
+
+        // Query by TDWG Region
+        async function queryByTDWG(lat, lon, growthForm, limit, nativeOnly) {
+            try {
+                const tdwgRes = await fetch(`${API_BASE}/api/tdwg?lat=${lat}&lon=${lon}`);
+                if (!tdwgRes.ok) {
+                    alert('Regiao TDWG nao encontrada para estas coordenadas');
+                    return;
+                }
+                const tdwg = await tdwgRes.json();
+
+                document.getElementById('tdwg-results').classList.remove('hidden');
+                document.getElementById('tdwg-name').textContent = tdwg.name;
+                document.getElementById('tdwg-code').textContent = tdwg.code + (tdwg.distance_km ? ` (${tdwg.distance_km}km)` : '');
+
+                let url = `${API_BASE}/api/species?tdwg_code=${tdwg.code}&limit=${limit}`;
+                if (growthForm) url += `&growth_form=${growthForm}`;
+                if (nativeOnly) url += `&native_only=true`;
+
+                const speciesRes = await fetch(url);
+                const data = await speciesRes.json();
+
+                document.getElementById('tdwg-count').textContent = formatNumber(data.total);
+                document.getElementById('tdwg-time').textContent = data.query_time;
+
+                document.getElementById('tdwg-tbody').innerHTML = data.species.map(sp => `
+                    <tr class="table-row transition-all duration-200">
+                        <td class="px-4 py-3">
+                            <span class="text-white text-sm italic">${sp.canonical_name}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">${sp.family || '-'}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">${sp.growth_form || '-'}</span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('TDWG Query failed:', e);
+                alert('Erro na consulta TDWG: ' + e.message);
+            }
+        }
+
+        // Query by PostGIS Geometry
+        async function queryByPostGIS(lat, lon, growthForm, limit) {
+            try {
+                document.getElementById('postgis-results').classList.remove('hidden');
+                document.getElementById('postgis-coords').textContent = `${lat}, ${lon}`;
+                document.getElementById('postgis-tbody').innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400">Carregando...</td></tr>';
+                document.getElementById('postgis-count').textContent = '...';
+
+                let growthFilter = '';
+                if (growthForm === 'tree') growthFilter = 'AND su.is_tree = TRUE';
+                else if (growthForm === 'shrub') growthFilter = 'AND su.is_shrub = TRUE';
+                else if (growthForm === 'herb') growthFilter = 'AND su.is_herb = TRUE';
+                else if (growthForm === 'climber') growthFilter = 'AND su.is_climber = TRUE';
+                else if (growthForm === 'palm') growthFilter = 'AND su.is_palm = TRUE';
+
+                // First get total count (without LIMIT)
+                const countSql = `SELECT COUNT(*) as total
+                    FROM species s
+                    JOIN species_unified su ON s.id = su.species_id
+                    JOIN species_geometry sg ON s.id = sg.species_id
+                    WHERE ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(${lon}, ${lat}), 4326), 0.1)
+                    ${growthFilter}`;
+
+                const countRes = await fetch(`${API_BASE}/api/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sql: countSql, limit: 1 })
+                });
+                const countData = await countRes.json();
+                const totalCount = countData.rows?.[0]?.[0] || 0;
+
+                // Then get species with LIMIT
+                const sql = `SELECT s.canonical_name, s.family, su.growth_form
+                    FROM species s
+                    JOIN species_unified su ON s.id = su.species_id
+                    JOIN species_geometry sg ON s.id = sg.species_id
+                    WHERE ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(${lon}, ${lat}), 4326), 0.1)
+                    ${growthFilter}
+                    ORDER BY s.canonical_name
+                    LIMIT ${limit}`;
+
+                const res = await fetch(`${API_BASE}/api/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sql, limit: parseInt(limit) })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    document.getElementById('postgis-tbody').innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-red-400">${data.error}</td></tr>`;
+                    return;
+                }
+
+                document.getElementById('postgis-count').textContent = formatNumber(totalCount);
+                document.getElementById('postgis-time').textContent = data.query_time;
+
+                document.getElementById('postgis-tbody').innerHTML = data.rows.map(row => `
+                    <tr class="table-row transition-all duration-200">
+                        <td class="px-4 py-3">
+                            <span class="text-white text-sm italic">${row[0]}</span>
+                        </td>
+                        <td class="px-4 py-3 text-gray-400 text-sm">${row[1] || '-'}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">${row[2] || '-'}</span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('PostGIS Query failed:', e);
+                alert('Erro na consulta PostGIS: ' + e.message);
+            }
+        }
+
+        // Set Query
+        function setQuery(sql) {
+            document.getElementById('custom-query').value = sql;
+        }
+
+        // Run Custom Query
+        async function runCustomQuery() {
+            const sql = document.getElementById('custom-query').value;
+            const limit = document.getElementById('query-limit').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sql, limit: parseInt(limit) })
+                });
+                const data = await res.json();
+
+                document.getElementById('query-results').classList.remove('hidden');
+
+                if (data.error) {
+                    document.getElementById('query-error').classList.remove('hidden');
+                    document.getElementById('query-error').textContent = data.error;
+                    document.getElementById('result-thead').innerHTML = '';
+                    document.getElementById('result-tbody').innerHTML = '';
+                    return;
+                }
+
+                document.getElementById('query-error').classList.add('hidden');
+                document.getElementById('result-count').textContent = `${data.row_count} rows`;
+                document.getElementById('result-time').textContent = `Query: ${data.query_time}`;
+
+                document.getElementById('result-thead').innerHTML = `
+                    <tr>
+                        ${data.columns.map(col => `<th class="px-6 py-4 text-left text-sm font-semibold text-gray-300">${col}</th>`).join('')}
+                    </tr>
+                `;
+
+                document.getElementById('result-tbody').innerHTML = data.rows.map(row => `
+                    <tr class="table-row transition-all duration-200">
+                        ${row.map(cell => `<td class="px-6 py-4 text-gray-300">${cell !== null ? cell : '<span class="text-gray-600">NULL</span>'}</td>`).join('')}
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Query failed:', e);
+                alert('Erro ao executar query: ' + e.message);
+            }
+        }
+
+        // Data Quality Check
+        async function runDataCheck() {
+            const checks = [
+                { name: 'Species com growth_form', query: 'SELECT COUNT(*) FROM species_unified WHERE growth_form IS NOT NULL', threshold: 300000, reverse: true, description: 'Especies com forma de crescimento' },
+                { name: 'Species com regiao', query: 'SELECT COUNT(DISTINCT species_id) FROM species_regions', threshold: 300000, reverse: true, description: 'Especies com distribuicao geografica' },
+                { name: 'Species com geometria', query: 'SELECT COUNT(*) FROM species_geometry WHERE native_range IS NOT NULL', threshold: 300000, reverse: true, description: 'Especies com poligono PostGIS' },
+                { name: 'Regioes TDWG', query: 'SELECT COUNT(*) FROM tdwg_level3 WHERE geom IS NOT NULL', threshold: 360, reverse: true, description: 'Regioes TDWG com poligono' },
+                { name: 'Unified total', query: 'SELECT COUNT(*) FROM species_unified', threshold: 300000, reverse: true, description: 'Total de registros unificados' },
+                { name: 'Nomes comuns PT', query: 'SELECT COUNT(*) FROM common_names WHERE language = \'pt\'', threshold: 1000, reverse: true, description: 'Nomes populares em portugues' },
+            ];
+
+            const container = document.getElementById('data-checks');
+            container.innerHTML = '<p class="text-gray-400 col-span-2">Executando verificacoes...</p>';
+
+            const results = [];
+            for (const check of checks) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/query`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sql: check.query, limit: 1 })
+                    });
+                    const data = await res.json();
+
+                    if (!data.error && data.rows.length > 0) {
+                        const value = parseInt(data.rows[0][0]);
+                        const ok = check.reverse ? value >= check.threshold : value <= check.threshold;
+                        results.push({ ...check, value, ok });
+                    } else {
+                        results.push({ ...check, value: 'Erro', ok: false });
+                    }
+                } catch (e) {
+                    results.push({ ...check, value: 'Erro', ok: false });
+                }
+            }
+
+            container.innerHTML = results.map(r => `
+                <div class="p-6 rounded-xl border ${r.ok ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'} transition-all duration-300">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold ${r.ok ? 'text-emerald-400' : 'text-red-400'}">${r.name}</span>
+                        <span class="text-2xl font-bold ${r.ok ? 'text-emerald-400' : 'text-red-400'}">
+                            ${typeof r.value === 'number' ? formatNumber(r.value) : r.value}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-400">${r.description}</p>
+                    <div class="mt-3 flex items-center gap-2">
+                        ${r.ok
+                            ? '<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="text-sm text-emerald-400">OK</span>'
+                            : '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span class="text-sm text-red-400">Atencao</span>'
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Format number
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '-';
+            return new Intl.NumberFormat('pt-BR').format(num);
+        }
+    </script>
+</body>
+</html>

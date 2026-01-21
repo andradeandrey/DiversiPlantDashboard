@@ -39,3 +39,4 @@ pgadmin_data/
 # Logs
 *.log
 logs/
+query-explorer/query-explorer
