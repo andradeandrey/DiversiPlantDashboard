@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -84,7 +84,7 @@
                 </div>
                 <div id="health-status" class="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
                     <div class="w-2.5 h-2.5 rounded-full bg-gray-500 animate-pulse" id="health-dot"></div>
-                    <span class="text-sm text-gray-400" id="health-text">Verificando...</span>
+                    <span class="text-sm text-gray-400" id="health-text">Checking...</span>
                 </div>
             </div>
         </div>
@@ -97,7 +97,7 @@
                 <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                Estatisticas do Banco
+                Database Statistics
             </h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5" id="stats-grid">
                 <!-- Stats will be injected here -->
@@ -110,14 +110,14 @@
                 <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
                 </svg>
-                Distribuicao por Fonte
+                Distribution by Source
             </h2>
 
             <!-- Growth Form Sources -->
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow mb-6">
                 <h3 class="text-md font-semibold text-emerald-400 mb-4 flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                    Growth Form (Forma de Crescimento)
+                    Growth Form
                 </h3>
                 <div id="sources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <!-- Growth form sources will be injected here -->
@@ -128,7 +128,7 @@
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow mb-6">
                 <h3 class="text-md font-semibold text-rose-400 mb-4 flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                    Threat Status (Status de Ameaca - IUCN)
+                    Threat Status (IUCN)
                 </h3>
                 <div id="threat-sources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Threat status sources will be injected here -->
@@ -139,10 +139,200 @@
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
                 <h3 class="text-md font-semibold text-purple-400 mb-4 flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-                    Lifespan (Longevidade)
+                    Lifespan
                 </h3>
                 <div id="lifespan-sources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Lifespan sources will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Climate Data -->
+        <section class="animate-slide-up" style="animation-delay: 0.15s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                </svg>
+                Climate Data (WorldClim)
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <!-- Climate Query -->
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">TDWG Code</label>
+                        <input type="text" id="climate-tdwg-input" placeholder="BZN, BZS, BZE..."
+                               class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-2 focus:ring-sky-500/20 transition-all duration-300">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">Or Latitude</label>
+                        <input type="number" step="0.0001" id="climate-lat-input" placeholder="-15.7"
+                               class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-2 focus:ring-sky-500/20 transition-all duration-300">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm text-gray-400 font-medium">Longitude</label>
+                        <input type="number" step="0.0001" id="climate-lon-input" placeholder="-47.9"
+                               class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-sky-500/50 focus:ring-2 focus:ring-sky-500/20 transition-all duration-300">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="queryClimate()"
+                                class="flex-1 px-6 py-4 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40 transition-all duration-300 transform hover:scale-[1.02]">
+                            TDWG
+                        </button>
+                        <button onclick="queryClimatePoint()"
+                                class="flex-1 px-6 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 transition-all duration-300 transform hover:scale-[1.02]"
+                                title="Requer dados raster carregados">
+                            Precise Raster
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info about query modes -->
+                <div class="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-sky-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-sm">
+                            <p class="text-gray-300 mb-1"><strong class="text-sky-400">TDWG:</strong> Uses aggregated data by region (5 macro-regions in Brazil). Fast, always available.</p>
+                            <p class="text-gray-300"><strong class="text-violet-400">Precise Raster:</strong> Uses high-resolution WorldClim data (~1km²). Requires loading rasters with: <code class="bg-black/30 px-2 py-0.5 rounded text-xs">python crawlers/worldclim_raster.py --apply-migration</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick TDWG buttons -->
+                <div class="mb-8">
+                    <p class="text-sm text-gray-400 mb-3">Brazilian regions:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setClimateTDWG('BZN')" class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg text-sm text-sky-300 hover:text-sky-200 transition-all duration-200">BZN - North</button>
+                        <button onclick="setClimateTDWG('BZS')" class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg text-sm text-sky-300 hover:text-sky-200 transition-all duration-200">BZS - South</button>
+                        <button onclick="setClimateTDWG('BZE')" class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg text-sm text-sky-300 hover:text-sky-200 transition-all duration-200">BZE - Northeast</button>
+                        <button onclick="setClimateTDWG('BZC')" class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg text-sm text-sky-300 hover:text-sky-200 transition-all duration-200">BZC - Central-West</button>
+                        <button onclick="setClimateTDWG('BZL')" class="px-4 py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg text-sm text-sky-300 hover:text-sky-200 transition-all duration-200">BZL - Southeast</button>
+                    </div>
+                </div>
+
+                <!-- Climate Result -->
+                <div id="climate-result" class="hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Climate Info Card -->
+                        <div class="p-6 bg-sky-500/5 rounded-xl border border-sky-500/20">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500/20 to-cyan-500/20 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xl font-semibold text-white" id="climate-region-name">-</p>
+                                    <p class="text-sky-400 font-mono text-sm" id="climate-region-code">-</p>
+                                </div>
+                            </div>
+
+                            <!-- Biome & Köppen -->
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                                    <p class="text-xs text-gray-400 mb-1">Whittaker Biome</p>
+                                    <p class="text-lg font-semibold text-emerald-400" id="climate-biome">-</p>
+                                </div>
+                                <div class="p-4 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                                    <p class="text-xs text-gray-400 mb-1">Köppen</p>
+                                    <p class="text-lg font-semibold text-amber-400" id="climate-koppen">-</p>
+                                </div>
+                            </div>
+
+                            <!-- Aridity -->
+                            <div class="p-4 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                                <p class="text-xs text-gray-400 mb-1">Aridity Index</p>
+                                <p class="text-2xl font-bold text-purple-400" id="climate-aridity">-</p>
+                            </div>
+                        </div>
+
+                        <!-- Temperature & Precipitation -->
+                        <div class="space-y-6">
+                            <!-- Temperature -->
+                            <div class="p-6 bg-rose-500/5 rounded-xl border border-rose-500/20">
+                                <h4 class="text-sm font-semibold text-rose-400 mb-4 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5"/>
+                                    </svg>
+                                    Temperature (BIO1)
+                                </h4>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Minimum</p>
+                                        <p class="text-xl font-bold text-blue-400" id="climate-temp-min">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Mean</p>
+                                        <p class="text-2xl font-bold text-rose-400" id="climate-temp-mean">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Maximum</p>
+                                        <p class="text-xl font-bold text-orange-400" id="climate-temp-max">-</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Precipitation -->
+                            <div class="p-6 bg-cyan-500/5 rounded-xl border border-cyan-500/20">
+                                <h4 class="text-sm font-semibold text-cyan-400 mb-4 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                    </svg>
+                                    Annual Precipitation (BIO12)
+                                </h4>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p class="text-xs text-gray-400">Minimum</p>
+                                        <p class="text-xl font-bold text-gray-400" id="climate-precip-min">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Mean</p>
+                                        <p class="text-2xl font-bold text-cyan-400" id="climate-precip-mean">-</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Maximum</p>
+                                        <p class="text-xl font-bold text-blue-400" id="climate-precip-max">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All BIO Variables -->
+                    <div class="mt-8 p-6 bg-white/5 rounded-xl border border-white/10">
+                        <h4 class="text-sm font-semibold text-gray-300 mb-4">All Bioclimatic Variables</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm" id="climate-all-bio">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Climate Stats -->
+                <div class="mt-8 pt-8 border-t border-white/10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-md font-semibold text-gray-300">Global Climate Statistics</h3>
+                        <button onclick="loadClimateStats()"
+                                class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
+                            Load Stats
+                        </button>
+                    </div>
+                    <div id="climate-stats" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Biome Distribution -->
+                        <div class="p-6 bg-emerald-500/5 rounded-xl border border-emerald-500/20">
+                            <h4 class="text-sm font-semibold text-emerald-400 mb-4">Biome Distribution</h4>
+                            <div id="biome-distribution" class="space-y-3">
+                                <p class="text-gray-500 text-sm">Click "Load Stats"</p>
+                            </div>
+                        </div>
+                        <!-- Köppen Distribution -->
+                        <div class="p-6 bg-amber-500/5 rounded-xl border border-amber-500/20">
+                            <h4 class="text-sm font-semibold text-amber-400 mb-4">Köppen Distribution</h4>
+                            <div id="koppen-distribution" class="space-y-3">
+                                <p class="text-gray-500 text-sm">Click "Load Stats"</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -154,7 +344,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                Consulta por Localizacao
+                Location Query
             </h2>
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -169,40 +359,40 @@
                                class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm text-gray-400 font-medium">Forma de Crescimento</label>
+                        <label class="text-sm text-gray-400 font-medium">Growth Form</label>
                         <select id="growth-form-select"
                                 class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
-                            <option value="">Todas</option>
-                            <option value="tree">Arvores</option>
-                            <option value="shrub">Arbustos</option>
-                            <option value="herb">Ervas</option>
-                            <option value="climber">Trepadeiras</option>
-                            <option value="palm">Palmeiras</option>
+                            <option value="">All</option>
+                            <option value="tree">Trees</option>
+                            <option value="shrub">Shrubs</option>
+                            <option value="herb">Herbs</option>
+                            <option value="climber">Climbers</option>
+                            <option value="palm">Palms</option>
                         </select>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                     <div class="space-y-2">
-                        <label class="text-sm text-gray-400 font-medium">Limite de Resultados</label>
+                        <label class="text-sm text-gray-400 font-medium">Results Limit</label>
                         <input type="number" id="limit-input" value="50" min="1" max="500"
                                class="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-300">
                     </div>
                     <div class="flex items-end">
                         <label class="flex items-center gap-3 cursor-pointer group">
                             <input type="checkbox" id="native-only" class="w-5 h-5 rounded bg-white/5 border-white/20 text-emerald-500 focus:ring-emerald-500/20">
-                            <span class="text-gray-300 group-hover:text-white transition-colors">Apenas nativas</span>
+                            <span class="text-gray-300 group-hover:text-white transition-colors">Native only</span>
                         </label>
                     </div>
                     <div class="flex items-end">
                         <button onclick="queryByLocation('tdwg')"
                                 class="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300 transform hover:scale-[1.02]">
-                            Buscar por TDWG
+                            Search by TDWG
                         </button>
                     </div>
                     <div class="flex items-end">
                         <button onclick="queryByLocation('postgis')"
                                 class="w-full px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all duration-300 transform hover:scale-[1.02]">
-                            Buscar por Geometria
+                            Search by Geometry
                         </button>
                     </div>
                 </div>
@@ -220,13 +410,13 @@
                                         </svg>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-gray-400 text-sm">Metodo TDWG (Regiao)</p>
+                                        <p class="text-gray-400 text-sm">TDWG Method (Region)</p>
                                         <p class="text-xl font-semibold text-white" id="tdwg-name">-</p>
                                         <p class="text-emerald-400 font-mono text-sm" id="tdwg-code">-</p>
                                     </div>
                                     <div class="text-right">
                                         <span id="tdwg-count" class="text-3xl font-bold text-emerald-400">0</span>
-                                        <p class="text-gray-400 text-sm">especies</p>
+                                        <p class="text-gray-400 text-sm">species</p>
                                         <p id="tdwg-time" class="text-xs text-gray-500"></p>
                                     </div>
                                 </div>
@@ -235,9 +425,9 @@
                                 <table class="w-full">
                                     <thead class="sticky top-0">
                                         <tr class="bg-gray-900 border-b border-white/10">
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Especie</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Familia</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Forma</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Species</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Family</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Form</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tdwg-tbody" class="divide-y divide-white/5">
@@ -257,13 +447,13 @@
                                         </svg>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-gray-400 text-sm">Metodo PostGIS (Geometria)</p>
+                                        <p class="text-gray-400 text-sm">PostGIS Method (Geometry)</p>
                                         <p class="text-xl font-semibold text-white">Query Espacial Direta</p>
                                         <p class="text-amber-400 font-mono text-sm" id="postgis-coords">-</p>
                                     </div>
                                     <div class="text-right">
                                         <span id="postgis-count" class="text-3xl font-bold text-amber-400">0</span>
-                                        <p class="text-gray-400 text-sm">especies</p>
+                                        <p class="text-gray-400 text-sm">species</p>
                                         <p id="postgis-time" class="text-xs text-gray-500"></p>
                                     </div>
                                 </div>
@@ -272,9 +462,9 @@
                                 <table class="w-full">
                                     <thead class="sticky top-0">
                                         <tr class="bg-gray-900 border-b border-white/10">
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Especie</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Familia</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Forma</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Species</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Family</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300">Form</th>
                                         </tr>
                                     </thead>
                                     <tbody id="postgis-tbody" class="divide-y divide-white/5">
@@ -293,31 +483,31 @@
                 <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
                 </svg>
-                Query Personalizada
+                Custom Query
             </h2>
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
                 <div class="mb-6">
-                    <label class="text-sm text-gray-400 font-medium mb-2 block">SQL Query (somente SELECT)</label>
+                    <label class="text-sm text-gray-400 font-medium mb-2 block">SQL Query (SELECT only)</label>
                     <textarea id="custom-query" rows="6" placeholder="SELECT * FROM species_unified LIMIT 10;"
                               class="query-input w-full px-5 py-4 bg-black/30 border border-white/10 rounded-xl text-emerald-300 placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 resize-none"></textarea>
                 </div>
                 <div class="flex items-center gap-4 mb-6">
                     <div class="flex-1">
-                        <label class="text-sm text-gray-400 font-medium mb-2 block">Limite</label>
+                        <label class="text-sm text-gray-400 font-medium mb-2 block">Limit</label>
                         <input type="number" id="query-limit" value="100" min="1" max="1000"
                                class="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-purple-500/50 transition-all duration-300">
                     </div>
                     <div class="flex items-end">
                         <button onclick="runCustomQuery()"
                                 class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-[1.02]">
-                            Executar Query
+                            Execute Query
                         </button>
                     </div>
                 </div>
 
                 <!-- Query presets -->
                 <div class="mb-8">
-                    <p class="text-sm text-gray-400 mb-3">Queries de exemplo:</p>
+                    <p class="text-sm text-gray-400 mb-3">Example queries:</p>
                     <div class="flex flex-wrap gap-2 mb-4">
                         <button onclick="setQuery('SELECT growth_form, COUNT(*) as total FROM species_unified WHERE growth_form IS NOT NULL GROUP BY growth_form ORDER BY total DESC')"
                                 class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
@@ -325,42 +515,42 @@
                         </button>
                         <button onclick="setQuery('SELECT s.family, COUNT(*) as total FROM species s JOIN species_unified su ON s.id = su.species_id WHERE su.is_tree = TRUE GROUP BY s.family ORDER BY total DESC LIMIT 20')"
                                 class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
-                            Top 20 Familias (Arvores)
+                            Top 20 Families (Trees)
                         </button>
                         <button onclick="setQuery('SELECT level3_code, level3_name, continent FROM tdwg_level3 WHERE level3_code LIKE \\'BZ%\\' ORDER BY level3_code')"
                                 class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
-                            Regioes Brasil
+                            Brazil Regions
                         </button>
                         <button onclick="setQuery('SELECT sr.tdwg_code, COUNT(*) as species_count FROM species_regions sr GROUP BY sr.tdwg_code ORDER BY species_count DESC LIMIT 20')"
                                 class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
-                            Top Regioes
+                            Top Regions
                         </button>
                         <button onclick="setQuery('EXPLAIN ANALYZE SELECT COUNT(*) FROM species_unified su JOIN species_regions sr ON su.species_id = sr.species_id WHERE sr.tdwg_code = \\'BZS\\' AND su.is_tree = TRUE')"
                                 class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200">
                             EXPLAIN Query
                         </button>
                     </div>
-                    <p class="text-sm text-amber-400 mb-3">PostGIS / Geometria:</p>
+                    <p class="text-sm text-amber-400 mb-3">PostGIS / Geometry:</p>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="setQuery('SELECT level3_code, level3_name, ROUND((ST_Distance(geom, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326)) * 111)::numeric, 2) as dist_km FROM tdwg_level3 WHERE ST_DWithin(geom, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.5) ORDER BY dist_km LIMIT 1')"
                                 class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
-                            TDWG por Coordenada (Floripa)
+                            TDWG by Coordinate (Floripa)
                         </button>
                         <button onclick="setQuery('SELECT s.canonical_name, s.family, su.growth_form FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE AND ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.1) LIMIT 20')"
                                 class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
-                            Arvores por Geometria (Floripa)
+                            Trees by Geometry (Floripa)
                         </button>
                         <button onclick="setQuery('SELECT s.canonical_name, s.family, sg.native_regions_count as regioes FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE ORDER BY sg.native_regions_count DESC LIMIT 20')"
                                 class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
-                            Arvores Maior Distribuicao
+                            Trees Largest Distribution
                         </button>
                         <button onclick="setQuery('SELECT s.canonical_name, sg.native_regions_count as regioes FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE ORDER BY sg.native_regions_count DESC LIMIT 20')"
                                 class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
-                            Arvores Mais Regioes
+                            Trees Most Regions
                         </button>
                         <button onclick="setQuery('SELECT COUNT(*) as arvores_floripa FROM species s JOIN species_unified su ON s.id = su.species_id JOIN species_geometry sg ON s.id = sg.species_id WHERE su.is_tree = TRUE AND ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.1)')"
                                 class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
-                            Count Arvores PostGIS
+                            Count Trees PostGIS
                         </button>
                         <button onclick="setQuery('EXPLAIN ANALYZE SELECT COUNT(*) FROM species_unified su JOIN species_geometry sg ON su.species_id = sg.species_id WHERE su.is_tree = TRUE AND ST_DWithin(sg.native_range, ST_SetSRID(ST_Point(-48.5480, -27.5954), 4326), 0.05)')"
                                 class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-sm text-amber-300 hover:text-amber-200 transition-all duration-200">
@@ -373,7 +563,7 @@
                 <div id="query-results" class="hidden">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-4">
-                            <h3 class="text-lg font-semibold text-white">Resultado</h3>
+                            <h3 class="text-lg font-semibold text-white">Result</h3>
                             <span id="result-count" class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm font-medium">0 rows</span>
                         </div>
                         <span id="result-time" class="text-sm text-gray-400"></span>
@@ -397,12 +587,12 @@
                 <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Verificacao de Dados
+                Data Verification
             </h2>
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
                 <button onclick="runDataCheck()"
                         class="mb-8 px-6 py-3 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-semibold rounded-xl shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 transition-all duration-300 transform hover:scale-[1.02]">
-                    Executar Verificacao
+                    Run Verification
                 </button>
                 <div id="data-checks" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Checks will be injected here -->
@@ -417,7 +607,7 @@
                 <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
                 </svg>
-                Estrutura das Tabelas
+                Table Structure
             </h2>
             <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -429,7 +619,7 @@
                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                                 species
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">Tabela principal de especies</p>
+                            <p class="text-xs text-gray-400 mt-1">Main species table</p>
                         </div>
                         <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
                             <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
@@ -453,7 +643,7 @@
                                 <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
                                 species_unified
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">Traits consolidados (prioridade: gift > reflora > wcvp)</p>
+                            <p class="text-xs text-gray-400 mt-1">Consolidated traits (priority: gift > reflora > wcvp)</p>
                         </div>
                         <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
                             <div class="flex justify-between"><span class="text-blue-400">species_id</span><span class="text-gray-500">integer PK/FK</span></div>
@@ -479,7 +669,7 @@
                                 <span class="w-2 h-2 rounded-full bg-purple-500"></span>
                                 species_regions
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">Distribuicao geografica por TDWG Level 3</p>
+                            <p class="text-xs text-gray-400 mt-1">Geographic distribution by TDWG Level 3</p>
                         </div>
                         <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
                             <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
@@ -499,7 +689,7 @@
                                 <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                                 species_geometry
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">Poligonos PostGIS (uniao das regioes TDWG)</p>
+                            <p class="text-xs text-gray-400 mt-1">PostGIS polygons (union of TDWG regions)</p>
                         </div>
                         <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
                             <div class="flex justify-between"><span class="text-blue-400">species_id</span><span class="text-gray-500">integer PK/FK</span></div>
@@ -520,7 +710,7 @@
                                 <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                                 tdwg_level3
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">Regioes TDWG (369 regioes globais)</p>
+                            <p class="text-xs text-gray-400 mt-1">TDWG regions (369 global regions)</p>
                         </div>
                         <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
                             <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
@@ -539,7 +729,7 @@
                                 <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                                 common_names
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1">Nomes populares (pt/en)</p>
+                            <p class="text-xs text-gray-400 mt-1">Common names (pt/en)</p>
                         </div>
                         <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
                             <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
@@ -551,11 +741,33 @@
                         </div>
                     </div>
 
+                    <!-- tdwg_climate -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                        <div class="px-5 py-4 bg-gradient-to-r from-sky-500/20 to-cyan-500/20 border-b border-white/10">
+                            <h3 class="font-bold text-sky-400 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                                tdwg_climate
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">WorldClim bioclimatic by TDWG</p>
+                        </div>
+                        <div class="p-4 space-y-2 text-sm font-mono max-h-64 overflow-y-auto">
+                            <div class="flex justify-between"><span class="text-blue-400">id</span><span class="text-gray-500">integer PK</span></div>
+                            <div class="flex justify-between"><span class="text-purple-400">tdwg_code</span><span class="text-gray-500">varchar FK</span></div>
+                            <div class="flex justify-between"><span class="text-rose-400">bio1_mean/min/max</span><span class="text-gray-500">decimal</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">bio2-bio11_mean</span><span class="text-gray-500">decimal</span></div>
+                            <div class="flex justify-between"><span class="text-cyan-400">bio12_mean/min/max</span><span class="text-gray-500">decimal</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">bio13-bio19_mean</span><span class="text-gray-500">decimal</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-400">whittaker_biome</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-amber-400">koppen_zone</span><span class="text-gray-500">varchar</span></div>
+                            <div class="flex justify-between"><span class="text-purple-400">aridity_index</span><span class="text-gray-500">decimal</span></div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Legend -->
                 <div class="mt-8 pt-6 border-t border-white/10">
-                    <p class="text-sm text-gray-400 mb-4">Legenda de cores:</p>
+                    <p class="text-sm text-gray-400 mb-4">Color legend:</p>
                     <div class="flex flex-wrap gap-6 text-sm">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded bg-blue-400"></span>
@@ -571,11 +783,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded bg-emerald-400"></span>
-                            <span class="text-gray-300">Campos de filtro</span>
+                            <span class="text-gray-300">Filter fields</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded bg-amber-400"></span>
-                            <span class="text-gray-300">IDs externos / Geometria</span>
+                            <span class="text-gray-300">External IDs / Geometry</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 rounded bg-gray-400"></span>
@@ -586,18 +798,18 @@
 
                 <!-- Relationships -->
                 <div class="mt-8 pt-6 border-t border-white/10">
-                    <p class="text-sm text-gray-400 mb-4">Relacionamentos:</p>
+                    <p class="text-sm text-gray-400 mb-4">Relationships:</p>
                     <div class="bg-black/30 rounded-xl p-6 font-mono text-sm overflow-x-auto">
                         <pre class="text-gray-300">
-species (1) ─────┬───── (1) species_unified     [traits consolidados]
+species (1) ─────┬───── (1) species_unified     [consolidated traits]
                  │
-                 ├───── (N) species_regions     [N regioes TDWG por especie]
+                 ├───── (N) species_regions     [N TDWG regions per species]
                  │              │
                  │              └──── tdwg_level3  [FK: tdwg_code → level3_code]
                  │
-                 ├───── (1) species_geometry    [poligono = uniao das regioes]
+                 ├───── (1) species_geometry    [polygon = union of regions]
                  │
-                 └───── (N) common_names        [nomes em pt/en]</pre>
+                 └───── (N) common_names        [names in pt/en]</pre>
                     </div>
                 </div>
             </div>
@@ -640,12 +852,12 @@ species (1) ─────┬───── (1) species_unified     [traits co
                     text.className = 'text-sm text-emerald-400';
                 } else {
                     dot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
-                    text.textContent = 'Erro de conexao';
+                    text.textContent = 'Connection error';
                     text.className = 'text-sm text-red-400';
                 }
             } catch (e) {
                 document.getElementById('health-dot').className = 'w-2.5 h-2.5 rounded-full bg-red-500';
-                document.getElementById('health-text').textContent = 'Offline';
+                document.getElementById('health-text').textContent = 'Connection error';
             }
         }
 
@@ -656,10 +868,10 @@ species (1) ─────┬───── (1) species_unified     [traits co
                 const data = await res.json();
 
                 const stats = [
-                    { label: 'Especies', value: data.total_species, color: 'from-emerald-500 to-teal-500' },
+                    { label: 'Species', value: data.total_species, color: 'from-emerald-500 to-teal-500' },
                     { label: 'Unified', value: data.species_unified, color: 'from-cyan-500 to-blue-500' },
-                    { label: 'Regioes', value: data.species_regions, color: 'from-purple-500 to-pink-500' },
-                    { label: 'Geometrias', value: data.species_geometry, color: 'from-amber-500 to-orange-500' },
+                    { label: 'Regions', value: data.species_regions, color: 'from-purple-500 to-pink-500' },
+                    { label: 'Geometries', value: data.species_geometry, color: 'from-amber-500 to-orange-500' },
                     { label: 'TDWG', value: data.tdwg_regions, color: 'from-rose-500 to-red-500' },
                 ];
 
@@ -704,19 +916,19 @@ species (1) ─────┬───── (1) species_unified     [traits co
                                 </div>
                                 <div class="space-y-1 text-sm">
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Arvores</span>
+                                        <span>Trees</span>
                                         <span class="text-white">${formatNumber(s.trees)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Arbustos</span>
+                                        <span>Shrubs</span>
                                         <span class="text-white">${formatNumber(s.shrubs)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Ervas</span>
+                                        <span>Herbs</span>
                                         <span class="text-white">${formatNumber(s.herbs)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Trepadeiras</span>
+                                        <span>Climbers</span>
                                         <span class="text-white">${formatNumber(s.climbers)}</span>
                                     </div>
                                 </div>
@@ -737,28 +949,28 @@ species (1) ─────┬───── (1) species_unified     [traits co
                                     <span class="text-xl font-bold text-white">${formatNumber(s.total)}</span>
                                 </div>
                                 <div class="mb-3 p-2 bg-rose-500/10 rounded-lg">
-                                    <div class="text-xs text-gray-400 mb-1">Ameacadas (CR+EN+VU)</div>
+                                    <div class="text-xs text-gray-400 mb-1">Threatened (CR+EN+VU)</div>
                                     <div class="text-lg font-bold text-rose-400">${formatNumber(threatened)}</div>
                                 </div>
                                 <div class="space-y-1 text-sm">
                                     <div class="flex justify-between text-gray-400">
-                                        <span class="text-red-400">CR (Critico)</span>
+                                        <span class="text-red-400">CR (Critical)</span>
                                         <span class="text-white">${formatNumber(s.cr)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span class="text-orange-400">EN (Em Perigo)</span>
+                                        <span class="text-orange-400">EN (Endangered)</span>
                                         <span class="text-white">${formatNumber(s.en)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span class="text-amber-400">VU (Vulneravel)</span>
+                                        <span class="text-amber-400">VU (Vulnerable)</span>
                                         <span class="text-white">${formatNumber(s.vu)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>NT (Quase Ameacada)</span>
+                                        <span>NT (Near Threatened)</span>
                                         <span class="text-white">${formatNumber(s.nt)}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>LC (Pouco Preocupante)</span>
+                                        <span>LC (Least Concern)</span>
                                         <span class="text-white">${formatNumber(s.lc)}</span>
                                     </div>
                                 </div>
@@ -766,7 +978,7 @@ species (1) ─────┬───── (1) species_unified     [traits co
                         `;
                     }).join('');
                 } else {
-                    document.getElementById('threat-sources-grid').innerHTML = '<p class="text-gray-500">Nenhum dado de threat_status encontrado</p>';
+                    document.getElementById('threat-sources-grid').innerHTML = '<p class="text-gray-500">No threat_status data found</p>';
                 }
 
                 // Lifespan Sources
@@ -781,23 +993,23 @@ species (1) ─────┬───── (1) species_unified     [traits co
                                 </div>
                                 <div class="space-y-1 text-sm">
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Media</span>
-                                        <span class="text-purple-400 font-semibold">${s.avg_lifespan ? s.avg_lifespan + ' anos' : '-'}</span>
+                                        <span>Average</span>
+                                        <span class="text-purple-400 font-semibold">${s.avg_lifespan ? s.avg_lifespan + ' years' : '-'}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Minimo</span>
-                                        <span class="text-white">${s.min_lifespan ? s.min_lifespan + ' anos' : '-'}</span>
+                                        <span>Minimum</span>
+                                        <span class="text-white">${s.min_lifespan ? s.min_lifespan + ' years' : '-'}</span>
                                     </div>
                                     <div class="flex justify-between text-gray-400">
-                                        <span>Maximo</span>
-                                        <span class="text-white">${s.max_lifespan ? s.max_lifespan + ' anos' : '-'}</span>
+                                        <span>Maximum</span>
+                                        <span class="text-white">${s.max_lifespan ? s.max_lifespan + ' years' : '-'}</span>
                                     </div>
                                 </div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    document.getElementById('lifespan-sources-grid').innerHTML = '<p class="text-gray-500">Nenhum dado de lifespan encontrado</p>';
+                    document.getElementById('lifespan-sources-grid').innerHTML = '<p class="text-gray-500">No lifespan data found</p>';
                 }
             } catch (e) {
                 console.error('Failed to load sources:', e);
@@ -826,7 +1038,7 @@ species (1) ─────┬───── (1) species_unified     [traits co
             try {
                 const tdwgRes = await fetch(`${API_BASE}/api/tdwg?lat=${lat}&lon=${lon}`);
                 if (!tdwgRes.ok) {
-                    alert('Regiao TDWG nao encontrada para estas coordenadas');
+                    alert('TDWG region not found for these coordinates');
                     return;
                 }
                 const tdwg = await tdwgRes.json();
@@ -858,7 +1070,7 @@ species (1) ─────┬───── (1) species_unified     [traits co
                 `).join('');
             } catch (e) {
                 console.error('TDWG Query failed:', e);
-                alert('Erro na consulta TDWG: ' + e.message);
+                alert('TDWG query error: ' + e.message);
             }
         }
 
@@ -867,7 +1079,7 @@ species (1) ─────┬───── (1) species_unified     [traits co
             try {
                 document.getElementById('postgis-results').classList.remove('hidden');
                 document.getElementById('postgis-coords').textContent = `${lat}, ${lon}`;
-                document.getElementById('postgis-tbody').innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400">Carregando...</td></tr>';
+                document.getElementById('postgis-tbody').innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400">Loading...</td></tr>';
                 document.getElementById('postgis-count').textContent = '...';
 
                 let growthFilter = '';
@@ -931,7 +1143,7 @@ species (1) ─────┬───── (1) species_unified     [traits co
                 `).join('');
             } catch (e) {
                 console.error('PostGIS Query failed:', e);
-                alert('Erro na consulta PostGIS: ' + e.message);
+                alert('PostGIS query error: ' + e.message);
             }
         }
 
@@ -980,23 +1192,23 @@ species (1) ─────┬───── (1) species_unified     [traits co
                 `).join('');
             } catch (e) {
                 console.error('Query failed:', e);
-                alert('Erro ao executar query: ' + e.message);
+                alert('Query execution error: ' + e.message);
             }
         }
 
         // Data Quality Check
         async function runDataCheck() {
             const checks = [
-                { name: 'Species com growth_form', query: 'SELECT COUNT(*) FROM species_unified WHERE growth_form IS NOT NULL', threshold: 300000, reverse: true, description: 'Especies com forma de crescimento' },
-                { name: 'Species com regiao', query: 'SELECT COUNT(DISTINCT species_id) FROM species_regions', threshold: 300000, reverse: true, description: 'Especies com distribuicao geografica' },
-                { name: 'Species com geometria', query: 'SELECT COUNT(*) FROM species_geometry WHERE native_range IS NOT NULL', threshold: 300000, reverse: true, description: 'Especies com poligono PostGIS' },
-                { name: 'Regioes TDWG', query: 'SELECT COUNT(*) FROM tdwg_level3 WHERE geom IS NOT NULL', threshold: 360, reverse: true, description: 'Regioes TDWG com poligono' },
-                { name: 'Unified total', query: 'SELECT COUNT(*) FROM species_unified', threshold: 300000, reverse: true, description: 'Total de registros unificados' },
-                { name: 'Nomes comuns PT', query: 'SELECT COUNT(*) FROM common_names WHERE language = \'pt\'', threshold: 1000, reverse: true, description: 'Nomes populares em portugues' },
+                { name: 'Species with growth_form', query: 'SELECT COUNT(*) FROM species_unified WHERE growth_form IS NOT NULL', threshold: 300000, reverse: true, description: 'Species with growth form' },
+                { name: 'Species with region', query: 'SELECT COUNT(DISTINCT species_id) FROM species_regions', threshold: 300000, reverse: true, description: 'Species with geographic distribution' },
+                { name: 'Species with geometry', query: 'SELECT COUNT(*) FROM species_geometry WHERE native_range IS NOT NULL', threshold: 300000, reverse: true, description: 'Species with PostGIS polygon' },
+                { name: 'TDWG Regions', query: 'SELECT COUNT(*) FROM tdwg_level3 WHERE geom IS NOT NULL', threshold: 360, reverse: true, description: 'TDWG regions with polygon' },
+                { name: 'Unified total', query: 'SELECT COUNT(*) FROM species_unified', threshold: 300000, reverse: true, description: 'Total unified records' },
+                { name: 'Common names PT', query: 'SELECT COUNT(*) FROM common_names WHERE language = \'pt\'', threshold: 1000, reverse: true, description: 'Common names in Portuguese' },
             ];
 
             const container = document.getElementById('data-checks');
-            container.innerHTML = '<p class="text-gray-400 col-span-2">Executando verificacoes...</p>';
+            container.innerHTML = '<p class="text-gray-400 col-span-2">Running verifications...</p>';
 
             const results = [];
             for (const check of checks) {
@@ -1032,7 +1244,7 @@ species (1) ─────┬───── (1) species_unified     [traits co
                     <div class="mt-3 flex items-center gap-2">
                         ${r.ok
                             ? '<svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="text-sm text-emerald-400">OK</span>'
-                            : '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span class="text-sm text-red-400">Atencao</span>'
+                            : '<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span class="text-sm text-red-400">Warning</span>'
                         }
                     </div>
                 </div>
@@ -1042,7 +1254,236 @@ species (1) ─────┬───── (1) species_unified     [traits co
         // Format number
         function formatNumber(num) {
             if (num === null || num === undefined) return '-';
-            return new Intl.NumberFormat('pt-BR').format(num);
+            return new Intl.NumberFormat('en-US').format(num);
+        }
+
+        // Climate Functions
+        function setClimateTDWG(code) {
+            document.getElementById('climate-tdwg-input').value = code;
+            document.getElementById('climate-lat-input').value = '';
+            document.getElementById('climate-lon-input').value = '';
+            queryClimate();
+        }
+
+        async function queryClimatePoint() {
+            const lat = document.getElementById('climate-lat-input').value;
+            const lon = document.getElementById('climate-lon-input').value;
+
+            if (!lat || !lon) {
+                alert('For precise raster query, provide latitude and longitude');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/climate/point?lat=${lat}&lon=${lon}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || 'Error fetching raster data');
+                    return;
+                }
+                const data = await res.json();
+                displayClimatePointData(data);
+            } catch (e) {
+                console.error('Climate point query failed:', e);
+                alert('Error fetching raster data: ' + e.message);
+            }
+        }
+
+        function displayClimatePointData(data) {
+            document.getElementById('climate-result').classList.remove('hidden');
+
+            // Region info (for point query, use coordinates)
+            document.getElementById('climate-region-name').textContent = `${data.lat?.toFixed(4)}, ${data.lon?.toFixed(4)}`;
+            document.getElementById('climate-region-code').textContent = `Raster Preciso (${data.source || 'worldclim_raster'})`;
+
+            // Biome & Köppen
+            document.getElementById('climate-biome').textContent = data.whittaker_biome || '-';
+            document.getElementById('climate-koppen').textContent = data.koppen_zone || '-';
+            document.getElementById('climate-aridity').textContent = data.aridity_index ? parseFloat(data.aridity_index).toFixed(1) : '-';
+
+            // Temperature (bio1)
+            const bio1 = data.bio1 || data.bio1_mean;
+            document.getElementById('climate-temp-mean').textContent = bio1 ? `${parseFloat(bio1).toFixed(1)}°C` : '-';
+            document.getElementById('climate-temp-min').textContent = '-';
+            document.getElementById('climate-temp-max').textContent = '-';
+
+            // Precipitation (bio12)
+            const bio12 = data.bio12 || data.bio12_mean;
+            document.getElementById('climate-precip-mean').textContent = bio12 ? `${formatNumber(Math.round(parseFloat(bio12)))} mm` : '-';
+            document.getElementById('climate-precip-min').textContent = '-';
+            document.getElementById('climate-precip-max').textContent = '-';
+
+            // All BIO variables
+            const bioVars = [
+                { key: 'bio1', label: 'BIO1', desc: 'Mean Annual Temp', unit: '°C' },
+                { key: 'bio2', label: 'BIO2', desc: 'Diurnal Range', unit: '°C' },
+                { key: 'bio3', label: 'BIO3', desc: 'Isothermality', unit: '%' },
+                { key: 'bio4', label: 'BIO4', desc: 'Temp Seasonality', unit: '' },
+                { key: 'bio5', label: 'BIO5', desc: 'Max Warmest Month', unit: '°C' },
+                { key: 'bio6', label: 'BIO6', desc: 'Min Coldest Month', unit: '°C' },
+                { key: 'bio7', label: 'BIO7', desc: 'Annual Range', unit: '°C' },
+                { key: 'bio8', label: 'BIO8', desc: 'Temp Wettest Qtr', unit: '°C' },
+                { key: 'bio9', label: 'BIO9', desc: 'Temp Driest Qtr', unit: '°C' },
+                { key: 'bio10', label: 'BIO10', desc: 'Temp Warmest Qtr', unit: '°C' },
+                { key: 'bio11', label: 'BIO11', desc: 'Temp Coldest Qtr', unit: '°C' },
+                { key: 'bio12', label: 'BIO12', desc: 'Annual Precip', unit: 'mm' },
+                { key: 'bio13', label: 'BIO13', desc: 'Precip Wettest Month', unit: 'mm' },
+                { key: 'bio14', label: 'BIO14', desc: 'Precip Driest Month', unit: 'mm' },
+                { key: 'bio15', label: 'BIO15', desc: 'Precip Seasonality', unit: 'CV' },
+                { key: 'bio16', label: 'BIO16', desc: 'Precip Wettest Qtr', unit: 'mm' },
+                { key: 'bio17', label: 'BIO17', desc: 'Precip Driest Qtr', unit: 'mm' },
+                { key: 'bio18', label: 'BIO18', desc: 'Precip Warmest Qtr', unit: 'mm' },
+                { key: 'bio19', label: 'BIO19', desc: 'Precip Coldest Qtr', unit: 'mm' },
+            ];
+
+            document.getElementById('climate-all-bio').innerHTML = bioVars.map(v => {
+                const value = data[v.key];
+                const formatted = value !== null && value !== undefined
+                    ? (v.unit === 'mm' ? formatNumber(Math.round(parseFloat(value))) : parseFloat(value).toFixed(1))
+                    : '-';
+                return `
+                    <div class="p-3 bg-violet-500/10 rounded-lg border border-violet-500/20">
+                        <p class="text-xs text-violet-400 font-semibold">${v.label}</p>
+                        <p class="text-white font-bold">${formatted}${v.unit ? ' ' + v.unit : ''}</p>
+                        <p class="text-xs text-gray-500">${v.desc}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function queryClimate() {
+            const tdwgCode = document.getElementById('climate-tdwg-input').value.trim();
+            const lat = document.getElementById('climate-lat-input').value;
+            const lon = document.getElementById('climate-lon-input').value;
+
+            let url = `${API_BASE}/api/climate`;
+            if (tdwgCode) {
+                url += `?tdwg_code=${tdwgCode}`;
+            } else if (lat && lon) {
+                url += `?lat=${lat}&lon=${lon}`;
+            } else {
+                alert('Provide a TDWG code or coordinates');
+                return;
+            }
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || 'Error fetching climate data');
+                    return;
+                }
+                const data = await res.json();
+                displayClimateData(data);
+            } catch (e) {
+                console.error('Climate query failed:', e);
+                alert('Error fetching climate data: ' + e.message);
+            }
+        }
+
+        function displayClimateData(data) {
+            document.getElementById('climate-result').classList.remove('hidden');
+
+            // Region info
+            document.getElementById('climate-region-name').textContent = data.tdwg_name || data.tdwg_code;
+            document.getElementById('climate-region-code').textContent = data.tdwg_code;
+
+            // Biome & Köppen
+            document.getElementById('climate-biome').textContent = data.whittaker_biome || '-';
+            document.getElementById('climate-koppen').textContent = data.koppen_zone || '-';
+            document.getElementById('climate-aridity').textContent = data.aridity_index ? data.aridity_index.toFixed(1) : '-';
+
+            // Temperature
+            document.getElementById('climate-temp-mean').textContent = data.bio1_mean ? `${data.bio1_mean.toFixed(1)}°C` : '-';
+            document.getElementById('climate-temp-min').textContent = data.bio1_min ? `${data.bio1_min.toFixed(1)}°C` : '-';
+            document.getElementById('climate-temp-max').textContent = data.bio1_max ? `${data.bio1_max.toFixed(1)}°C` : '-';
+
+            // Precipitation
+            document.getElementById('climate-precip-mean').textContent = data.bio12_mean ? `${formatNumber(Math.round(data.bio12_mean))} mm` : '-';
+            document.getElementById('climate-precip-min').textContent = data.bio12_min ? `${formatNumber(Math.round(data.bio12_min))} mm` : '-';
+            document.getElementById('climate-precip-max').textContent = data.bio12_max ? `${formatNumber(Math.round(data.bio12_max))} mm` : '-';
+
+            // All BIO variables
+            const bioVars = [
+                { key: 'bio1_mean', label: 'BIO1', desc: 'Mean Annual Temp', unit: '°C' },
+                { key: 'bio2_mean', label: 'BIO2', desc: 'Diurnal Range', unit: '°C' },
+                { key: 'bio3_mean', label: 'BIO3', desc: 'Isothermality', unit: '%' },
+                { key: 'bio4_mean', label: 'BIO4', desc: 'Temp Seasonality', unit: '' },
+                { key: 'bio5_mean', label: 'BIO5', desc: 'Max Warmest Month', unit: '°C' },
+                { key: 'bio6_mean', label: 'BIO6', desc: 'Min Coldest Month', unit: '°C' },
+                { key: 'bio7_mean', label: 'BIO7', desc: 'Annual Range', unit: '°C' },
+                { key: 'bio8_mean', label: 'BIO8', desc: 'Temp Wettest Qtr', unit: '°C' },
+                { key: 'bio9_mean', label: 'BIO9', desc: 'Temp Driest Qtr', unit: '°C' },
+                { key: 'bio10_mean', label: 'BIO10', desc: 'Temp Warmest Qtr', unit: '°C' },
+                { key: 'bio11_mean', label: 'BIO11', desc: 'Temp Coldest Qtr', unit: '°C' },
+                { key: 'bio12_mean', label: 'BIO12', desc: 'Annual Precip', unit: 'mm' },
+                { key: 'bio13_mean', label: 'BIO13', desc: 'Precip Wettest Month', unit: 'mm' },
+                { key: 'bio14_mean', label: 'BIO14', desc: 'Precip Driest Month', unit: 'mm' },
+                { key: 'bio15_mean', label: 'BIO15', desc: 'Precip Seasonality', unit: 'CV' },
+                { key: 'bio16_mean', label: 'BIO16', desc: 'Precip Wettest Qtr', unit: 'mm' },
+                { key: 'bio17_mean', label: 'BIO17', desc: 'Precip Driest Qtr', unit: 'mm' },
+                { key: 'bio18_mean', label: 'BIO18', desc: 'Precip Warmest Qtr', unit: 'mm' },
+                { key: 'bio19_mean', label: 'BIO19', desc: 'Precip Coldest Qtr', unit: 'mm' },
+            ];
+
+            document.getElementById('climate-all-bio').innerHTML = bioVars.map(v => {
+                const value = data[v.key];
+                const formatted = value !== null && value !== undefined
+                    ? (v.unit === 'mm' ? formatNumber(Math.round(value)) : value.toFixed(1))
+                    : '-';
+                return `
+                    <div class="p-3 bg-white/5 rounded-lg">
+                        <p class="text-xs text-sky-400 font-semibold">${v.label}</p>
+                        <p class="text-white font-bold">${formatted}${v.unit ? ' ' + v.unit : ''}</p>
+                        <p class="text-xs text-gray-500">${v.desc}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadClimateStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/climate/stats`);
+                const data = await res.json();
+
+                // Biome distribution
+                if (data.biome_breakdown && data.biome_breakdown.length > 0) {
+                    const maxBiome = Math.max(...data.biome_breakdown.map(b => b.count));
+                    document.getElementById('biome-distribution').innerHTML = data.biome_breakdown.map(b => `
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-300">${b.biome || 'No data'}</span>
+                                    <span class="text-emerald-400 font-semibold">${b.count} <span class="text-gray-500 text-xs">(${b.avg_temp?.toFixed(1) || '-'}°C)</span></span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full" style="width: ${(b.count / maxBiome * 100)}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Köppen distribution
+                if (data.koppen_breakdown && data.koppen_breakdown.length > 0) {
+                    const maxKoppen = Math.max(...data.koppen_breakdown.map(k => k.count));
+                    document.getElementById('koppen-distribution').innerHTML = data.koppen_breakdown.map(k => `
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-300">${k.zone || 'No data'}</span>
+                                    <span class="text-amber-400 font-semibold">${k.count}</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style="width: ${(k.count / maxKoppen * 100)}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load climate stats:', e);
+            }
         }
     </script>
 </body>
