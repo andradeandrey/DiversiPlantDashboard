@@ -123,6 +123,59 @@ CREATE INDEX idx_wcvp_dist_native ON wcvp_distribution(tdwg_code)
     WHERE establishment_means = 'native';
 
 -- =============================================
+-- TABELA DE CLIMA (WorldClim Bio Variables)
+-- =============================================
+
+CREATE TABLE tdwg_climate (
+    id SERIAL PRIMARY KEY,
+    tdwg_code VARCHAR(10) NOT NULL UNIQUE REFERENCES tdwg_level3(level3_code),
+    -- Temperature variables (°C, stored as actual values)
+    bio1_mean DECIMAL(6,2),   -- Annual Mean Temperature
+    bio1_min DECIMAL(6,2),
+    bio1_max DECIMAL(6,2),
+    bio2_mean DECIMAL(6,2),   -- Mean Diurnal Range
+    bio3_mean DECIMAL(6,2),   -- Isothermality (%)
+    bio4_mean DECIMAL(8,2),   -- Temperature Seasonality (std dev * 100)
+    bio5_mean DECIMAL(6,2),   -- Max Temp of Warmest Month
+    bio6_mean DECIMAL(6,2),   -- Min Temp of Coldest Month
+    bio7_mean DECIMAL(6,2),   -- Temperature Annual Range
+    bio8_mean DECIMAL(6,2),   -- Mean Temp of Wettest Quarter
+    bio9_mean DECIMAL(6,2),   -- Mean Temp of Driest Quarter
+    bio10_mean DECIMAL(6,2),  -- Mean Temp of Warmest Quarter
+    bio11_mean DECIMAL(6,2),  -- Mean Temp of Coldest Quarter
+    -- Precipitation variables (mm)
+    bio12_mean DECIMAL(8,2),  -- Annual Precipitation
+    bio12_min DECIMAL(8,2),
+    bio12_max DECIMAL(8,2),
+    bio13_mean DECIMAL(8,2),  -- Precipitation of Wettest Month
+    bio14_mean DECIMAL(8,2),  -- Precipitation of Driest Month
+    bio15_mean DECIMAL(6,2),  -- Precipitation Seasonality (CV)
+    bio16_mean DECIMAL(8,2),  -- Precipitation of Wettest Quarter
+    bio17_mean DECIMAL(8,2),  -- Precipitation of Driest Quarter
+    bio18_mean DECIMAL(8,2),  -- Precipitation of Warmest Quarter
+    bio19_mean DECIMAL(8,2),  -- Precipitation of Coldest Quarter
+    -- Derived classifications
+    koppen_zone VARCHAR(10),      -- Köppen climate classification
+    whittaker_biome VARCHAR(50),  -- Whittaker biome from temp/precip
+    aridity_index DECIMAL(6,3),   -- bio12 / (bio1 + 10) * 10
+    -- Metadata
+    pixel_count INTEGER,       -- Number of valid pixels used
+    resolution VARCHAR(10),    -- WorldClim resolution used
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_tdwg_climate_code ON tdwg_climate(tdwg_code);
+CREATE INDEX idx_tdwg_climate_biome ON tdwg_climate(whittaker_biome);
+CREATE INDEX idx_tdwg_climate_koppen ON tdwg_climate(koppen_zone);
+
+-- Trigger para atualizar timestamp
+CREATE TRIGGER trigger_tdwg_climate_updated_at
+    BEFORE UPDATE ON tdwg_climate
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at();
+
+-- =============================================
 -- TABELAS DE CRAWLERS
 -- =============================================
 

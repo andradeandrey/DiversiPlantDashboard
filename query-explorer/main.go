@@ -92,6 +92,10 @@ func main() {
 	mux.HandleFunc("/api/species", handleSpecies)
 	mux.HandleFunc("/api/query", handleQuery)
 	mux.HandleFunc("/api/sources", handleSources)
+	mux.HandleFunc("/api/climate", handleClimate)
+	mux.HandleFunc("/api/climate/stats", handleClimateStats)
+	mux.HandleFunc("/api/climate/species", handleClimateSpecies)
+	mux.HandleFunc("/api/climate/point", handleClimatePoint)
 
 	// Static files
 	mux.Handle("/", http.FileServer(http.Dir("static")))
@@ -197,7 +201,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check tables
-	tables := []string{"species", "species_unified", "species_regions", "species_geometry", "tdwg_level3"}
+	tables := []string{"species", "species_unified", "species_regions", "species_geometry", "tdwg_level3", "tdwg_climate"}
 	for _, table := range tables {
 		var count int64
 		err := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count)
@@ -693,4 +697,356 @@ func handleSources(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(resp)
+}
+
+// Climate API Handlers
+
+type ClimateData struct {
+	TDWGCode       string   `json:"tdwg_code"`
+	TDWGName       string   `json:"tdwg_name,omitempty"`
+	Bio1Mean       *float64 `json:"bio1_mean"`
+	Bio1Min        *float64 `json:"bio1_min"`
+	Bio1Max        *float64 `json:"bio1_max"`
+	Bio2Mean       *float64 `json:"bio2_mean"`
+	Bio3Mean       *float64 `json:"bio3_mean"`
+	Bio4Mean       *float64 `json:"bio4_mean"`
+	Bio5Mean       *float64 `json:"bio5_mean"`
+	Bio6Mean       *float64 `json:"bio6_mean"`
+	Bio7Mean       *float64 `json:"bio7_mean"`
+	Bio8Mean       *float64 `json:"bio8_mean"`
+	Bio9Mean       *float64 `json:"bio9_mean"`
+	Bio10Mean      *float64 `json:"bio10_mean"`
+	Bio11Mean      *float64 `json:"bio11_mean"`
+	Bio12Mean      *float64 `json:"bio12_mean"`
+	Bio12Min       *float64 `json:"bio12_min"`
+	Bio12Max       *float64 `json:"bio12_max"`
+	Bio13Mean      *float64 `json:"bio13_mean"`
+	Bio14Mean      *float64 `json:"bio14_mean"`
+	Bio15Mean      *float64 `json:"bio15_mean"`
+	Bio16Mean      *float64 `json:"bio16_mean"`
+	Bio17Mean      *float64 `json:"bio17_mean"`
+	Bio18Mean      *float64 `json:"bio18_mean"`
+	Bio19Mean      *float64 `json:"bio19_mean"`
+	KoppenZone     *string  `json:"koppen_zone"`
+	WhittakerBiome *string  `json:"whittaker_biome"`
+	AridityIndex   *float64 `json:"aridity_index"`
+}
+
+func handleClimate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	tdwgCode := r.URL.Query().Get("tdwg_code")
+	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
+	lon, _ := strconv.ParseFloat(r.URL.Query().Get("lon"), 64)
+
+	var data ClimateData
+
+	if tdwgCode != "" {
+		err := db.QueryRow(`
+			SELECT c.tdwg_code, t.level3_name,
+				   c.bio1_mean, c.bio1_min, c.bio1_max,
+				   c.bio2_mean, c.bio3_mean, c.bio4_mean,
+				   c.bio5_mean, c.bio6_mean, c.bio7_mean,
+				   c.bio8_mean, c.bio9_mean, c.bio10_mean, c.bio11_mean,
+				   c.bio12_mean, c.bio12_min, c.bio12_max,
+				   c.bio13_mean, c.bio14_mean, c.bio15_mean,
+				   c.bio16_mean, c.bio17_mean, c.bio18_mean, c.bio19_mean,
+				   c.koppen_zone, c.whittaker_biome, c.aridity_index
+			FROM tdwg_climate c
+			JOIN tdwg_level3 t ON c.tdwg_code = t.level3_code
+			WHERE c.tdwg_code = $1
+		`, tdwgCode).Scan(
+			&data.TDWGCode, &data.TDWGName,
+			&data.Bio1Mean, &data.Bio1Min, &data.Bio1Max,
+			&data.Bio2Mean, &data.Bio3Mean, &data.Bio4Mean,
+			&data.Bio5Mean, &data.Bio6Mean, &data.Bio7Mean,
+			&data.Bio8Mean, &data.Bio9Mean, &data.Bio10Mean, &data.Bio11Mean,
+			&data.Bio12Mean, &data.Bio12Min, &data.Bio12Max,
+			&data.Bio13Mean, &data.Bio14Mean, &data.Bio15Mean,
+			&data.Bio16Mean, &data.Bio17Mean, &data.Bio18Mean, &data.Bio19Mean,
+			&data.KoppenZone, &data.WhittakerBiome, &data.AridityIndex,
+		)
+		if err != nil {
+			http.Error(w, `{"error": "Climate data not found"}`, http.StatusNotFound)
+			return
+		}
+	} else if lat != 0 || lon != 0 {
+		err := db.QueryRow(`
+			SELECT c.tdwg_code, t.level3_name,
+				   c.bio1_mean, c.bio1_min, c.bio1_max,
+				   c.bio2_mean, c.bio3_mean, c.bio4_mean,
+				   c.bio5_mean, c.bio6_mean, c.bio7_mean,
+				   c.bio8_mean, c.bio9_mean, c.bio10_mean, c.bio11_mean,
+				   c.bio12_mean, c.bio12_min, c.bio12_max,
+				   c.bio13_mean, c.bio14_mean, c.bio15_mean,
+				   c.bio16_mean, c.bio17_mean, c.bio18_mean, c.bio19_mean,
+				   c.koppen_zone, c.whittaker_biome, c.aridity_index
+			FROM tdwg_level3 t
+			JOIN tdwg_climate c ON t.level3_code = c.tdwg_code
+			WHERE ST_Contains(t.geom, ST_SetSRID(ST_Point($1, $2), 4326))
+			LIMIT 1
+		`, lon, lat).Scan(
+			&data.TDWGCode, &data.TDWGName,
+			&data.Bio1Mean, &data.Bio1Min, &data.Bio1Max,
+			&data.Bio2Mean, &data.Bio3Mean, &data.Bio4Mean,
+			&data.Bio5Mean, &data.Bio6Mean, &data.Bio7Mean,
+			&data.Bio8Mean, &data.Bio9Mean, &data.Bio10Mean, &data.Bio11Mean,
+			&data.Bio12Mean, &data.Bio12Min, &data.Bio12Max,
+			&data.Bio13Mean, &data.Bio14Mean, &data.Bio15Mean,
+			&data.Bio16Mean, &data.Bio17Mean, &data.Bio18Mean, &data.Bio19Mean,
+			&data.KoppenZone, &data.WhittakerBiome, &data.AridityIndex,
+		)
+		if err != nil {
+			http.Error(w, `{"error": "No climate data for this location"}`, http.StatusNotFound)
+			return
+		}
+	} else {
+		http.Error(w, `{"error": "Provide tdwg_code or lat/lon"}`, http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(data)
+}
+
+type ClimateStatsResponse struct {
+	TotalRegions      int64        `json:"total_regions"`
+	WithTemperature   int64        `json:"with_temperature"`
+	WithPrecipitation int64        `json:"with_precipitation"`
+	AvgTemperature    *float64     `json:"avg_temperature"`
+	MinTemperature    *float64     `json:"min_temperature"`
+	MaxTemperature    *float64     `json:"max_temperature"`
+	AvgPrecipitation  *float64     `json:"avg_precipitation"`
+	BiomeBreakdown    []BiomeCount `json:"biome_breakdown"`
+	KoppenBreakdown   []KoppenCount `json:"koppen_breakdown"`
+}
+
+type BiomeCount struct {
+	Biome     string   `json:"biome"`
+	Count     int64    `json:"count"`
+	AvgTemp   *float64 `json:"avg_temp"`
+	AvgPrecip *float64 `json:"avg_precip"`
+}
+
+type KoppenCount struct {
+	Zone  string `json:"zone"`
+	Count int64  `json:"count"`
+}
+
+func handleClimateStats(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	resp := ClimateStatsResponse{}
+
+	db.QueryRow(`
+		SELECT COUNT(*), COUNT(bio1_mean), COUNT(bio12_mean),
+			   ROUND(AVG(bio1_mean)::numeric, 1),
+			   ROUND(MIN(bio1_mean)::numeric, 1),
+			   ROUND(MAX(bio1_mean)::numeric, 1),
+			   ROUND(AVG(bio12_mean)::numeric, 0)
+		FROM tdwg_climate
+	`).Scan(
+		&resp.TotalRegions, &resp.WithTemperature, &resp.WithPrecipitation,
+		&resp.AvgTemperature, &resp.MinTemperature, &resp.MaxTemperature,
+		&resp.AvgPrecipitation,
+	)
+
+	rows, err := db.Query(`
+		SELECT whittaker_biome, COUNT(*),
+			   ROUND(AVG(bio1_mean)::numeric, 1),
+			   ROUND(AVG(bio12_mean)::numeric, 0)
+		FROM tdwg_climate
+		WHERE whittaker_biome IS NOT NULL
+		GROUP BY whittaker_biome
+		ORDER BY COUNT(*) DESC
+	`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var bc BiomeCount
+			rows.Scan(&bc.Biome, &bc.Count, &bc.AvgTemp, &bc.AvgPrecip)
+			resp.BiomeBreakdown = append(resp.BiomeBreakdown, bc)
+		}
+	}
+
+	rows2, err := db.Query(`
+		SELECT koppen_zone, COUNT(*)
+		FROM tdwg_climate
+		WHERE koppen_zone IS NOT NULL
+		GROUP BY koppen_zone
+		ORDER BY COUNT(*) DESC
+	`)
+	if err == nil {
+		defer rows2.Close()
+		for rows2.Next() {
+			var kc KoppenCount
+			rows2.Scan(&kc.Zone, &kc.Count)
+			resp.KoppenBreakdown = append(resp.KoppenBreakdown, kc)
+		}
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+type SpeciesClimateResponse struct {
+	SpeciesID         int64    `json:"species_id"`
+	CanonicalName     string   `json:"canonical_name"`
+	Family            string   `json:"family"`
+	NRegions          int64    `json:"n_regions"`
+	TempMeanAvg       *float64 `json:"temp_mean_avg"`
+	TempAbsoluteMin   *float64 `json:"temp_absolute_min"`
+	TempAbsoluteMax   *float64 `json:"temp_absolute_max"`
+	PrecipMeanAvg     *float64 `json:"precip_mean_avg"`
+	PrecipAbsoluteMin *float64 `json:"precip_absolute_min"`
+	PrecipAbsoluteMax *float64 `json:"precip_absolute_max"`
+	AridityAvg        *float64 `json:"aridity_avg"`
+	DominantBiome     *string  `json:"dominant_biome"`
+	DominantKoppen    *string  `json:"dominant_koppen"`
+	Biomes            []string `json:"biomes,omitempty"`
+}
+
+func handleClimateSpecies(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	speciesName := r.URL.Query().Get("name")
+	speciesID := r.URL.Query().Get("id")
+
+	if speciesName == "" && speciesID == "" {
+		http.Error(w, `{"error": "Provide species name or id"}`, http.StatusBadRequest)
+		return
+	}
+
+	var resp SpeciesClimateResponse
+	var query string
+	var args []interface{}
+
+	if speciesID != "" {
+		query = `
+			SELECT s.id, s.canonical_name, COALESCE(s.family, ''),
+				   COUNT(DISTINCT sd.tdwg_code),
+				   ROUND(AVG(c.bio1_mean)::numeric, 1),
+				   ROUND(MIN(c.bio1_min)::numeric, 1),
+				   ROUND(MAX(c.bio1_max)::numeric, 1),
+				   ROUND(AVG(c.bio12_mean)::numeric, 0),
+				   ROUND(MIN(c.bio12_min)::numeric, 0),
+				   ROUND(MAX(c.bio12_max)::numeric, 0),
+				   ROUND(AVG(c.aridity_index)::numeric, 1),
+				   MODE() WITHIN GROUP (ORDER BY c.whittaker_biome),
+				   MODE() WITHIN GROUP (ORDER BY c.koppen_zone)
+			FROM species s
+			JOIN species_distribution sd ON s.id = sd.species_id AND sd.native = TRUE
+			LEFT JOIN tdwg_climate c ON sd.tdwg_code = c.tdwg_code
+			WHERE s.id = $1 AND c.bio1_mean IS NOT NULL
+			GROUP BY s.id, s.canonical_name, s.family
+		`
+		args = []interface{}{speciesID}
+	} else {
+		query = `
+			SELECT s.id, s.canonical_name, COALESCE(s.family, ''),
+				   COUNT(DISTINCT sd.tdwg_code),
+				   ROUND(AVG(c.bio1_mean)::numeric, 1),
+				   ROUND(MIN(c.bio1_min)::numeric, 1),
+				   ROUND(MAX(c.bio1_max)::numeric, 1),
+				   ROUND(AVG(c.bio12_mean)::numeric, 0),
+				   ROUND(MIN(c.bio12_min)::numeric, 0),
+				   ROUND(MAX(c.bio12_max)::numeric, 0),
+				   ROUND(AVG(c.aridity_index)::numeric, 1),
+				   MODE() WITHIN GROUP (ORDER BY c.whittaker_biome),
+				   MODE() WITHIN GROUP (ORDER BY c.koppen_zone)
+			FROM species s
+			JOIN species_distribution sd ON s.id = sd.species_id AND sd.native = TRUE
+			LEFT JOIN tdwg_climate c ON sd.tdwg_code = c.tdwg_code
+			WHERE s.canonical_name ILIKE $1 AND c.bio1_mean IS NOT NULL
+			GROUP BY s.id, s.canonical_name, s.family
+		`
+		args = []interface{}{speciesName}
+	}
+
+	err := db.QueryRow(query, args...).Scan(
+		&resp.SpeciesID, &resp.CanonicalName, &resp.Family, &resp.NRegions,
+		&resp.TempMeanAvg, &resp.TempAbsoluteMin, &resp.TempAbsoluteMax,
+		&resp.PrecipMeanAvg, &resp.PrecipAbsoluteMin, &resp.PrecipAbsoluteMax,
+		&resp.AridityAvg, &resp.DominantBiome, &resp.DominantKoppen,
+	)
+
+	if err != nil {
+		http.Error(w, `{"error": "Species not found or no climate data"}`, http.StatusNotFound)
+		return
+	}
+
+	rows, _ := db.Query(`
+		SELECT DISTINCT c.whittaker_biome
+		FROM species s
+		JOIN species_distribution sd ON s.id = sd.species_id AND sd.native = TRUE
+		JOIN tdwg_climate c ON sd.tdwg_code = c.tdwg_code
+		WHERE s.id = $1 AND c.whittaker_biome IS NOT NULL
+		ORDER BY c.whittaker_biome
+	`, resp.SpeciesID)
+	if rows != nil {
+		defer rows.Close()
+		for rows.Next() {
+			var biome string
+			rows.Scan(&biome)
+			resp.Biomes = append(resp.Biomes, biome)
+		}
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+// handleClimatePoint returns precise climate data from WorldClim rasters at exact coordinates
+func handleClimatePoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	latStr := r.URL.Query().Get("lat")
+	lonStr := r.URL.Query().Get("lon")
+
+	if latStr == "" || lonStr == "" {
+		http.Error(w, `{"error": "Provide lat and lon parameters"}`, http.StatusBadRequest)
+		return
+	}
+
+	lat, err := strconv.ParseFloat(latStr, 64)
+	if err != nil {
+		http.Error(w, `{"error": "Invalid lat value"}`, http.StatusBadRequest)
+		return
+	}
+
+	lon, err := strconv.ParseFloat(lonStr, 64)
+	if err != nil {
+		http.Error(w, `{"error": "Invalid lon value"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Check if raster data exists
+	var rasterCount int
+	err = db.QueryRow("SELECT COUNT(*) FROM worldclim_raster").Scan(&rasterCount)
+	if err != nil || rasterCount == 0 {
+		// Fall back to TDWG-based climate data
+		http.Error(w, `{"error": "Raster data not loaded. Use /api/climate with lat/lon for TDWG-based data."}`, http.StatusNotFound)
+		return
+	}
+
+	// Query climate data from raster using the SQL function
+	var climateJSON []byte
+	err = db.QueryRow("SELECT get_climate_json_at_point($1, $2)", lat, lon).Scan(&climateJSON)
+	if err != nil {
+		http.Error(w, `{"error": "No climate data at this location"}`, http.StatusNotFound)
+		return
+	}
+
+	// Parse the JSON and add metadata
+	var climateData map[string]any
+	json.Unmarshal(climateJSON, &climateData)
+
+	if len(climateData) == 0 {
+		http.Error(w, `{"error": "No climate data at this location (possibly ocean or missing coverage)"}`, http.StatusNotFound)
+		return
+	}
+
+	// Add request coordinates
+	climateData["lat"] = lat
+	climateData["lon"] = lon
+	climateData["source"] = "worldclim_raster"
+
+	json.NewEncoder(w).Encode(climateData)
 }
