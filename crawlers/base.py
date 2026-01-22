@@ -145,6 +145,10 @@ class BaseCrawler(ABC):
             if 'common_names' in data:
                 self._save_common_names(session, species_id, data['common_names'])
 
+            # Handle Brazilian distribution if present (from REFLORA)
+            if 'brazil_distribution' in data:
+                self._save_brazil_distribution(session, species_id, data['brazil_distribution'])
+
             session.commit()
 
     def _upsert_species(self, session: Session, data: Dict) -> tuple:
@@ -326,6 +330,40 @@ class BaseCrawler(ABC):
                 text(f"INSERT INTO species_traits ({cols_str}) VALUES ({vals_str})"),
                 {k: traits.get(k) for k in fields}
             )
+
+    def _save_brazil_distribution(self, session: Session, species_id: int, distributions: list):
+        """Save Brazilian state-level distribution data."""
+        for dist in distributions:
+            state_code = dist.get('state_code')
+            if not state_code:
+                continue
+
+            # Use savepoint for error isolation
+            savepoint = session.begin_nested()
+            try:
+                session.execute(
+                    text("""
+                        INSERT INTO species_distribution_brazil
+                            (species_id, state_code, establishment, is_endemic, phytogeographic_domain, source)
+                        VALUES (:sid, :state, :estab, :endemic, :domains, :src)
+                        ON CONFLICT (species_id, state_code) DO UPDATE SET
+                            establishment = EXCLUDED.establishment,
+                            is_endemic = EXCLUDED.is_endemic,
+                            phytogeographic_domain = EXCLUDED.phytogeographic_domain
+                    """),
+                    {
+                        'sid': species_id,
+                        'state': state_code,
+                        'estab': dist.get('establishment'),
+                        'endemic': dist.get('is_endemic', False),
+                        'domains': dist.get('phytogeographic_domain'),
+                        'src': self.name
+                    }
+                )
+                savepoint.commit()
+            except Exception as e:
+                savepoint.rollback()
+                self.logger.debug(f"Skipped distribution {state_code}: {e}")
 
     def _save_common_names(self, session: Session, species_id: int, names: list):
         """Save common names for a species using savepoints for error isolation."""

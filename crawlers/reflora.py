@@ -94,9 +94,16 @@ class REFLORACrawler(BaseCrawler):
                 if not sp.empty:
                     profile = sp.iloc[0].to_dict()
 
+            # Get distribution data for this taxon
+            distributions = []
+            if self._distribution_df is not None and taxon_id:
+                dist = self._distribution_df[self._distribution_df['id'] == taxon_id]
+                distributions = dist.to_dict('records') if not dist.empty else []
+
             record = row.to_dict()
             record['vernacularNames'] = vernacular_names
             record['profile'] = profile
+            record['distributions'] = distributions
 
             yield record
             count += 1
@@ -245,6 +252,38 @@ class REFLORACrawler(BaseCrawler):
                     })
             if common_names:
                 transformed['common_names'] = common_names
+
+        # Handle Brazilian state distribution
+        distributions = raw_data.get('distributions', [])
+        if distributions:
+            brazil_dist = []
+            for dist in distributions:
+                location_id = dist.get('locationID', '')
+                # Handle NaN or non-string values
+                if not isinstance(location_id, str) or pd.isna(location_id):
+                    continue
+                if location_id.startswith('BR-'):
+                    # Parse occurrenceRemarks JSON for endemism and phytogeographic domain
+                    is_endemic = False
+                    domains = None
+                    remarks = dist.get('occurrenceRemarks')
+                    if remarks and pd.notna(remarks):
+                        try:
+                            remarks_data = json.loads(remarks) if isinstance(remarks, str) else remarks
+                            is_endemic = remarks_data.get('endemism', '').lower() == 'endemica'
+                            domains = remarks_data.get('phytogeographicDomain', [])
+                        except (json.JSONDecodeError, TypeError):
+                            pass
+
+                    brazil_dist.append({
+                        'state_code': location_id,
+                        'establishment': dist.get('establishmentMeans'),
+                        'is_endemic': is_endemic,
+                        'phytogeographic_domain': domains
+                    })
+
+            if brazil_dist:
+                transformed['brazil_distribution'] = brazil_dist
 
         return transformed
 
