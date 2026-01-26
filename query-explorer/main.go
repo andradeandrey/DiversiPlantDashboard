@@ -96,6 +96,8 @@ func main() {
 	mux.HandleFunc("/api/climate/stats", handleClimateStats)
 	mux.HandleFunc("/api/climate/species", handleClimateSpecies)
 	mux.HandleFunc("/api/climate/point", handleClimatePoint)
+	mux.HandleFunc("/api/recommend", handleRecommend)
+	mux.HandleFunc("/api/ecoregion/species", handleEcoregionSpecies)
 
 	// Static files
 	mux.Handle("/", http.FileServer(http.Dir("static")))

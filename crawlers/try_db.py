@@ -106,7 +106,8 @@ class TRYCrawler(BaseCrawler):
                     continue
 
                 # Skip unreasonably high values (likely errors)
-                if lifespan_years > 5000:
+                # Note: Larrea tridentata has documented lifespan of 11,700 years
+                if lifespan_years > 15000:
                     self.logger.warning(f"Skipping unrealistic lifespan: {species_name} = {lifespan_years} years")
                     continue
 
@@ -177,8 +178,8 @@ class TRYCrawler(BaseCrawler):
         if lifespan is None:
             return False
 
-        # Reasonable range: 1-5000 years
-        if lifespan < 1 or lifespan > 5000:
+        # Reasonable range: 1-15000 years (Larrea tridentata = 11,700 years)
+        if lifespan < 1 or lifespan > 15000:
             return False
 
         return True
