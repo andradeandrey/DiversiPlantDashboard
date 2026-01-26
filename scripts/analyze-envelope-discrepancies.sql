@@ -254,8 +254,8 @@ LIMIT 20;
 \echo '=== GBIF vs TreeGOER Comparison (Trees with Both Sources) ==='
 SELECT
     COUNT(*) as species_with_both,
-    ROUND(AVG(ABS(ceg.temp_mean - cee.temp_mean)), 2) as avg_temp_diff,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ABS(ceg.temp_mean - cee.temp_mean)), 2) as median_temp_diff,
+    ROUND(AVG(ABS(ceg.temp_mean - cee.temp_mean))::numeric, 2) as avg_temp_diff,
+    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ABS(ceg.temp_mean - cee.temp_mean))::numeric, 2) as median_temp_diff,
     COUNT(*) FILTER (WHERE ABS(ceg.temp_mean - cee.temp_mean) <= 2) as within_2c,
     COUNT(*) FILTER (WHERE ABS(ceg.temp_mean - cee.temp_mean) <= 5) as within_5c,
     COUNT(*) FILTER (WHERE ABS(ceg.temp_mean - cee.temp_mean) > 5) as beyond_5c

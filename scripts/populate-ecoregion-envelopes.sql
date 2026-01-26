@@ -1,17 +1,20 @@
 -- Populate Ecoregion-derived climate envelopes (TreeGOER data)
 -- Uses species_ecoregions + ecoregion centroids + WorldClim rasters
-
+--
+-- OPTIMIZED VERSION: Uses get_climate_json_at_point() which returns all bio
+-- variables as JSONB in a single optimized call.
+--
 -- This script calculates climate envelopes for tree species using TreeGOER's
 -- ecoregion occurrence data combined with WorldClim climate at ecoregion centroids.
 
 \echo 'Populating Ecoregion climate envelopes...'
-\echo 'Using species_ecoregions + ecoregion centroids + WorldClim'
+\echo 'Using species_ecoregions + ecoregion centroids + WorldClim (JSON method)'
 
 -- Count before
 SELECT COUNT(*) as eco_envelopes_before FROM climate_envelope_ecoregion;
 
--- Step 1: Create temporary table with climate at ecoregion centroids
-\echo 'Extracting climate at ecoregion centroids...'
+-- Step 1: Create temp table with ecoregion centroids + climate via JSON function
+\echo 'Extracting climate at ecoregion centroids (JSON method)...'
 
 DROP TABLE IF EXISTS _tmp_ecoregion_climate;
 
@@ -19,71 +22,40 @@ CREATE TEMP TABLE _tmp_ecoregion_climate AS
 SELECT
     e.eco_id,
     e.eco_name,
-    ST_Y(ST_Centroid(e.geometry)) as centroid_lat,
-    ST_X(ST_Centroid(e.geometry)) as centroid_lon,
-    NULL::decimal as bio1,
-    NULL::decimal as bio5,
-    NULL::decimal as bio6,
-    NULL::decimal as bio7,
-    NULL::decimal as bio12,
-    NULL::decimal as bio15
-FROM ecoregions e
-WHERE e.geometry IS NOT NULL;
+    climate_json,
+    (climate_json->>'bio1')::decimal as bio1,
+    (climate_json->>'bio5')::decimal as bio5,
+    (climate_json->>'bio6')::decimal as bio6,
+    (climate_json->>'bio7')::decimal as bio7,
+    (climate_json->>'bio12')::decimal as bio12,
+    (climate_json->>'bio15')::decimal as bio15
+FROM (
+    SELECT
+        e.eco_id,
+        e.eco_name,
+        get_climate_json_at_point(
+            ST_Y(ST_Centroid(e.geom)),
+            ST_X(ST_Centroid(e.geom))
+        ) as climate_json
+    FROM ecoregions e
+    WHERE e.geom IS NOT NULL
+) e;
 
--- Update with climate data from WorldClim
--- This uses get_climate_at_point() which queries the worldclim_raster table
-DO $$
-DECLARE
-    eco RECORD;
-    climate RECORD;
-BEGIN
-    FOR eco IN SELECT eco_id, centroid_lat, centroid_lon FROM _tmp_ecoregion_climate
-    LOOP
-        BEGIN
-            SELECT * INTO climate
-            FROM get_climate_at_point(eco.centroid_lat, eco.centroid_lon);
-
-            IF climate.bio1 IS NOT NULL THEN
-                UPDATE _tmp_ecoregion_climate
-                SET
-                    bio1 = climate.bio1,
-                    bio5 = climate.bio5,
-                    bio6 = climate.bio6,
-                    bio7 = climate.bio7,
-                    bio12 = climate.bio12,
-                    bio15 = climate.bio15
-                WHERE eco_id = eco.eco_id;
-            END IF;
-        EXCEPTION WHEN OTHERS THEN
-            -- Skip ecoregions where climate extraction fails
-            NULL;
-        END;
-    END LOOP;
-END $$;
-
--- Show how many ecoregions have climate
+-- Check how many ecoregions have climate
+\echo 'Ecoregion climate extraction results:'
 SELECT
     COUNT(*) as total_ecoregions,
-    COUNT(*) FILTER (WHERE bio1 IS NOT NULL) as with_climate
+    COUNT(*) FILTER (WHERE bio1 IS NOT NULL) as with_climate,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE bio1 IS NOT NULL) / NULLIF(COUNT(*), 0), 1) as coverage_pct
 FROM _tmp_ecoregion_climate;
 
--- Step 2: Calculate envelopes using species_ecoregions + ecoregion climate
+-- Step 2: Calculate envelopes from species_ecoregions + ecoregion climate
 \echo 'Calculating envelopes from ecoregion data...'
 
 INSERT INTO climate_envelope_ecoregion (
-    species_id,
-    temp_mean,
-    temp_min,
-    temp_max,
-    temp_range,
-    cold_month_min,
-    warm_month_max,
-    precip_mean,
-    precip_min,
-    precip_max,
-    precip_seasonality,
-    n_ecoregions,
-    envelope_quality
+    species_id, temp_mean, temp_min, temp_max, temp_range,
+    cold_month_min, warm_month_max, precip_mean, precip_min, precip_max,
+    precip_seasonality, n_ecoregions, envelope_quality
 )
 SELECT
     se.species_id,
@@ -126,10 +98,9 @@ ON CONFLICT (species_id) DO UPDATE SET
 -- Cleanup
 DROP TABLE IF EXISTS _tmp_ecoregion_climate;
 
--- Count after
+-- Results
 SELECT COUNT(*) as eco_envelopes_after FROM climate_envelope_ecoregion;
 
--- Show quality distribution
 \echo 'Ecoregion envelope quality distribution:'
 SELECT
     envelope_quality,
@@ -137,12 +108,7 @@ SELECT
     ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) as pct
 FROM climate_envelope_ecoregion
 GROUP BY envelope_quality
-ORDER BY
-    CASE envelope_quality
-        WHEN 'high' THEN 1
-        WHEN 'medium' THEN 2
-        WHEN 'low' THEN 3
-    END;
+ORDER BY CASE envelope_quality WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 END;
 
 -- Note: Ecoregion envelopes are only for trees (TreeGOER data)
 \echo 'Note: Ecoregion envelopes cover only tree species from TreeGOER'
