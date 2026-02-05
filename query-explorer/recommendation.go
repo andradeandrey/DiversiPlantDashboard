@@ -384,8 +384,17 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 		  AND calculate_climate_match(s.id, $1, $2, $3, $4, $5) >= $7
 		  %s
 		ORDER BY climate_match_score DESC
-		LIMIT 500
+		LIMIT $8
 	`, nativeClause, whereClause)
+
+	// Calculate candidate pool size: at least 2x requested species, min 500, max 2000
+	candidateLimit := req.NSpecies * 2
+	if candidateLimit < 500 {
+		candidateLimit = 500
+	}
+	if candidateLimit > 2000 {
+		candidateLimit = 2000
+	}
 
 	rows, err := db.Query(query,
 		loc.Bio1,
@@ -395,6 +404,7 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 		loc.Bio15,
 		loc.TDWGCode,
 		req.ClimateThreshold,
+		candidateLimit,
 	)
 	if err != nil {
 		return nil, err
