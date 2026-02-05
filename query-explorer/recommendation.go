@@ -33,7 +33,8 @@ type RecommendRequest struct {
 }
 
 type Preferences struct {
-	GrowthForms        []string `json:"growth_forms,omitempty"`    // ["tree", "shrub"]
+	GrowthForms        []string `json:"growth_forms,omitempty"`    // ["tree", "shrub", "herb"]
+	IncludeIntroduced  bool     `json:"include_introduced,omitempty"` // Include introduced species (default: false)
 	IncludeThreatened  *bool    `json:"include_threatened,omitempty"`
 	MinHeightM         *float64 `json:"min_height_m,omitempty"`
 	MaxHeightM         *float64 `json:"max_height_m,omitempty"`
@@ -348,6 +349,13 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 	// Build WHERE clause from preferences
 	whereClause := buildWhereClause(req.Preferences)
 
+	// Build native/introduced filter
+	nativeClause := "AND sr.is_native = TRUE"
+	if req.Preferences.IncludeIntroduced {
+		// Accept both native AND introduced species
+		nativeClause = "AND (sr.is_native = TRUE OR sr.is_introduced = TRUE)"
+	}
+
 	query := fmt.Sprintf(`
 		SELECT
 			s.id,
@@ -366,18 +374,18 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 		FROM species s
 		JOIN species_unified su ON s.id = su.species_id
 		JOIN species_regions sr ON s.id = sr.species_id
-		JOIN species_climate_envelope sce ON s.id = sce.species_id
+		JOIN species_climate_envelope_unified sce ON s.id = sce.species_id
 		LEFT JOIN species_trait_vectors tv ON s.id = tv.species_id
 		LEFT JOIN common_names cn_pt ON s.id = cn_pt.species_id AND cn_pt.language = 'pt'
 		LEFT JOIN common_names cn_en ON s.id = cn_en.species_id AND cn_en.language = 'en'
 		WHERE sr.tdwg_code = $6
-		  AND sr.is_native = TRUE
+		  %s
 		  AND su.growth_form IS NOT NULL
 		  AND calculate_climate_match(s.id, $1, $2, $3, $4, $5) >= $7
 		  %s
 		ORDER BY climate_match_score DESC
 		LIMIT 500
-	`, whereClause)
+	`, nativeClause, whereClause)
 
 	rows, err := db.Query(query,
 		loc.Bio1,
@@ -411,23 +419,71 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 	return candidates, nil
 }
 
+// expandGrowthForms automatically expands "herb" to include all herbaceous forms
+func expandGrowthForms(forms []string) []string {
+	expanded := make(map[string]bool)
+
+	for _, form := range forms {
+		expanded[form] = true
+
+		// Auto-expand "herb" to include forb and graminoid
+		if form == "herb" {
+			expanded["forb"] = true
+			expanded["graminoid"] = true
+		}
+	}
+
+	// Convert map back to slice
+	result := make([]string, 0, len(expanded))
+	for form := range expanded {
+		result = append(result, form)
+	}
+
+	return result
+}
+
+// joinWithOr joins SQL clauses with OR operator
+func joinWithOr(clauses []string) string {
+	result := ""
+	for i, clause := range clauses {
+		if i > 0 {
+			result += " OR "
+		}
+		result += clause
+	}
+	return result
+}
+
 func buildWhereClause(prefs Preferences) string {
 	var clauses []string
 
 	if len(prefs.GrowthForms) > 0 {
-		for _, form := range prefs.GrowthForms {
+		// Expand "herb" to include all herbaceous forms
+		expandedForms := expandGrowthForms(prefs.GrowthForms)
+
+		var formClauses []string
+		for _, form := range expandedForms {
 			switch form {
 			case "tree":
-				clauses = append(clauses, "su.is_tree = TRUE")
+				formClauses = append(formClauses, "su.is_tree = TRUE")
 			case "shrub":
-				clauses = append(clauses, "su.is_shrub = TRUE")
+				formClauses = append(formClauses, "su.is_shrub = TRUE")
 			case "herb":
-				clauses = append(clauses, "su.is_herb = TRUE")
+				formClauses = append(formClauses, "su.is_herb = TRUE")
+			case "forb":
+				formClauses = append(formClauses, "su.growth_form = 'forb'")
+			case "graminoid":
+				formClauses = append(formClauses, "su.growth_form = 'graminoid'")
 			case "climber":
-				clauses = append(clauses, "su.is_climber = TRUE")
+				formClauses = append(formClauses, "su.is_climber = TRUE")
 			case "palm":
-				clauses = append(clauses, "su.is_palm = TRUE")
+				formClauses = append(formClauses, "su.is_palm = TRUE")
 			}
+		}
+
+		// Combine with OR (any of the growth forms)
+		if len(formClauses) > 0 {
+			clauses = append(clauses, "("+joinWithOr(formClauses)+")")
 		}
 	}
 

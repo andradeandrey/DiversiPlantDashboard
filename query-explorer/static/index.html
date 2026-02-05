@@ -542,7 +542,7 @@
             <h3 class="text-sm font-semibold text-emerald-400 mb-3" data-i18n="recommend.filters">
                 Filters (Optional)
             </h3>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
                     <input type="checkbox" value="tree" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
                     <span data-i18n="recommend.tree">Trees</span>
@@ -552,6 +552,10 @@
                     <span data-i18n="recommend.shrub">Shrubs</span>
                 </label>
                 <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="herb" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.herb">Herbs</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
                     <input type="checkbox" id="rec-n-fixers" class="rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
                     <span data-i18n="recommend.n_fixers">Nitrogen Fixers Only</span>
                 </label>
@@ -559,6 +563,24 @@
                     <input type="checkbox" id="rec-exclude-threatened" class="rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
                     <span data-i18n="recommend.exclude_threatened">Exclude Threatened</span>
                 </label>
+            </div>
+            <!-- Second row of filters -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mt-3">
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="climber" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.climber">Climbers</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="palm" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.palm">Palms</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" id="rec-include-introduced" class="rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.include_introduced">Include Introduced</span>
+                    <span class="text-xs text-amber-400" title="For agricultural species like corn, tomato">🌾</span>
+                </label>
+                <div></div> <!-- Spacer -->
+                <div></div> <!-- Spacer -->
             </div>
         </div>
 
@@ -656,8 +678,12 @@ const i18n = {
         'recommend.filters': 'Filters (Optional)',
         'recommend.tree': 'Trees',
         'recommend.shrub': 'Shrubs',
+        'recommend.herb': 'Herbs',
+        'recommend.climber': 'Climbers',
+        'recommend.palm': 'Palms',
         'recommend.n_fixers': 'Nitrogen Fixers Only',
         'recommend.exclude_threatened': 'Exclude Threatened',
+        'recommend.include_introduced': 'Include Introduced',
         'recommend.climate_threshold': 'Climate Match Threshold:',
         'recommend.experimental': 'Experimental (0.3)',
         'recommend.moderate': 'Moderate (0.5)',
@@ -717,8 +743,12 @@ const i18n = {
         'recommend.filters': 'Filtros (Opcional)',
         'recommend.tree': 'Árvores',
         'recommend.shrub': 'Arbustos',
+        'recommend.herb': 'Herbáceas',
+        'recommend.climber': 'Trepadeiras',
+        'recommend.palm': 'Palmeiras',
         'recommend.n_fixers': 'Apenas Fixadores de N₂',
         'recommend.exclude_threatened': 'Excluir Ameaçadas',
+        'recommend.include_introduced': 'Incluir Introduzidas',
         'recommend.climate_threshold': 'Limiar de Adaptação Climática:',
         'recommend.experimental': 'Experimental (0.3)',
         'recommend.moderate': 'Moderado (0.5)',
@@ -816,11 +846,13 @@ async function generateRecommendations() {
     const nSpecies = parseInt(document.getElementById('rec-n-species').value) || 20;
     const climateThreshold = parseFloat(document.getElementById('rec-climate-threshold').value);
 
-    const growthForms = Array.from(document.querySelectorAll('.rec-growth-form:checked'))
+    const selectedForms = Array.from(document.querySelectorAll('.rec-growth-form:checked'))
         .map(cb => cb.value);
+    const growthForms = expandGrowthForms(selectedForms);
 
     const preferences = {
         growth_forms: growthForms.length > 0 ? growthForms : undefined,
+        include_introduced: document.getElementById('rec-include-introduced').checked,
         nitrogen_fixers_only: document.getElementById('rec-n-fixers').checked,
         include_threatened: !document.getElementById('rec-exclude-threatened').checked
     };
@@ -1138,6 +1170,19 @@ function displayRecommendations(data) {
 // ECOREGION MAP & SPECIES LOOKUP
 // ============================================================================
 
+// Helper function to expand growth forms (shared by both sections)
+function expandGrowthForms(forms) {
+    const expanded = new Set(forms);
+
+    // Auto-expand "herb" to include forb and graminoid
+    if (forms.includes('herb')) {
+        expanded.add('forb');
+        expanded.add('graminoid');
+    }
+
+    return Array.from(expanded);
+}
+
 let ecoMap = null;
 let ecoMarker = null;
 let lastEcoData = null;
@@ -1212,9 +1257,10 @@ async function lookupEcoregionSpecies() {
     const limit = parseInt(document.getElementById('eco-limit').value) || 100;
     const threshold = parseFloat(document.getElementById('eco-threshold').value) || 0.5;
 
-    // Get selected growth forms
-    const growthForms = Array.from(document.querySelectorAll('.eco-growth-form:checked'))
+    // Get selected growth forms and expand "herb" automatically
+    const selectedForms = Array.from(document.querySelectorAll('.eco-growth-form:checked'))
         .map(cb => cb.value);
+    const growthForms = expandGrowthForms(selectedForms);
 
     if (isNaN(lat) || isNaN(lon)) {
         alert(currentLang === 'pt' ? 'Por favor, forneça coordenadas válidas' : 'Please provide valid coordinates');
