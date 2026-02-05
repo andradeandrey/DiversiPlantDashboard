@@ -778,7 +778,7 @@ func handleRecommend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set defaults
-	if req.NSpecies <= 0 || req.NSpecies > 100 {
+	if req.NSpecies <= 0 || req.NSpecies > 1000 {
 		req.NSpecies = 20
 	}
 	if req.ClimateThreshold < 0.3 || req.ClimateThreshold > 1.0 {
