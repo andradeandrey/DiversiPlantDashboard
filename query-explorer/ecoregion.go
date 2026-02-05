@@ -98,7 +98,7 @@ func handleEcoregionSpecies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set defaults
-	if req.Limit <= 0 || req.Limit > 500 {
+	if req.Limit <= 0 || req.Limit > 1000 {
 		req.Limit = 100
 	}
 	if req.ClimateThreshold < 0.1 || req.ClimateThreshold > 1.0 {
