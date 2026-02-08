@@ -1,0 +1,1451 @@
+[
+  {
+    "source": "cropgrids",
+    "crop_name": "wheat",
+    "scientific_name": "Triticum aestivum",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Triticum aestivum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "rice",
+    "scientific_name": "Oryza sativa",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Oryza sativa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "maize",
+    "scientific_name": "Zea mays",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Zea mays"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "barley",
+    "scientific_name": "Hordeum vulgare",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Hordeum vulgare"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sorghum",
+    "scientific_name": "Sorghum bicolor",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Sorghum bicolor"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "millet, pearl",
+    "scientific_name": "Pennisetum glaucum",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "millet, finger",
+    "scientific_name": "Eleusine coracana",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Eleusine coracana"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "millet, foxtail",
+    "scientific_name": "Setaria italica",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Setaria italica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "millet, proso",
+    "scientific_name": "Panicum miliaceum",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Panicum miliaceum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "oats",
+    "scientific_name": "Avena sativa",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Avena sativa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "rye",
+    "scientific_name": "Secale cereale",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Secale cereale"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "triticale",
+    "scientific_name": "Triticosecale",
+    "category": "cereal",
+    "in_ecocrop": false,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "buckwheat",
+    "scientific_name": "Fagopyrum esculentum",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Fagopyrum esculentum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "quinoa",
+    "scientific_name": "Chenopodium quinoa",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Chenopodium quinoa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "fonio",
+    "scientific_name": "Digitaria exilis",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Digitaria exilis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "teff",
+    "scientific_name": "Eragrostis tef",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Eragrostis tef"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "potato",
+    "scientific_name": "Solanum tuberosum",
+    "category": "root/tuber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Solanum tuberosum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sweet potato",
+    "scientific_name": "Ipomoea batatas",
+    "category": "root/tuber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ipomoea batatas"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cassava",
+    "scientific_name": "Manihot esculenta",
+    "category": "root/tuber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Manihot esculenta"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "yam",
+    "scientific_name": "Dioscorea rotundata",
+    "category": "root/tuber",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "taro",
+    "scientific_name": "Colocasia esculenta",
+    "category": "root/tuber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Colocasia esculenta"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sugar beet",
+    "scientific_name": "Beta vulgaris",
+    "category": "root/tuber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Beta vulgaris"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sugarcane",
+    "scientific_name": "Saccharum officinarum",
+    "category": "sugar",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Saccharum officinarum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "soybean",
+    "scientific_name": "Glycine max",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Glycine max"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "groundnut",
+    "scientific_name": "Arachis hypogaea",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Arachis hypogaea"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sunflower",
+    "scientific_name": "Helianthus annuus",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Helianthus annuus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "rapeseed",
+    "scientific_name": "Brassica napus",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Brassica napus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sesame",
+    "scientific_name": "Sesamum indicum",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Sesamum indicum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "oil palm",
+    "scientific_name": "Elaeis guineensis",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Elaeis guineensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "olive",
+    "scientific_name": "Olea europaea",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Olea europaea"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "coconut",
+    "scientific_name": "Cocos nucifera",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cocos nucifera"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "linseed",
+    "scientific_name": "Linum usitatissimum",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Linum usitatissimum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "castor bean",
+    "scientific_name": "Ricinus communis",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ricinus communis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "safflower",
+    "scientific_name": "Carthamus tinctorius",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Carthamus tinctorius"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mustard",
+    "scientific_name": "Brassica juncea",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "common bean",
+    "scientific_name": "Phaseolus vulgaris",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Phaseolus vulgaris"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "chickpea",
+    "scientific_name": "Cicer arietinum",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cicer arietinum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lentil",
+    "scientific_name": "Lens culinaris",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pea",
+    "scientific_name": "Pisum sativum",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cowpea",
+    "scientific_name": "Vigna unguiculata",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vigna unguiculata"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pigeon pea",
+    "scientific_name": "Cajanus cajan",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cajanus cajan"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "broad bean",
+    "scientific_name": "Vicia faba",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vicia faba"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mung bean",
+    "scientific_name": "Vigna radiata",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vigna radiata"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lima bean",
+    "scientific_name": "Phaseolus lunatus",
+    "category": "pulse",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Phaseolus lunatus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lupins",
+    "scientific_name": "Lupinus spp.",
+    "category": "pulse",
+    "in_ecocrop": false,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "tomato",
+    "scientific_name": "Solanum lycopersicum",
+    "category": "vegetable",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Solanum lycopersicum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "onion",
+    "scientific_name": "Allium cepa",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Allium cepa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "garlic",
+    "scientific_name": "Allium sativum",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Allium sativum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cabbage",
+    "scientific_name": "Brassica oleracea var. capitata",
+    "category": "vegetable",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Brassica oleracea"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cauliflower",
+    "scientific_name": "Brassica oleracea var. botrytis",
+    "category": "vegetable",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Brassica oleracea"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lettuce",
+    "scientific_name": "Lactuca sativa",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Lactuca sativa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "spinach",
+    "scientific_name": "Spinacia oleracea",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Spinacia oleracea"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cucumber",
+    "scientific_name": "Cucumis sativus",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cucumis sativus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "eggplant",
+    "scientific_name": "Solanum melongena",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Solanum melongena"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pepper, sweet",
+    "scientific_name": "Capsicum annuum",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Capsicum annuum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pepper, chili",
+    "scientific_name": "Capsicum frutescens",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Capsicum frutescens"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "squash",
+    "scientific_name": "Cucurbita pepo",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cucurbita pepo"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pumpkin",
+    "scientific_name": "Cucurbita maxima",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cucurbita maxima"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "watermelon",
+    "scientific_name": "Citrullus lanatus",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Citrullus lanatus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "melon",
+    "scientific_name": "Cucumis melo",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cucumis melo"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "carrot",
+    "scientific_name": "Daucus carota",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Daucus carota"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "asparagus",
+    "scientific_name": "Asparagus officinalis",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Asparagus officinalis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "okra",
+    "scientific_name": "Abelmoschus esculentus",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Abelmoschus esculentus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "artichoke",
+    "scientific_name": "Cynara cardunculus",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cynara cardunculus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "banana",
+    "scientific_name": "Musa acuminata",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Musa acuminata"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "plantain",
+    "scientific_name": "Musa paradisiaca",
+    "category": "fruit",
+    "in_ecocrop": false,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "orange",
+    "scientific_name": "Citrus sinensis",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mandarin",
+    "scientific_name": "Citrus reticulata",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Citrus reticulata"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lemon",
+    "scientific_name": "Citrus limon",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "grapefruit",
+    "scientific_name": "Citrus paradisi",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "apple",
+    "scientific_name": "Malus domestica",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Malus domestica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pear",
+    "scientific_name": "Pyrus communis",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Pyrus communis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "peach",
+    "scientific_name": "Prunus persica",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Prunus persica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "plum",
+    "scientific_name": "Prunus domestica",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Prunus domestica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cherry",
+    "scientific_name": "Prunus avium",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Prunus avium"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "apricot",
+    "scientific_name": "Prunus armeniaca",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Prunus armeniaca"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "grape",
+    "scientific_name": "Vitis vinifera",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vitis vinifera"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mango",
+    "scientific_name": "Mangifera indica",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Mangifera indica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pineapple",
+    "scientific_name": "Ananas comosus",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ananas comosus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "papaya",
+    "scientific_name": "Carica papaya",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Carica papaya"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "avocado",
+    "scientific_name": "Persea americana",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Persea americana"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "guava",
+    "scientific_name": "Psidium guajava",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Psidium guajava"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "passion fruit",
+    "scientific_name": "Passiflora edulis",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Passiflora edulis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "fig",
+    "scientific_name": "Ficus carica",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ficus carica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "date palm",
+    "scientific_name": "Phoenix dactylifera",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Phoenix dactylifera"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pomegranate",
+    "scientific_name": "Punica granatum",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Punica granatum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "kiwi",
+    "scientific_name": "Actinidia deliciosa",
+    "category": "fruit",
+    "in_ecocrop": false,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "persimmon",
+    "scientific_name": "Diospyros kaki",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Diospyros kaki"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lychee",
+    "scientific_name": "Litchi chinensis",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Litchi chinensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "dragon fruit",
+    "scientific_name": "Hylocereus undatus",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "durian",
+    "scientific_name": "Durio zibethinus",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Durio zibethinus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "rambutan",
+    "scientific_name": "Nephelium lappaceum",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Nephelium lappaceum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mangosteen",
+    "scientific_name": "Garcinia mangostana",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Garcinia mangostana"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "jackfruit",
+    "scientific_name": "Artocarpus heterophyllus",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Artocarpus heterophyllus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "breadfruit",
+    "scientific_name": "Artocarpus altilis",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Artocarpus altilis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "strawberry",
+    "scientific_name": "Fragaria ananassa",
+    "category": "fruit",
+    "in_ecocrop": false,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "blueberry",
+    "scientific_name": "Vaccinium corymbosum",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vaccinium corymbosum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "raspberry",
+    "scientific_name": "Rubus idaeus",
+    "category": "fruit",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Rubus idaeus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cashew",
+    "scientific_name": "Anacardium occidentale",
+    "category": "nut",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Anacardium occidentale"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "almond",
+    "scientific_name": "Prunus dulcis",
+    "category": "nut",
+    "in_ecocrop": false,
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "walnut",
+    "scientific_name": "Juglans regia",
+    "category": "nut",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Juglans regia"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "hazelnut",
+    "scientific_name": "Corylus avellana",
+    "category": "nut",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Corylus avellana"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pistachio",
+    "scientific_name": "Pistacia vera",
+    "category": "nut",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Pistacia vera"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "brazil nut",
+    "scientific_name": "Bertholletia excelsa",
+    "category": "nut",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Bertholletia excelsa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "macadamia",
+    "scientific_name": "Macadamia integrifolia",
+    "category": "nut",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Macadamia integrifolia"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pecan",
+    "scientific_name": "Carya illinoinensis",
+    "category": "nut",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Carya illinoinensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "coffee",
+    "scientific_name": "Coffea arabica",
+    "category": "beverage",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Coffea arabica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "tea",
+    "scientific_name": "Camellia sinensis",
+    "category": "beverage",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Camellia sinensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cocoa",
+    "scientific_name": "Theobroma cacao",
+    "category": "beverage",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Theobroma cacao"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pepper, black",
+    "scientific_name": "Piper nigrum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Piper nigrum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "vanilla",
+    "scientific_name": "Vanilla planifolia",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vanilla planifolia"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cinnamon",
+    "scientific_name": "Cinnamomum verum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cinnamomum verum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "clove",
+    "scientific_name": "Syzygium aromaticum",
+    "category": "spice",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Syzygium aromaticum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "nutmeg",
+    "scientific_name": "Myristica fragrans",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Myristica fragrans"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "ginger",
+    "scientific_name": "Zingiber officinale",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Zingiber officinale"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "turmeric",
+    "scientific_name": "Curcuma longa",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Curcuma longa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cardamom",
+    "scientific_name": "Elettaria cardamomum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Elettaria cardamomum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "oregano",
+    "scientific_name": "Origanum vulgare",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Origanum vulgare"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "basil",
+    "scientific_name": "Ocimum basilicum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ocimum basilicum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "rosemary",
+    "scientific_name": "Salvia rosmarinus",
+    "category": "spice",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Salvia rosmarinus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "thyme",
+    "scientific_name": "Thymus vulgaris",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Thymus vulgaris"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sage",
+    "scientific_name": "Salvia officinalis",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Salvia officinalis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mint",
+    "scientific_name": "Mentha spicata",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Mentha spicata"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "parsley",
+    "scientific_name": "Petroselinum crispum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Petroselinum crispum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "coriander",
+    "scientific_name": "Coriandrum sativum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Coriandrum sativum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cumin",
+    "scientific_name": "Cuminum cyminum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cuminum cyminum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "fennel",
+    "scientific_name": "Foeniculum vulgare",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Foeniculum vulgare"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "dill",
+    "scientific_name": "Anethum graveolens",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Anethum graveolens"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "saffron",
+    "scientific_name": "Crocus sativus",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Crocus sativus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "anise",
+    "scientific_name": "Pimpinella anisum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Pimpinella anisum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "star anise",
+    "scientific_name": "Illicium verum",
+    "category": "spice",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Illicium verum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "bay laurel",
+    "scientific_name": "Laurus nobilis",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Laurus nobilis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "lemongrass",
+    "scientific_name": "Cymbopogon citratus",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cymbopogon citratus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "tarragon",
+    "scientific_name": "Artemisia dracunculus",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Artemisia dracunculus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "chive",
+    "scientific_name": "Allium schoenoprasum",
+    "category": "spice",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Allium schoenoprasum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cotton",
+    "scientific_name": "Gossypium hirsutum",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Gossypium hirsutum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "jute",
+    "scientific_name": "Corchorus capsularis",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Corchorus capsularis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "hemp",
+    "scientific_name": "Cannabis sativa",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cannabis sativa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "sisal",
+    "scientific_name": "Agave sisalana",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Agave sisalana"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "flax",
+    "scientific_name": "Linum usitatissimum",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Linum usitatissimum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "rubber",
+    "scientific_name": "Hevea brasiliensis",
+    "category": "industrial",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Hevea brasiliensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "tobacco",
+    "scientific_name": "Nicotiana tabacum",
+    "category": "industrial",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Nicotiana tabacum"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "alfalfa",
+    "scientific_name": "Medicago sativa",
+    "category": "fodder",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Medicago sativa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "clover",
+    "scientific_name": "Trifolium pratense",
+    "category": "fodder",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Trifolium pratense"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "areca nut",
+    "scientific_name": "Areca catechu",
+    "category": "stimulant",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Areca catechu"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "khat",
+    "scientific_name": "Catha edulis",
+    "category": "stimulant",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Catha edulis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cola nut",
+    "scientific_name": "Cola nitida",
+    "category": "stimulant",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cola nitida"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "mate",
+    "scientific_name": "Ilex paraguariensis",
+    "category": "beverage",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ilex paraguariensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "cacao",
+    "scientific_name": "Theobroma cacao",
+    "category": "beverage",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Theobroma cacao"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "shea",
+    "scientific_name": "Vitellaria paradoxa",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vitellaria paradoxa"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "jojoba",
+    "scientific_name": "Simmondsia chinensis",
+    "category": "oilseed",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Simmondsia chinensis"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "hops",
+    "scientific_name": "Humulus lupulus",
+    "category": "beverage",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Humulus lupulus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "stevia",
+    "scientific_name": "Stevia rebaudiana",
+    "category": "sugar",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Stevia rebaudiana"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "amaranth",
+    "scientific_name": "Amaranthus cruentus",
+    "category": "cereal",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Amaranthus cruentus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "chia",
+    "scientific_name": "Salvia hispanica",
+    "category": "oilseed",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Salvia hispanica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "moringa",
+    "scientific_name": "Moringa oleifera",
+    "category": "vegetable",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Moringa oleifera"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "neem",
+    "scientific_name": "Azadirachta indica",
+    "category": "industrial",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Azadirachta indica"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "bamboo",
+    "scientific_name": "Bambusa vulgaris",
+    "category": "industrial",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Bambusa vulgaris"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "kenaf",
+    "scientific_name": "Hibiscus cannabinus",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Hibiscus cannabinus"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "ramie",
+    "scientific_name": "Boehmeria nivea",
+    "category": "fiber",
+    "in_ecocrop": true,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Boehmeria nivea"
+  },
+  {
+    "source": "cropgrids",
+    "crop_name": "pyrethrum",
+    "scientific_name": "Tanacetum cinerariifolium",
+    "category": "industrial",
+    "in_ecocrop": false,
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Tanacetum cinerariifolium"
+  }
+]

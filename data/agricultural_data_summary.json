@@ -1,0 +1,79 @@
+{
+  "sources": {
+    "ecocrop": {
+      "total_species": 2568,
+      "in_wcvp": 2009,
+      "not_in_wcvp": 559,
+      "with_temperature_data": 2071,
+      "with_rainfall_data": 2067,
+      "with_complete_climate_envelope": 2066,
+      "climate_completeness_pct": 80.5,
+      "categories": {
+        "vegetables": 280,
+        "ornamentals/turf": 499,
+        "medicinals & aromatic": 824,
+        "forest/wood": 793,
+        "materials": 584,
+        "environmental": 694,
+        "forage/pasture": 791,
+        "cereals & pseudocereals": 47,
+        "fruits & nuts": 393,
+        "cover crop": 65,
+        "weed": 130,
+        "roots/tubers": 63,
+        "pulses (grain legumes)": 56,
+        "other": 1,
+        "na": 1
+      }
+    },
+    "faostat": {
+      "total_items": 93,
+      "with_scientific_name": 93
+    },
+    "cropgrids": {
+      "total_crops": 161,
+      "in_wcvp": 146,
+      "in_ecocrop": 146,
+      "categories": {
+        "cereal": 17,
+        "root/tuber": 6,
+        "sugar": 2,
+        "oilseed": 15,
+        "pulse": 10,
+        "vegetable": 20,
+        "fruit": 34,
+        "nut": 8,
+        "beverage": 6,
+        "spice": 26,
+        "fiber": 7,
+        "industrial": 5,
+        "fodder": 2,
+        "stimulant": 3
+      }
+    },
+    "mapspam": {
+      "total_crops": 42,
+      "with_scientific_name": 33,
+      "in_wcvp": 29
+    }
+  },
+  "unique_species": {
+    "total_unique_across_all_sources": 2484,
+    "by_source": {
+      "ecocrop": 2466,
+      "faostat": 93,
+      "cropgrids": 159,
+      "mapspam": 33
+    }
+  },
+  "overlap": {
+    "ecocrop_x_faostat": 83,
+    "ecocrop_x_cropgrids": 144,
+    "ecocrop_x_mapspam": 32,
+    "faostat_x_cropgrids": 86,
+    "faostat_x_mapspam": 28,
+    "cropgrids_x_mapspam": 32,
+    "all_sources": 27
+  },
+  "categories": {}
+}

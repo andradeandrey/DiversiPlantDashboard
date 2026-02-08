@@ -1,0 +1,746 @@
+[
+  {
+    "source": "faostat",
+    "item": "Wheat",
+    "item_code": "",
+    "scientific_name_mapped": "Triticum aestivum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Rice",
+    "item_code": "",
+    "scientific_name_mapped": "Oryza sativa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Maize (corn)",
+    "item_code": "",
+    "scientific_name_mapped": "Zea mays",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Barley",
+    "item_code": "",
+    "scientific_name_mapped": "Hordeum vulgare",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Sorghum",
+    "item_code": "",
+    "scientific_name_mapped": "Sorghum bicolor",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Millet",
+    "item_code": "",
+    "scientific_name_mapped": "Pennisetum glaucum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Oats",
+    "item_code": "",
+    "scientific_name_mapped": "Avena sativa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Rye",
+    "item_code": "",
+    "scientific_name_mapped": "Secale cereale",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Potatoes",
+    "item_code": "",
+    "scientific_name_mapped": "Solanum tuberosum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Sweet potatoes",
+    "item_code": "",
+    "scientific_name_mapped": "Ipomoea batatas",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cassava, fresh",
+    "item_code": "",
+    "scientific_name_mapped": "Manihot esculenta",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Yams",
+    "item_code": "",
+    "scientific_name_mapped": "Dioscorea spp.",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Sugar cane",
+    "item_code": "",
+    "scientific_name_mapped": "Saccharum officinarum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Sugar beet",
+    "item_code": "",
+    "scientific_name_mapped": "Beta vulgaris",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Soybeans",
+    "item_code": "",
+    "scientific_name_mapped": "Glycine max",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Groundnuts, excluding shelled",
+    "item_code": "",
+    "scientific_name_mapped": "Arachis hypogaea",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Sunflower seed",
+    "item_code": "",
+    "scientific_name_mapped": "Helianthus annuus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Rapeseed",
+    "item_code": "",
+    "scientific_name_mapped": "Brassica napus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Oil palm fruit",
+    "item_code": "",
+    "scientific_name_mapped": "Elaeis guineensis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Olives",
+    "item_code": "",
+    "scientific_name_mapped": "Olea europaea",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Coconuts, in shell",
+    "item_code": "",
+    "scientific_name_mapped": "Cocos nucifera",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cotton lint",
+    "item_code": "",
+    "scientific_name_mapped": "Gossypium hirsutum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Jute",
+    "item_code": "",
+    "scientific_name_mapped": "Corchorus capsularis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Tobacco, unmanufactured",
+    "item_code": "",
+    "scientific_name_mapped": "Nicotiana tabacum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Coffee, green",
+    "item_code": "",
+    "scientific_name_mapped": "Coffea arabica",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cocoa beans",
+    "item_code": "",
+    "scientific_name_mapped": "Theobroma cacao",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Tea",
+    "item_code": "",
+    "scientific_name_mapped": "Camellia sinensis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Tomatoes",
+    "item_code": "",
+    "scientific_name_mapped": "Solanum lycopersicum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Onions and shallots, dry (old)",
+    "item_code": "",
+    "scientific_name_mapped": "Allium cepa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cabbages",
+    "item_code": "",
+    "scientific_name_mapped": "Brassica oleracea",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Carrots and turnips",
+    "item_code": "",
+    "scientific_name_mapped": "Daucus carota",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Bananas",
+    "item_code": "",
+    "scientific_name_mapped": "Musa acuminata",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Plantains and cooking bananas",
+    "item_code": "",
+    "scientific_name_mapped": "Musa paradisiaca",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Oranges",
+    "item_code": "",
+    "scientific_name_mapped": "Citrus sinensis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Apples",
+    "item_code": "",
+    "scientific_name_mapped": "Malus domestica",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Grapes",
+    "item_code": "",
+    "scientific_name_mapped": "Vitis vinifera",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Mangoes, guavas and mangosteens",
+    "item_code": "",
+    "scientific_name_mapped": "Mangifera indica",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Pineapples",
+    "item_code": "",
+    "scientific_name_mapped": "Ananas comosus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Papayas",
+    "item_code": "",
+    "scientific_name_mapped": "Carica papaya",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Avocados",
+    "item_code": "",
+    "scientific_name_mapped": "Persea americana",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Lemons and limes",
+    "item_code": "",
+    "scientific_name_mapped": "Citrus limon",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Watermelons",
+    "item_code": "",
+    "scientific_name_mapped": "Citrullus lanatus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Beans, dry",
+    "item_code": "",
+    "scientific_name_mapped": "Phaseolus vulgaris",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Chick peas, dry",
+    "item_code": "",
+    "scientific_name_mapped": "Cicer arietinum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Lentils, dry",
+    "item_code": "",
+    "scientific_name_mapped": "Lens culinaris",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Peas, dry",
+    "item_code": "",
+    "scientific_name_mapped": "Pisum sativum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Broad beans and horse beans, dry",
+    "item_code": "",
+    "scientific_name_mapped": "Vicia faba",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Pepper (piper spp.)",
+    "item_code": "",
+    "scientific_name_mapped": "Piper nigrum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Chillies and peppers, dry (Capsicum spp. and Pimenta spp.)",
+    "item_code": "",
+    "scientific_name_mapped": "Capsicum annuum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Ginger",
+    "item_code": "",
+    "scientific_name_mapped": "Zingiber officinale",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Vanilla",
+    "item_code": "",
+    "scientific_name_mapped": "Vanilla planifolia",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cinnamon and cinnamon-tree flowers",
+    "item_code": "",
+    "scientific_name_mapped": "Cinnamomum verum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cloves",
+    "item_code": "",
+    "scientific_name_mapped": "Syzygium aromaticum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Nutmeg, mace, cardamoms",
+    "item_code": "",
+    "scientific_name_mapped": "Myristica fragrans",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Natural rubber",
+    "item_code": "",
+    "scientific_name_mapped": "Hevea brasiliensis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Sesame seed",
+    "item_code": "",
+    "scientific_name_mapped": "Sesamum indicum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Linseed",
+    "item_code": "",
+    "scientific_name_mapped": "Linum usitatissimum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Hemp, raw or retted",
+    "item_code": "",
+    "scientific_name_mapped": "Cannabis sativa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Buckwheat",
+    "item_code": "",
+    "scientific_name_mapped": "Fagopyrum esculentum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Quinoa",
+    "item_code": "",
+    "scientific_name_mapped": "Chenopodium quinoa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Triticale",
+    "item_code": "",
+    "scientific_name_mapped": "Triticale hexaploide",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Lettuce and chicory",
+    "item_code": "",
+    "scientific_name_mapped": "Lactuca sativa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Spinach",
+    "item_code": "",
+    "scientific_name_mapped": "Spinacia oleracea",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cucumbers and gherkins",
+    "item_code": "",
+    "scientific_name_mapped": "Cucumis sativus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Eggplants (aubergines)",
+    "item_code": "",
+    "scientific_name_mapped": "Solanum melongena",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Garlic",
+    "item_code": "",
+    "scientific_name_mapped": "Allium sativum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Pumpkins, squash and gourds",
+    "item_code": "",
+    "scientific_name_mapped": "Cucurbita spp.",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cauliflowers and broccoli",
+    "item_code": "",
+    "scientific_name_mapped": "Brassica oleracea var. botrytis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Asparagus",
+    "item_code": "",
+    "scientific_name_mapped": "Asparagus officinalis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Artichokes",
+    "item_code": "",
+    "scientific_name_mapped": "Cynara cardunculus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Pears",
+    "item_code": "",
+    "scientific_name_mapped": "Pyrus communis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Peaches and nectarines",
+    "item_code": "",
+    "scientific_name_mapped": "Prunus persica",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Plums and sloes",
+    "item_code": "",
+    "scientific_name_mapped": "Prunus domestica",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cherries",
+    "item_code": "",
+    "scientific_name_mapped": "Prunus avium",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Apricots",
+    "item_code": "",
+    "scientific_name_mapped": "Prunus armeniaca",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Strawberries",
+    "item_code": "",
+    "scientific_name_mapped": "Fragaria ananassa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Raspberries",
+    "item_code": "",
+    "scientific_name_mapped": "Rubus idaeus",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Blueberries",
+    "item_code": "",
+    "scientific_name_mapped": "Vaccinium corymbosum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cranberries",
+    "item_code": "",
+    "scientific_name_mapped": "Vaccinium macrocarpon",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Currants",
+    "item_code": "",
+    "scientific_name_mapped": "Ribes rubrum",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Gooseberries",
+    "item_code": "",
+    "scientific_name_mapped": "Ribes uva-crispa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Figs",
+    "item_code": "",
+    "scientific_name_mapped": "Ficus carica",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Dates",
+    "item_code": "",
+    "scientific_name_mapped": "Phoenix dactylifera",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Cashew nuts, in shell",
+    "item_code": "",
+    "scientific_name_mapped": "Anacardium occidentale",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Walnuts, in shell",
+    "item_code": "",
+    "scientific_name_mapped": "Juglans regia",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Almonds, in shell",
+    "item_code": "",
+    "scientific_name_mapped": "Prunus dulcis",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Hazelnuts (filberts)",
+    "item_code": "",
+    "scientific_name_mapped": "Corylus avellana",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Pistachios",
+    "item_code": "",
+    "scientific_name_mapped": "Pistacia vera",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Brazil nuts, in shell",
+    "item_code": "",
+    "scientific_name_mapped": "Bertholletia excelsa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Kiwi fruit",
+    "item_code": "",
+    "scientific_name_mapped": "Actinidia deliciosa",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Persimmons",
+    "item_code": "",
+    "scientific_name_mapped": "Diospyros kaki",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Tangerines, mandarins, clementines",
+    "item_code": "",
+    "scientific_name_mapped": "Citrus reticulata",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  },
+  {
+    "source": "faostat",
+    "item": "Grapefruit and pomelos",
+    "item_code": "",
+    "scientific_name_mapped": "Citrus paradisi",
+    "production_countries": [],
+    "note": "From built-in mapping only; no production data available"
+  }
+]

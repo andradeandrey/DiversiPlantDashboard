@@ -1,0 +1,380 @@
+[
+  {
+    "source": "mapspam",
+    "code": "WHEA",
+    "crop_name": "wheat",
+    "scientific_name": "Triticum aestivum",
+    "category": "cereal",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Triticum aestivum"
+  },
+  {
+    "source": "mapspam",
+    "code": "RICE",
+    "crop_name": "rice",
+    "scientific_name": "Oryza sativa",
+    "category": "cereal",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Oryza sativa"
+  },
+  {
+    "source": "mapspam",
+    "code": "MAIZ",
+    "crop_name": "maize",
+    "scientific_name": "Zea mays",
+    "category": "cereal",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Zea mays"
+  },
+  {
+    "source": "mapspam",
+    "code": "BARL",
+    "crop_name": "barley",
+    "scientific_name": "Hordeum vulgare",
+    "category": "cereal",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Hordeum vulgare"
+  },
+  {
+    "source": "mapspam",
+    "code": "PMIL",
+    "crop_name": "pearl millet",
+    "scientific_name": "Pennisetum glaucum",
+    "category": "cereal",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "SMIL",
+    "crop_name": "small millet",
+    "scientific_name": "Panicum miliaceum",
+    "category": "cereal",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Panicum miliaceum"
+  },
+  {
+    "source": "mapspam",
+    "code": "SORG",
+    "crop_name": "sorghum",
+    "scientific_name": "Sorghum bicolor",
+    "category": "cereal",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Sorghum bicolor"
+  },
+  {
+    "source": "mapspam",
+    "code": "OCER",
+    "crop_name": "other cereals",
+    "scientific_name": null,
+    "category": "cereal",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "POTA",
+    "crop_name": "potato",
+    "scientific_name": "Solanum tuberosum",
+    "category": "root/tuber",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Solanum tuberosum"
+  },
+  {
+    "source": "mapspam",
+    "code": "SWPO",
+    "crop_name": "sweet potato",
+    "scientific_name": "Ipomoea batatas",
+    "category": "root/tuber",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Ipomoea batatas"
+  },
+  {
+    "source": "mapspam",
+    "code": "YAMS",
+    "crop_name": "yams",
+    "scientific_name": "Dioscorea rotundata",
+    "category": "root/tuber",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "CASS",
+    "crop_name": "cassava",
+    "scientific_name": "Manihot esculenta",
+    "category": "root/tuber",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Manihot esculenta"
+  },
+  {
+    "source": "mapspam",
+    "code": "ORTS",
+    "crop_name": "other roots",
+    "scientific_name": null,
+    "category": "root/tuber",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "BEAN",
+    "crop_name": "bean",
+    "scientific_name": "Phaseolus vulgaris",
+    "category": "pulse",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Phaseolus vulgaris"
+  },
+  {
+    "source": "mapspam",
+    "code": "CHIC",
+    "crop_name": "chickpea",
+    "scientific_name": "Cicer arietinum",
+    "category": "pulse",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cicer arietinum"
+  },
+  {
+    "source": "mapspam",
+    "code": "COWP",
+    "crop_name": "cowpea",
+    "scientific_name": "Vigna unguiculata",
+    "category": "pulse",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Vigna unguiculata"
+  },
+  {
+    "source": "mapspam",
+    "code": "LENT",
+    "crop_name": "lentil",
+    "scientific_name": "Lens culinaris",
+    "category": "pulse",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "PIGE",
+    "crop_name": "pigeon pea",
+    "scientific_name": "Cajanus cajan",
+    "category": "pulse",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cajanus cajan"
+  },
+  {
+    "source": "mapspam",
+    "code": "OPUL",
+    "crop_name": "other pulses",
+    "scientific_name": null,
+    "category": "pulse",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "SOYB",
+    "crop_name": "soybean",
+    "scientific_name": "Glycine max",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Glycine max"
+  },
+  {
+    "source": "mapspam",
+    "code": "GROU",
+    "crop_name": "groundnut",
+    "scientific_name": "Arachis hypogaea",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Arachis hypogaea"
+  },
+  {
+    "source": "mapspam",
+    "code": "CNUT",
+    "crop_name": "coconut",
+    "scientific_name": "Cocos nucifera",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Cocos nucifera"
+  },
+  {
+    "source": "mapspam",
+    "code": "OILP",
+    "crop_name": "oil palm",
+    "scientific_name": "Elaeis guineensis",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Elaeis guineensis"
+  },
+  {
+    "source": "mapspam",
+    "code": "SUNF",
+    "crop_name": "sunflower",
+    "scientific_name": "Helianthus annuus",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Helianthus annuus"
+  },
+  {
+    "source": "mapspam",
+    "code": "RAPE",
+    "crop_name": "rapeseed",
+    "scientific_name": "Brassica napus",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Brassica napus"
+  },
+  {
+    "source": "mapspam",
+    "code": "SESA",
+    "crop_name": "sesame",
+    "scientific_name": "Sesamum indicum",
+    "category": "oilseed",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Sesamum indicum"
+  },
+  {
+    "source": "mapspam",
+    "code": "OOIL",
+    "crop_name": "other oil crops",
+    "scientific_name": null,
+    "category": "oilseed",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "SUGC",
+    "crop_name": "sugarcane",
+    "scientific_name": "Saccharum officinarum",
+    "category": "sugar",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Saccharum officinarum"
+  },
+  {
+    "source": "mapspam",
+    "code": "SUGB",
+    "crop_name": "sugar beet",
+    "scientific_name": "Beta vulgaris",
+    "category": "sugar",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Beta vulgaris"
+  },
+  {
+    "source": "mapspam",
+    "code": "COTT",
+    "crop_name": "cotton",
+    "scientific_name": "Gossypium hirsutum",
+    "category": "fiber",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Gossypium hirsutum"
+  },
+  {
+    "source": "mapspam",
+    "code": "OFIB",
+    "crop_name": "other fibers",
+    "scientific_name": null,
+    "category": "fiber",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "ACOF",
+    "crop_name": "arabica coffee",
+    "scientific_name": "Coffea arabica",
+    "category": "beverage",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Coffea arabica"
+  },
+  {
+    "source": "mapspam",
+    "code": "RCOF",
+    "crop_name": "robusta coffee",
+    "scientific_name": "Coffea canephora",
+    "category": "beverage",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Coffea canephora"
+  },
+  {
+    "source": "mapspam",
+    "code": "COCO",
+    "crop_name": "cocoa",
+    "scientific_name": "Theobroma cacao",
+    "category": "beverage",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Theobroma cacao"
+  },
+  {
+    "source": "mapspam",
+    "code": "TEAS",
+    "crop_name": "tea",
+    "scientific_name": "Camellia sinensis",
+    "category": "beverage",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Camellia sinensis"
+  },
+  {
+    "source": "mapspam",
+    "code": "TOBA",
+    "crop_name": "tobacco",
+    "scientific_name": "Nicotiana tabacum",
+    "category": "industrial",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Nicotiana tabacum"
+  },
+  {
+    "source": "mapspam",
+    "code": "BANA",
+    "crop_name": "banana",
+    "scientific_name": "Musa acuminata",
+    "category": "fruit",
+    "in_wcvp": true,
+    "wcvp_canonical_name": "Musa acuminata"
+  },
+  {
+    "source": "mapspam",
+    "code": "PLNT",
+    "crop_name": "plantain",
+    "scientific_name": "Musa paradisiaca",
+    "category": "fruit",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "TROF",
+    "crop_name": "tropical fruit",
+    "scientific_name": null,
+    "category": "fruit",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "TEMF",
+    "crop_name": "temperate fruit",
+    "scientific_name": null,
+    "category": "fruit",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "VEGE",
+    "crop_name": "vegetables",
+    "scientific_name": null,
+    "category": "vegetable",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  },
+  {
+    "source": "mapspam",
+    "code": "REST",
+    "crop_name": "rest of crops",
+    "scientific_name": null,
+    "category": "other",
+    "in_wcvp": false,
+    "wcvp_canonical_name": null
+  }
+]
