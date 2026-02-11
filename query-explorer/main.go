@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -85,6 +87,10 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	// Dashboard proxy (must be registered before catch-all)
+	dashboardProxy := newDashboardProxy()
+	mux.Handle("/diversiplant/", dashboardProxy)
+
 	// API routes
 	mux.HandleFunc("/api/health", handleHealth)
 	mux.HandleFunc("/api/stats", handleStats)
@@ -141,6 +147,26 @@ func main() {
 		log.Printf("Starting HTTPS server for %s on :443", cfg.Domain)
 		log.Fatal(server.ListenAndServeTLS("", ""))
 	}
+}
+
+func newDashboardProxy() http.Handler {
+	target, _ := url.Parse("http://127.0.0.1:8001")
+	proxy := httputil.NewSingleHostReverseProxy(target)
+
+	// Custom error handler for when the Python server is offline
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("Dashboard proxy error: %v", err)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusBadGateway)
+		fmt.Fprintf(w, `<html><body style="font-family:sans-serif;text-align:center;padding:60px">
+			<h1>Dashboard Offline</h1>
+			<p>The DiversiPlant Shiny dashboard is not running.</p>
+			<p>Start it with: <code>uvicorn app:app --host 127.0.0.1 --port 8001</code></p>
+			<p><a href="/">Go to Admin UI</a></p>
+		</body></html>`)
+	}
+
+	return proxy
 }
 
 func redirectHTTPS(w http.ResponseWriter, r *http.Request) {
