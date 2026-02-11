@@ -1,0 +1,134 @@
+═══════════════════════════════════════════════════════════════
+  📦 PACOTE DE DEPLOY - DIVERSIPLANT QUERY EXPLORER
+═══════════════════════════════════════════════════════════════
+
+📅 Data: 2026-02-04
+🎯 Versão: v2.0 - Unified Climate Envelopes
+👤 Responsável: Andrey Andrade
+
+───────────────────────────────────────────────────────────────
+📂 ARQUIVOS INCLUÍDOS
+───────────────────────────────────────────────────────────────
+
+1. BINÁRIO GO
+   query-explorer/query-explorer-linux (9.7 MB)
+   ├─ Endpoint: POST /api/recommend
+   ├─ Endpoint: GET /api/ecoregion/species
+   └─ Usa VIEW unificada de climate envelopes
+
+2. MIGRATIONS SQL
+   database/migrations/010_climate_envelope_system.sql (14 KB)
+   ├─ Tabela: climate_envelope_gbif
+   ├─ Tabela: climate_envelope_ecoregion
+   └─ Função: calculate_climate_match()
+
+   database/migrations/011_unified_climate_envelope_view.sql (5.5 KB)
+   └─ VIEW: species_climate_envelope_unified
+      (prioriza GBIF > Ecoregion > WCVP)
+
+3. SCRIPTS DE POPULAÇÃO
+   scripts/populate-wcvp-envelopes.sql (3.2 KB)
+   └─ Popula ~362,000 envelopes WCVP
+
+   scripts/populate-ecoregion-envelopes.sql (4.6 KB)
+   └─ Popula ~46,767 envelopes TreeGOER
+
+4. SCRIPT DE DEPLOY
+   scripts/deploy-to-diversiplant.sh (6.8 KB)
+   └─ Automatiza todo o processo
+
+───────────────────────────────────────────────────────────────
+🎯 RESULTADO ESPERADO
+───────────────────────────────────────────────────────────────
+
+📊 COBERTURA DE ENVELOPES:
+   Antes:  156,185 espécies (47.5%)
+   Depois: 181,932 espécies (55.4%)
+   Ganho:  +25,747 espécies (+16.5%)
+
+🌳 COBERTURA DE ÁRVORES:
+   Antes:  23,694 árvores (41.4%)
+   Depois: 42,295 árvores (73.9%)
+   Ganho:  +18,601 árvores (+78.5%) 🎉
+
+📈 DISTRIBUIÇÃO POR FONTE:
+   GBIF:      15,878 espécies (8.7%)  - Alta qualidade
+   Ecoregion: 46,867 espécies (25.8%) - TreeGOER
+   WCVP:     119,187 espécies (65.5%) - Cobertura global
+
+───────────────────────────────────────────────────────────────
+⚙️  MUDANÇAS NO SISTEMA
+───────────────────────────────────────────────────────────────
+
+✅ BACKEND:
+   • Novo endpoint /api/recommend para recomendações
+   • Algoritmo Greedy de maximização de diversidade
+   • Cálculo de Gower distance para traits
+   • Cache de recomendações (24h TTL)
+
+✅ BANCO DE DADOS:
+   • 3 tabelas novas de climate envelopes
+   • VIEW unificada com priorização inteligente
+   • Função SQL calculate_climate_match()
+   • Índices otimizados para performance
+
+✅ INTEGRAÇÃO:
+   • GBIF occurrences individuais (lat/lon)
+   • TreeGOER ecoregion data (46k árvores)
+   • WCVP regional climate aggregation
+
+───────────────────────────────────────────────────────────────
+🚀 COMO EXECUTAR O DEPLOY
+───────────────────────────────────────────────────────────────
+
+cd /Users/andreyandrade/Code/DiversiPlantDashboard-sticky
+./scripts/deploy-to-diversiplant.sh
+
+O script irá:
+1. ✅ Fazer backup do banco (pg_dump comprimido)
+2. ✅ Parar o servidor atual
+3. ✅ Enviar novo binário (9.7 MB)
+4. ✅ Enviar migrations (010 + 011)
+5. ✅ Aplicar migrations no PostgreSQL
+6. ✅ Popular envelopes (WCVP + Ecoregion)
+7. ✅ Iniciar novo servidor
+
+Tempo estimado: 5-10 minutos
+Downtime: ~2 minutos (durante restart)
+
+───────────────────────────────────────────────────────────────
+🔍 VERIFICAÇÃO PÓS-DEPLOY
+───────────────────────────────────────────────────────────────
+
+1. Health check:
+   curl http://localhost:8080/api/health
+
+2. Verificar envelopes:
+   docker exec diversiplant-db psql -U diversiplant -d diversiplant \
+     -c "SELECT envelope_source, COUNT(*) FROM
+         species_climate_envelope_unified GROUP BY envelope_source;"
+
+3. Testar recomendação:
+   curl -X POST http://localhost:8080/api/recommend \
+     -H "Content-Type: application/json" \
+     -d '{"tdwg_code":"BZS","n_species":10}'
+
+───────────────────────────────────────────────────────────────
+⚠️  OBSERVAÇÕES IMPORTANTES
+───────────────────────────────────────────────────────────────
+
+• Backup automático será criado antes de qualquer mudança
+• Envelopes GBIF (~15k) já foram processados previamente
+• População de WCVP e Ecoregion leva ~5 minutos cada
+• VIEW unificada não duplica dados, apenas prioriza fontes
+• Rollback disponível via restore do backup
+
+───────────────────────────────────────────────────────────────
+📞 SUPORTE
+───────────────────────────────────────────────────────────────
+
+Logs: tail -f /opt/diversiplant/logs/query-explorer.log
+Docker: docker ps | grep diversiplant-db
+Health: curl localhost:8080/api/health
+
+═══════════════════════════════════════════════════════════════

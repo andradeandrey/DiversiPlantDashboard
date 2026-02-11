@@ -48,8 +48,10 @@ class GBIFOccurrenceCrawler(BaseCrawler):
     MAX_OCCURRENCES_PER_SPECIES = 1000  # Limit per species for performance
 
     # Rate limiting
-    API_DELAY = 0.1  # Seconds between API calls
-    SPECIES_DELAY = 0.5  # Seconds between species processing
+    API_DELAY = 0.3  # Seconds between API calls
+    SPECIES_DELAY = 1.0  # Seconds between species processing
+    MAX_RETRIES = 5  # Max retries on 429
+    BACKOFF_BASE = 30  # Base backoff in seconds (30, 60, 120, 240, 480)
 
     def get_priority_species(self, limit: int = 1000) -> List[Dict]:
         """
@@ -65,12 +67,16 @@ class GBIFOccurrenceCrawler(BaseCrawler):
                     s.id,
                     s.canonical_name,
                     s.family,
-                    COALESCE(se.n_occurrences, 0) as tregoer_occurrences,
+                    COALESCE(se_agg.total_observations, 0) as tregoer_occurrences,
                     COALESCE(sr.region_count, 0) as wcvp_regions
                 FROM species s
                 JOIN species_unified su ON s.id = su.species_id
                 LEFT JOIN climate_envelope_gbif ceg ON s.id = ceg.species_id
-                LEFT JOIN species_ecoregions se ON s.id = se.species_id
+                LEFT JOIN (
+                    SELECT species_id, SUM(n_observations) as total_observations
+                    FROM species_ecoregions
+                    GROUP BY species_id
+                ) se_agg ON s.id = se_agg.species_id
                 LEFT JOIN (
                     SELECT species_id, COUNT(*) as region_count
                     FROM species_regions
@@ -79,15 +85,75 @@ class GBIFOccurrenceCrawler(BaseCrawler):
                 ) sr ON s.id = sr.species_id
                 WHERE ceg.species_id IS NULL  -- No GBIF envelope yet
                   AND su.growth_form IS NOT NULL
-                  AND (se.species_id IS NOT NULL OR sr.species_id IS NOT NULL)  -- Has some distribution data
+                  AND (se_agg.species_id IS NOT NULL OR sr.species_id IS NOT NULL)  -- Has some distribution data
                 ORDER BY
-                    se.n_occurrences DESC NULLS LAST,  -- Prioritize species with more TreeGOER occurrences
+                    se_agg.total_observations DESC NULLS LAST,  -- Prioritize species with more TreeGOER occurrences
                     sr.region_count DESC NULLS LAST,
                     s.id
                 LIMIT :limit
             """), {'limit': limit})
 
             return [dict(row._mapping) for row in result]
+
+    def _request_with_backoff(self, params: Dict, species_name: str) -> Optional[Dict]:
+        """
+        Make a GBIF API request with exponential backoff on 429 errors.
+
+        Returns:
+            Response JSON dict, or None if all retries failed.
+        """
+        for attempt in range(self.MAX_RETRIES + 1):
+            try:
+                response = requests.get(
+                    self.GBIF_API,
+                    params=params,
+                    timeout=30,
+                    headers={'Accept': 'application/json'}
+                )
+
+                if response.status_code == 429:
+                    if attempt >= self.MAX_RETRIES:
+                        self.logger.warning(
+                            f"GBIF 429 for {species_name}: max retries ({self.MAX_RETRIES}) exceeded"
+                        )
+                        return None
+
+                    # Exponential backoff: 30, 60, 120, 240, 480 seconds
+                    wait_time = self.BACKOFF_BASE * (2 ** attempt)
+                    # Check Retry-After header if provided
+                    retry_after = response.headers.get('Retry-After')
+                    if retry_after:
+                        try:
+                            wait_time = max(wait_time, int(retry_after))
+                        except ValueError:
+                            pass
+
+                    self.logger.info(
+                        f"GBIF 429 for {species_name}: backing off {wait_time}s "
+                        f"(attempt {attempt + 1}/{self.MAX_RETRIES})"
+                    )
+                    time.sleep(wait_time)
+                    continue
+
+                response.raise_for_status()
+                return response.json()
+
+            except requests.ConnectionError as e:
+                if attempt < self.MAX_RETRIES:
+                    wait_time = self.BACKOFF_BASE * (2 ** attempt)
+                    self.logger.warning(
+                        f"Connection error for {species_name}: {e}. Retrying in {wait_time}s"
+                    )
+                    time.sleep(wait_time)
+                    continue
+                self.logger.warning(f"Connection failed for {species_name} after {self.MAX_RETRIES} retries")
+                return None
+
+            except requests.RequestException as e:
+                self.logger.warning(f"GBIF API error for {species_name}: {e}")
+                return None
+
+        return None
 
     def fetch_gbif_occurrences(self, species_name: str, limit: int = 1000) -> List[Dict]:
         """
@@ -117,43 +183,33 @@ class GBIFOccurrenceCrawler(BaseCrawler):
             if len(occurrences) >= limit:
                 break
 
-            try:
-                response = requests.get(
-                    self.GBIF_API,
-                    params=params,
-                    timeout=30,
-                    headers={'Accept': 'application/json'}
-                )
-                response.raise_for_status()
-                data = response.json()
-
-                results = data.get('results', [])
-                if not results:
-                    break
-
-                for occ in results:
-                    if self._is_valid_occurrence(occ):
-                        occurrences.append({
-                            'gbif_id': occ.get('key'),
-                            'latitude': occ.get('decimalLatitude'),
-                            'longitude': occ.get('decimalLongitude'),
-                            'uncertainty_m': occ.get('coordinateUncertaintyInMeters'),
-                            'year': occ.get('year'),
-                            'country_code': occ.get('countryCode')
-                        })
-
-                        if len(occurrences) >= limit:
-                            break
-
-                if data.get('endOfRecords', True):
-                    break
-
-                params['offset'] += 300
-                time.sleep(self.API_DELAY)
-
-            except requests.RequestException as e:
-                self.logger.warning(f"GBIF API error for {species_name}: {e}")
+            data = self._request_with_backoff(params, species_name)
+            if data is None:
                 break
+
+            results = data.get('results', [])
+            if not results:
+                break
+
+            for occ in results:
+                if self._is_valid_occurrence(occ):
+                    occurrences.append({
+                        'gbif_id': occ.get('key'),
+                        'latitude': occ.get('decimalLatitude'),
+                        'longitude': occ.get('decimalLongitude'),
+                        'uncertainty_m': occ.get('coordinateUncertaintyInMeters'),
+                        'year': occ.get('year'),
+                        'country_code': occ.get('countryCode')
+                    })
+
+                    if len(occurrences) >= limit:
+                        break
+
+            if data.get('endOfRecords', True):
+                break
+
+            params['offset'] += 300
+            time.sleep(self.API_DELAY)
 
         return occurrences
 
@@ -192,8 +248,8 @@ class GBIFOccurrenceCrawler(BaseCrawler):
         """
         Extract WorldClim climate data at each occurrence point.
 
-        Uses the get_climate_at_point() database function that queries
-        the worldclim_raster table.
+        Uses the get_climate_json_at_point() database function that returns
+        all bio variables as JSONB in a single call.
         """
         climate_data = []
 
@@ -201,20 +257,23 @@ class GBIFOccurrenceCrawler(BaseCrawler):
             for occ in occurrences:
                 try:
                     result = session.execute(
-                        text("SELECT * FROM get_climate_at_point(:lat, :lon)"),
+                        text("SELECT get_climate_json_at_point(:lat, :lon) as climate_json"),
                         {'lat': occ['latitude'], 'lon': occ['longitude']}
                     ).fetchone()
 
-                    if result and result.bio1 is not None:
-                        climate_data.append({
-                            **occ,
-                            'bio1': float(result.bio1) if result.bio1 else None,
-                            'bio5': float(result.bio5) if result.bio5 else None,
-                            'bio6': float(result.bio6) if result.bio6 else None,
-                            'bio7': float(result.bio7) if result.bio7 else None,
-                            'bio12': float(result.bio12) if result.bio12 else None,
-                            'bio15': float(result.bio15) if result.bio15 else None
-                        })
+                    if result and result.climate_json:
+                        cj = result.climate_json
+                        bio1 = cj.get('bio1')
+                        if bio1 is not None:
+                            climate_data.append({
+                                **occ,
+                                'bio1': float(bio1) if bio1 else None,
+                                'bio5': float(cj.get('bio5')) if cj.get('bio5') else None,
+                                'bio6': float(cj.get('bio6')) if cj.get('bio6') else None,
+                                'bio7': float(cj.get('bio7')) if cj.get('bio7') else None,
+                                'bio12': float(cj.get('bio12')) if cj.get('bio12') else None,
+                                'bio15': float(cj.get('bio15')) if cj.get('bio15') else None
+                            })
                 except Exception as e:
                     self.logger.debug(f"Climate extraction error at {occ['latitude']},{occ['longitude']}: {e}")
 
@@ -480,8 +539,8 @@ class GBIFOccurrenceCrawler(BaseCrawler):
         return raw_data
 
     def validate(self, data: Dict) -> bool:
-        """Validation is not used - we validate in fetch_data."""
-        return True
+        """Always returns False - processing is handled entirely in fetch_data."""
+        return False
 
 
 # For running directly

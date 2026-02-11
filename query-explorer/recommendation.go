@@ -33,7 +33,7 @@ type RecommendRequest struct {
 }
 
 type Preferences struct {
-	GrowthForms        []string `json:"growth_forms,omitempty"`    // ["tree", "shrub", "herb"]
+	GrowthForms        []string `json:"growth_forms,omitempty"`    // graminoid, forb, subshrub, shrub, tree, scrambler, vine, liana, palm, bamboo, other
 	IncludeIntroduced  bool     `json:"include_introduced,omitempty"` // Include introduced species (default: false)
 	IncludeThreatened  *bool    `json:"include_threatened,omitempty"`
 	MinHeightM         *float64 `json:"min_height_m,omitempty"`
@@ -429,27 +429,11 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 	return candidates, nil
 }
 
-// expandGrowthForms automatically expands "herb" to include all herbaceous forms
-func expandGrowthForms(forms []string) []string {
-	expanded := make(map[string]bool)
-
-	for _, form := range forms {
-		expanded[form] = true
-
-		// Auto-expand "herb" to include forb and graminoid
-		if form == "herb" {
-			expanded["forb"] = true
-			expanded["graminoid"] = true
-		}
-	}
-
-	// Convert map back to slice
-	result := make([]string, 0, len(expanded))
-	for form := range expanded {
-		result = append(result, form)
-	}
-
-	return result
+// validGrowthForms defines the 11 accepted growth form values
+var validGrowthForms = map[string]bool{
+	"graminoid": true, "forb": true, "subshrub": true, "shrub": true,
+	"tree": true, "scrambler": true, "vine": true, "liana": true,
+	"palm": true, "bamboo": true, "other": true,
 }
 
 // joinWithOr joins SQL clauses with OR operator
@@ -468,26 +452,10 @@ func buildWhereClause(prefs Preferences) string {
 	var clauses []string
 
 	if len(prefs.GrowthForms) > 0 {
-		// Expand "herb" to include all herbaceous forms
-		expandedForms := expandGrowthForms(prefs.GrowthForms)
-
 		var formClauses []string
-		for _, form := range expandedForms {
-			switch form {
-			case "tree":
-				formClauses = append(formClauses, "su.is_tree = TRUE")
-			case "shrub":
-				formClauses = append(formClauses, "su.is_shrub = TRUE")
-			case "herb":
-				formClauses = append(formClauses, "su.is_herb = TRUE")
-			case "forb":
-				formClauses = append(formClauses, "su.growth_form = 'forb'")
-			case "graminoid":
-				formClauses = append(formClauses, "su.growth_form = 'graminoid'")
-			case "climber":
-				formClauses = append(formClauses, "su.is_climber = TRUE")
-			case "palm":
-				formClauses = append(formClauses, "su.is_palm = TRUE")
+		for _, form := range prefs.GrowthForms {
+			if validGrowthForms[form] {
+				formClauses = append(formClauses, fmt.Sprintf("su.growth_form = '%s'", form))
 			}
 		}
 
@@ -521,7 +489,19 @@ func buildWhereClause(prefs Preferences) string {
 		return ""
 	}
 
-	return "AND (" + clauses[0] + ")"
+	return " AND " + joinWithAnd(clauses)
+}
+
+// joinWithAnd joins SQL clauses with AND operator
+func joinWithAnd(clauses []string) string {
+	result := ""
+	for i, clause := range clauses {
+		if i > 0 {
+			result += " AND "
+		}
+		result += clause
+	}
+	return result
 }
 
 // ============================================================================

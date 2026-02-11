@@ -59,15 +59,59 @@
             <h3 class="text-sm font-semibold text-emerald-400 mb-3" data-i18n="recommend.filters">
                 Filters (Optional)
             </h3>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- Growth Form filters - Row 1 -->
+            <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
                 <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
                     <input type="checkbox" value="tree" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
-                    <span data-i18n="recommend.tree">Trees</span>
+                    <span data-i18n="recommend.tree">Tree</span>
                 </label>
                 <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
                     <input type="checkbox" value="shrub" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
-                    <span data-i18n="recommend.shrub">Shrubs</span>
+                    <span data-i18n="recommend.shrub">Shrub</span>
                 </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="subshrub" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.subshrub">Subshrub</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="forb" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.forb">Forb</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="graminoid" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.graminoid">Graminoid</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="palm" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.palm">Palm</span>
+                </label>
+            </div>
+            <!-- Growth Form filters - Row 2 -->
+            <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mt-3">
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="liana" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.liana">Liana</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="vine" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.vine">Vine</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="scrambler" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.scrambler">Scrambler</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="bamboo" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.bamboo">Bamboo</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" value="other" class="rec-growth-form rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.other">Other</span>
+                </label>
+                <div></div>
+            </div>
+            <!-- Other filters -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-white/5">
                 <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
                     <input type="checkbox" id="rec-n-fixers" class="rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
                     <span data-i18n="recommend.n_fixers">Nitrogen Fixers Only</span>
@@ -76,6 +120,11 @@
                     <input type="checkbox" id="rec-exclude-threatened" class="rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
                     <span data-i18n="recommend.exclude_threatened">Exclude Threatened</span>
                 </label>
+                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-emerald-400 transition-colors">
+                    <input type="checkbox" id="rec-include-introduced" class="rounded border-white/20 text-emerald-600 focus:ring-emerald-500">
+                    <span data-i18n="recommend.include_introduced">Include Introduced</span>
+                </label>
+                <div></div>
             </div>
         </div>
 
@@ -171,10 +220,20 @@ const i18n = {
         'recommend.longitude': 'Longitude',
         'recommend.n_species': 'Number of Species',
         'recommend.filters': 'Filters (Optional)',
-        'recommend.tree': 'Trees',
-        'recommend.shrub': 'Shrubs',
+        'recommend.tree': 'Tree',
+        'recommend.shrub': 'Shrub',
+        'recommend.subshrub': 'Subshrub',
+        'recommend.forb': 'Forb',
+        'recommend.graminoid': 'Graminoid',
+        'recommend.palm': 'Palm',
+        'recommend.liana': 'Liana',
+        'recommend.vine': 'Vine',
+        'recommend.scrambler': 'Scrambler',
+        'recommend.bamboo': 'Bamboo',
+        'recommend.other': 'Other',
         'recommend.n_fixers': 'Nitrogen Fixers Only',
         'recommend.exclude_threatened': 'Exclude Threatened',
+        'recommend.include_introduced': 'Include Introduced',
         'recommend.climate_threshold': 'Climate Match Threshold:',
         'recommend.experimental': 'Experimental (0.3)',
         'recommend.moderate': 'Moderate (0.5)',
@@ -199,10 +258,20 @@ const i18n = {
         'recommend.longitude': 'Longitude',
         'recommend.n_species': 'Número de Espécies',
         'recommend.filters': 'Filtros (Opcional)',
-        'recommend.tree': 'Árvores',
-        'recommend.shrub': 'Arbustos',
+        'recommend.tree': 'Árvore',
+        'recommend.shrub': 'Arbusto',
+        'recommend.subshrub': 'Subarbusto',
+        'recommend.forb': 'Erva',
+        'recommend.graminoid': 'Graminóide',
+        'recommend.palm': 'Palmeira',
+        'recommend.liana': 'Liana',
+        'recommend.vine': 'Trepadeira herbácea',
+        'recommend.scrambler': 'Escandente',
+        'recommend.bamboo': 'Bambu',
+        'recommend.other': 'Outro',
         'recommend.n_fixers': 'Apenas Fixadores de N₂',
         'recommend.exclude_threatened': 'Excluir Ameaçadas',
+        'recommend.include_introduced': 'Incluir Introduzidas',
         'recommend.climate_threshold': 'Limiar de Adaptação Climática:',
         'recommend.experimental': 'Experimental (0.3)',
         'recommend.moderate': 'Moderado (0.5)',
@@ -258,6 +327,7 @@ async function generateRecommendations() {
 
     const preferences = {
         growth_forms: growthForms.length > 0 ? growthForms : undefined,
+        include_introduced: document.getElementById('rec-include-introduced').checked,
         nitrogen_fixers_only: document.getElementById('rec-n-fixers').checked,
         include_threatened: !document.getElementById('rec-exclude-threatened').checked
     };
@@ -335,11 +405,17 @@ function displayRecommendations(data) {
         const growthFormEmoji = {
             'tree': '🌲',
             'shrub': '🌳',
-            'herb': '🌿',
-            'climber': '🌱',
-            'palm': '🌴'
+            'subshrub': '🌿',
+            'forb': '🌼',
+            'graminoid': '🌾',
+            'palm': '🌴',
+            'liana': '🪢',
+            'vine': '🌱',
+            'scrambler': '🪴',
+            'bamboo': '🎋',
+            'other': '🍃'
         };
-        const emoji = growthFormEmoji[sp.growth_form] || '🌱';
+        const emoji = growthFormEmoji[sp.growth_form] || '🍃';
 
         return `
             <tr class="table-row hover:bg-white/5 transition-colors">

@@ -394,22 +394,9 @@ func handleSpecies(w http.ResponseWriter, r *http.Request) {
 	argNum := 2
 
 	if growthForm != "" {
-		switch growthForm {
-		case "tree":
-			query += " AND su.is_tree = TRUE"
-		case "shrub":
-			query += " AND su.is_shrub = TRUE"
-		case "herb":
-			query += " AND su.is_herb = TRUE"
-		case "climber":
-			query += " AND su.is_climber = TRUE"
-		case "palm":
-			query += " AND su.is_palm = TRUE"
-		default:
-			query += fmt.Sprintf(" AND su.growth_form = $%d", argNum)
-			args = append(args, growthForm)
-			argNum++
-		}
+		query += fmt.Sprintf(" AND su.growth_form = $%d", argNum)
+		args = append(args, growthForm)
+		argNum++
 	}
 
 	if nativeOnly {
@@ -428,21 +415,8 @@ func handleSpecies(w http.ResponseWriter, r *http.Request) {
 	countArgNum := 2
 
 	if growthForm != "" {
-		switch growthForm {
-		case "tree":
-			countQuery += " AND su.is_tree = TRUE"
-		case "shrub":
-			countQuery += " AND su.is_shrub = TRUE"
-		case "herb":
-			countQuery += " AND su.is_herb = TRUE"
-		case "climber":
-			countQuery += " AND su.is_climber = TRUE"
-		case "palm":
-			countQuery += " AND su.is_palm = TRUE"
-		default:
-			countQuery += fmt.Sprintf(" AND su.growth_form = $%d", countArgNum)
-			countArgs = append(countArgs, growthForm)
-		}
+		countQuery += fmt.Sprintf(" AND su.growth_form = $%d", countArgNum)
+		countArgs = append(countArgs, growthForm)
 	}
 
 	if nativeOnly {

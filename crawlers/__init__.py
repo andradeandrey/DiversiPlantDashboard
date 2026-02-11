@@ -10,9 +10,11 @@ from .treegoer import TreeGOERCrawler
 from .iucn import IUCNCrawler
 from .try_db import TRYCrawler
 from .practitioners import PractitionersCrawler
+from .gbif_occurrences import GBIFOccurrenceCrawler
 
 CRAWLERS = {
     'gbif': GBIFCrawler,
+    'gbif_occurrences': GBIFOccurrenceCrawler,
     'reflora': REFLORACrawler,
     'gift': GIFTCrawler,
     'wcvp': WCVPCrawler,
@@ -40,6 +42,7 @@ def list_crawlers() -> list:
 __all__ = [
     'BaseCrawler',
     'GBIFCrawler',
+    'GBIFOccurrenceCrawler',
     'REFLORACrawler',
     'GIFTCrawler',
     'WCVPCrawler',

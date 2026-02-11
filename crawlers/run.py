@@ -63,6 +63,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        '--limit',
+        type=int,
+        default=None,
+        help='Limit number of species to process (for gbif_occurrences crawler)'
+    )
+
+    parser.add_argument(
         '--db-url',
         default=None,
         help='Database URL (default: from DATABASE_URL env var)'
@@ -219,6 +226,8 @@ def main():
         kwargs = {}
         if args.max_records:
             kwargs['max_records'] = args.max_records
+        if args.limit:
+            kwargs['limit'] = args.limit
         if args.by_family:
             kwargs['by_family'] = True
 
