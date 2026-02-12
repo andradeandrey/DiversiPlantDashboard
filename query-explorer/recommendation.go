@@ -205,17 +205,40 @@ func executeRecommendation(db *sql.DB, req RecommendRequest) (*RecommendResponse
 		return nil, fmt.Errorf("no species found matching criteria (try lowering climate_threshold)")
 	}
 
-	// 3. Load trait vectors
-	traitVectors, err := loadTraitVectors(db, candidates)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load traits: %w", err)
+	var selected []SpeciesRecommendation
+	var metrics DiversityMetrics
+
+	if req.NSpecies > 0 && req.NSpecies < len(candidates) {
+		// 3. Load trait vectors
+		traitVectors, err := loadTraitVectors(db, candidates)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load traits: %w", err)
+		}
+
+		// 4. Greedy diversity maximization
+		selected = greedyDiversitySelection(candidates, traitVectors, req.NSpecies)
+
+		// 5. Calculate final metrics
+		metrics = calculateDiversityMetrics(selected, traitVectors)
+	} else {
+		// Return all candidates (no greedy selection)
+		selected = candidates
+		for i := range selected {
+			selected[i].SelectionRank = i + 1
+		}
+		metrics = DiversityMetrics{
+			NSpecies: len(selected),
+		}
+		// Count families and growth forms
+		families := map[string]bool{}
+		gforms := map[string]bool{}
+		for _, sp := range selected {
+			families[sp.Family] = true
+			gforms[sp.GrowthForm] = true
+		}
+		metrics.NFamilies = len(families)
+		metrics.NGrowthForms = len(gforms)
 	}
-
-	// 4. Greedy diversity maximization
-	selected := greedyDiversitySelection(candidates, traitVectors, req.NSpecies)
-
-	// 5. Calculate final metrics
-	metrics := calculateDiversityMetrics(selected, traitVectors)
 
 	// 6. Cache result
 	speciesIDs := make([]int64, len(selected))
@@ -384,17 +407,7 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 		  AND calculate_climate_match(s.id, $1, $2, $3, $4, $5) >= $7
 		  %s
 		ORDER BY climate_match_score DESC
-		LIMIT $8
 	`, nativeClause, whereClause)
-
-	// Calculate candidate pool size: at least 2x requested species, min 500, max 2000
-	candidateLimit := req.NSpecies * 2
-	if candidateLimit < 500 {
-		candidateLimit = 500
-	}
-	if candidateLimit > 2000 {
-		candidateLimit = 2000
-	}
 
 	rows, err := db.Query(query,
 		loc.Bio1,
@@ -404,7 +417,6 @@ func getClimateAdaptedSpecies(db *sql.DB, loc LocationInfo, req RecommendRequest
 		loc.Bio15,
 		loc.TDWGCode,
 		req.ClimateThreshold,
-		candidateLimit,
 	)
 	if err != nil {
 		return nil, err
@@ -767,9 +779,9 @@ func handleRecommend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set defaults
-	if req.NSpecies <= 0 || req.NSpecies > 1000 {
-		req.NSpecies = 20
+	// Set defaults (0 = return all candidates, no limit)
+	if req.NSpecies < 0 {
+		req.NSpecies = 0
 	}
 	if req.ClimateThreshold < 0.3 || req.ClimateThreshold > 1.0 {
 		req.ClimateThreshold = 0.6

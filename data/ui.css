@@ -58,13 +58,11 @@ body {
     align-items: center;
 }
 
+/* Base navbar — overridden by green capsule section below */
 .navbar {
     display: flex;
     align-items: center;
     font-size: .875rem;
-    background-color: rgb(155, 162, 172);
-    padding: 10px;
-    border-color: rgb(155, 162, 172);
     z-index: 2;
 }
 
@@ -764,4 +762,218 @@ background-color: #ff1a1a; /* Darker red on hover */
 .whittaker-container h4 {
     margin-bottom: 10px;
     color: #333;
+}
+
+/* =============================================== */
+/* i18n — Bilingual Toggle                         */
+/* =============================================== */
+
+body.lang-pt .i18n-en { display: none !important; }
+body.lang-en .i18n-pt { display: none !important; }
+/* Before JS loads, default to PT */
+body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
+
+.lang-toggle {
+    font-weight: 600;
+    min-width: 38px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    padding: 2px 10px;
+}
+
+/* =============================================== */
+/* Navbar — Green Capsule (Figma)                  */
+/* =============================================== */
+
+.navbar {
+    background: transparent !important;
+    border-bottom: none !important;
+    padding: 8px 0 !important;
+    box-shadow: none;
+    justify-content: center;
+}
+
+.navbar .container-fluid {
+    background-color: #d4e9a2;
+    border-radius: 50px;
+    padding: 6px 20px;
+    gap: 0;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap !important;
+    display: inline-flex !important;
+    width: auto;
+}
+
+.navbar .navbar-brand {
+    padding: 4px 6px 4px 0 !important;
+    margin-right: 0 !important;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    background: transparent;
+}
+
+.navbar .navbar-nav {
+    background: transparent;
+    padding: 0;
+    align-items: center;
+    flex-wrap: nowrap !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0;
+}
+
+/* Force single line — disable collapse on all screens */
+.navbar .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto !important;
+    flex-grow: 0 !important;
+}
+
+.navbar .navbar-toggler {
+    display: none !important;
+}
+
+/* Controls after spacer: outside capsule look */
+.navbar .navbar-nav > .bslib-nav-spacer ~ .nav-item {
+    background: transparent;
+}
+
+/* Remove Bootstrap nav-underline border */
+.navbar .nav-underline .nav-link,
+.navbar .nav-underline .nav-link.active {
+    border-bottom: none !important;
+}
+
+/* Hide Recommend (tab 5) and Admin from the navbar */
+.navbar .nav-item:has(a[data-value="tab_recommend"]),
+.navbar .nav-item:has(a[data-value="tab_admin"]) {
+    display: none !important;
+}
+
+/* Tab badge (numbered circle) — dark grey */
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: #555;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* Nav-link items */
+.navbar .nav-item {
+    display: flex;
+    align-items: center;
+}
+
+.navbar .nav-link {
+    border-radius: 0 !important;
+    padding: 6px 8px !important;
+    margin: 0;
+    font-size: 0.85rem;
+    color: #555;
+    background: transparent !important;
+    transition: color 0.15s;
+    white-space: nowrap;
+    border: none !important;
+    display: flex;
+    align-items: center;
+}
+
+.navbar .nav-link:hover {
+    background: transparent !important;
+    color: #222;
+}
+
+.navbar .nav-link.active {
+    background: transparent !important;
+    color: #222 !important;
+    font-weight: 700;
+}
+
+.navbar .nav-link.active .tab-badge {
+    background-color: #333;
+}
+
+/* Chevron separators between visible tab items */
+.navbar .navbar-nav > .nav-item + .nav-item > .nav-link::before {
+    content: "›";
+    color: #777;
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* Spacer + controls after capsule */
+.navbar .navbar-nav > .bslib-nav-spacer {
+    flex-grow: 0 !important;
+    width: 0;
+}
+.navbar .navbar-nav > .bslib-nav-spacer ~ .nav-item {
+    background: transparent;
+    margin-left: 10px;
+}
+.navbar .navbar-nav > .bslib-nav-spacer ~ .nav-item > .nav-link::before {
+    display: none !important;
+}
+
+/* Lang toggle styling */
+.lang-toggle {
+    border-radius: 20px;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+}
+
+/* =============================================== */
+/* Navigation Buttons (Voltar / Próximo)           */
+/* =============================================== */
+
+.nav-buttons {
+    border-top: 1px solid #dee2e6;
+    padding-top: 16px;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.nav-btn {
+    min-width: 120px;
+    font-weight: 500;
+    padding: 8px 24px;
+    border-radius: 6px;
+}
+
+/* =============================================== */
+/* Recommend Tab                                    */
+/* =============================================== */
+
+.rec-metric-card {
+    text-align: center;
+    padding: 15px;
+}
+.rec-metric-value {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #27ae60;
+}
+.rec-metric-label {
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+.rec-nfix-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: bold;
+    background-color: #27ae60;
+    color: white;
 }

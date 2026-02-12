@@ -1077,17 +1077,25 @@ function displayRecommendations(data) {
                                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/50 transition-all duration-300">
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm text-gray-400 font-medium" data-i18n="ecoregion.limit">Max Species</label>
-                        <input type="number" min="10" max="1000" step="1" value="100" id="eco-limit"
-                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/50 transition-all duration-300">
+                        <label class="text-sm text-gray-400 font-medium flex items-center gap-2">
+                            <span data-i18n="ecoregion.limit">Max Species</span>
+                            <label class="relative inline-flex items-center cursor-pointer ml-auto">
+                                <input type="checkbox" id="eco-all-species" class="sr-only peer" checked
+                                       onchange="document.getElementById('eco-limit').disabled = this.checked; document.getElementById('eco-limit').classList.toggle('opacity-30', this.checked);">
+                                <div class="w-9 h-5 bg-white/10 peer-focus:ring-2 peer-focus:ring-amber-300/20 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                                <span class="ml-2 text-xs text-amber-400" data-i18n="ecoregion.all_species">All</span>
+                            </label>
+                        </label>
+                        <input type="number" min="10" max="50000" step="10" value="100" id="eco-limit" disabled
+                               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-amber-500/50 transition-all duration-300 opacity-30">
                     </div>
                     <div class="space-y-2 col-span-2">
                         <label class="text-sm text-gray-400 font-medium">
                             <span data-i18n="ecoregion.threshold">Climate Match Threshold:</span>
-                            <span id="eco-threshold-value" class="text-amber-400 ml-1">0.5</span>
-                            <span class="text-gray-500 text-xs ml-2" id="eco-threshold-label">(Moderate)</span>
+                            <span id="eco-threshold-value" class="text-amber-400 ml-1">0.3</span>
+                            <span class="text-gray-500 text-xs ml-2" id="eco-threshold-label">(Experimental)</span>
                         </label>
-                        <input type="range" min="0.3" max="0.9" step="0.1" value="0.5" id="eco-threshold"
+                        <input type="range" min="0.3" max="0.9" step="0.1" value="0.3" id="eco-threshold"
                                class="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
                                oninput="updateThresholdLabel(this.value)">
                         <div class="flex justify-between text-xs text-gray-500 mt-1">
@@ -1337,8 +1345,9 @@ function updateThresholdLabel(value) {
 async function lookupEcoregionSpecies() {
     const lat = parseFloat(document.getElementById('eco-lat').value);
     const lon = parseFloat(document.getElementById('eco-lon').value);
-    const limit = parseInt(document.getElementById('eco-limit').value) || 100;
-    const threshold = parseFloat(document.getElementById('eco-threshold').value) || 0.5;
+    const allSpecies = document.getElementById('eco-all-species').checked;
+    const limit = allSpecies ? 0 : (parseInt(document.getElementById('eco-limit').value) || 100);
+    const threshold = parseFloat(document.getElementById('eco-threshold').value) || 0.3;
 
     // Get selected growth forms and expand "herb" automatically
     const selectedForms = Array.from(document.querySelectorAll('.eco-growth-form:checked'))
@@ -1445,7 +1454,19 @@ function displayEcoregionResults(data, growthForms) {
         'other': '🌾'
     };
 
-    tableBody.innerHTML = filteredSpecies.map((sp, idx) => {
+    // Limit table rendering to prevent browser freeze
+    const MAX_DISPLAY = 2000;
+    const displaySpecies = filteredSpecies.slice(0, MAX_DISPLAY);
+
+    let truncationNote = '';
+    if (filteredSpecies.length > MAX_DISPLAY) {
+        const msg = currentLang === 'pt'
+            ? `Mostrando ${MAX_DISPLAY} de ${filteredSpecies.length.toLocaleString()} espécies. Use filtros de forma de crescimento para refinar. Exporte CSV para ver todos.`
+            : `Showing ${MAX_DISPLAY} of ${filteredSpecies.length.toLocaleString()} species. Use growth form filters to narrow results. Export CSV for all.`;
+        truncationNote = `<tr><td colspan="7" class="px-4 py-3 text-center text-amber-400 text-sm font-medium bg-amber-500/10">${msg}</td></tr>`;
+    }
+
+    tableBody.innerHTML = displaySpecies.map((sp, idx) => {
         const climatePercent = (sp.climate_match_score * 100).toFixed(0);
         const climateClass = sp.climate_match_score >= 0.8 ? 'text-emerald-400' :
                             sp.climate_match_score >= 0.6 ? 'text-cyan-400' :
@@ -1482,7 +1503,7 @@ function displayEcoregionResults(data, growthForms) {
                 <td class="px-4 py-3 text-center text-gray-400">${sp.n_observations.toLocaleString()}</td>
             </tr>
         `;
-    }).join('');
+    }).join('') + truncationNote;
 
     // Scroll to results
     document.getElementById('eco-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

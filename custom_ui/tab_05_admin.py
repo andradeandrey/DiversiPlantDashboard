@@ -15,7 +15,7 @@ ADMIN_ICONS = {
 }
 
 admin = ui.nav_panel(
-    "Admin",
+    "Admin",  # Admin tab stays English-only (internal tool)
     ui.page_fluid(
         ui.h2("Admin Panel", class_="admin-title"),
 
@@ -377,5 +377,6 @@ admin = ui.nav_panel(
                 min-width: 150px;
             }
         """)
-    )
+    ),
+    value="tab_admin",
 )

@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-diversiplant}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      POSTGRES_DB: ${DB_NAME:-diversiplant}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-diversiplant}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GO_API_URL: http://go-server:8080/api/recommend
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-diversiplant}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      DB_NAME: ${DB_NAME:-diversiplant}
+    volumes:
+      - ${ECOREGIONS_PATH:-./data/ecoregions_raster}:/app/data/ecoregions_raster:ro
+    networks:
+      - internal
+
+  go-server:
+    build:
+      context: ./query-explorer
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DASHBOARD_URL: http://dashboard:8001
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-diversiplant}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      DB_NAME: ${DB_NAME:-diversiplant}
+      DOMAIN: ${DOMAIN:-diversiplant.andreyandrade.com}
+      CERT_DIR: /certs
+      DEV_MODE: ${DEV_MODE:-false}
+    volumes:
+      - certs_data:/certs
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+    external: true
+    name: ${POSTGRES_VOLUME:-diversiplant_postgres_data}
+  certs_data:
+
+networks:
+  internal:
+    driver: bridge

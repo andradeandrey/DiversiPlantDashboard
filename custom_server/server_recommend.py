@@ -3,7 +3,8 @@ from shiny import render, reactive, ui
 import httpx
 import json
 
-GO_API_URL = "http://127.0.0.1:8080/api/recommend"
+import os
+GO_API_URL = os.environ.get("GO_API_URL", "http://127.0.0.1:8080/api/recommend")
 
 
 def server_recommend(input, output, session):
@@ -22,8 +23,9 @@ def server_recommend(input, output, session):
         rec_data.set(None)
 
         # Build request payload
+        n_species = 0 if input.rec_all_species() else input.rec_n_species()
         payload = {
-            "n_species": input.rec_n_species(),
+            "n_species": n_species,
             "climate_threshold": input.rec_climate_threshold(),
             "preferences": {},
         }
@@ -61,8 +63,11 @@ def server_recommend(input, output, session):
         if input.rec_endemics_only():
             payload["preferences"]["endemics_only"] = True
 
+        import logging
+        logging.warning(f"[RECOMMEND] Payload: {json.dumps(payload)}")
+
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=300.0) as client:
                 resp = await client.post(GO_API_URL, json=payload)
 
             if resp.status_code != 200:
@@ -150,9 +155,16 @@ def server_recommend(input, output, session):
             class_="mb-3",
         )
 
-        # Species table
+        # Growth form summary
+        from collections import Counter
+        gf_counts = Counter(sp.get("growth_form", "") for sp in species_list)
+        gf_summary = ", ".join(f"{k}: {v}" for k, v in gf_counts.most_common())
+
+        # Species table (show first 500 to avoid browser freeze)
+        MAX_DISPLAY = 500
+        display_list = species_list[:MAX_DISPLAY]
         table_rows = []
-        for i, sp in enumerate(species_list, 1):
+        for i, sp in enumerate(display_list, 1):
             climate_pct = sp.get("climate_match_score", 0) * 100
             diversity_pct = sp.get("diversity_contribution", 0) * 100
             nfix = ui.span("N-Fix", class_="rec-nfix-badge") if sp.get("is_nitrogen_fixer") else ""
@@ -195,10 +207,30 @@ def server_recommend(input, output, session):
             class_="table table-striped table-hover",
         )
 
+        truncation_note = ui.div()
+        if len(species_list) > MAX_DISPLAY:
+            truncation_note = ui.div(
+                ui.p(
+                    f"Showing first {MAX_DISPLAY} of {len(species_list)} species. "
+                    f"Use growth form filters to narrow results.",
+                    class_="text-warning",
+                    style="font-weight: 500;",
+                ),
+            )
+
+        gf_info = ui.div(
+            ui.strong("Growth forms: "),
+            gf_summary,
+            class_="mb-2 text-muted",
+            style="font-size: 0.9em;",
+        )
+
         return ui.div(
             metric_cards,
             ui.hr(),
             location_info,
+            gf_info,
+            truncation_note,
             species_table,
         )
 

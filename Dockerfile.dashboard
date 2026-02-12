@@ -1,0 +1,35 @@
+FROM python:3.12-bookworm
+
+# System deps for geopandas, shapely, rpy2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gdal-bin libgdal-dev libgeos-dev libproj-dev \
+    r-base r-base-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# R package: GIFT (needed by crawlers/server)
+RUN R -e "install.packages('GIFT', repos='https://cloud.r-project.org')"
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Application code
+COPY app.py .
+COPY custom_server/ custom_server/
+COPY custom_ui/ custom_ui/
+COPY database/ database/
+COPY i18n/ i18n/
+
+# Small data files baked into image
+COPY data/ui.css data/ui.css
+COPY data/MgmtTraitData_updated.csv data/MgmtTraitData_updated.csv
+COPY data/whittaker_biomes.csv data/whittaker_biomes.csv
+COPY data/img/ data/img/
+
+# Ecoregions raster mounted at runtime via volume
+# VOLUME /app/data/ecoregions_raster
+
+EXPOSE 8001
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "4", "--ws-ping-interval", "48000", "--ws-ping-timeout", "0"]

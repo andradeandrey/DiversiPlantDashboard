@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Go project (built separately)
+query-explorer/
+
+# Large data (mounted as volumes)
+data/ecoregions_raster/
+data/gbif_s3/
+data/wc2/
+data/traitbank_raw/
+data/Ecoregions2017.zip
+
+# R condition scripts
+data/condi*.R
+
+# Dev / IDE
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+figma/
+docs/
+scripts/
+crawlers/
+migrations/
+
+# Binaries
+query-explorer-linux
+query-explorer-test

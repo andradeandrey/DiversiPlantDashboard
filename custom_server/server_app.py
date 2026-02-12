@@ -119,8 +119,168 @@ def server_app(input,output,session):
         # Return the Folium map as raw HTML
         return ui.HTML(world_map._repr_html_())
 
+    # Location badge in navbar (Figma: green pill showing current location)
+    @render.ui
+    @reactive.event(input.update_map)
+    def location_badge():
+        coords = input.longitude_latitude()
+        if not coords or not coords.strip():
+            return ui.span()
+        try:
+            lat, lon = parse_lat_lon(coords)
+            label = f"{lat:.2f}, {lon:.2f}"
+        except Exception:
+            label = coords.strip()
+        return ui.span(
+            ui.span("\U0001F4CD ", style="margin-right: 2px;"),
+            label,
+            class_="badge",
+            style="background-color: #6cb043; color: white; font-size: 0.8em; "
+                  "padding: 5px 12px; border-radius: 20px; font-weight: 500;",
+        )
+
 
 ##Climate
+
+    # --- Ecoregion lookup (WWF Ecoregions 2017) ---
+    ECOREGION_SHP = os.path.join(
+        Path(__file__).parent.parent, "data", "ecoregions_raster", "Ecoregions2017.shp"
+    )
+    _ecoregion_gdf = None  # lazy-loaded
+
+    def _load_ecoregions():
+        nonlocal _ecoregion_gdf
+        if _ecoregion_gdf is None:
+            _ecoregion_gdf = gpd.read_file(ECOREGION_SHP)
+            _ecoregion_gdf = _ecoregion_gdf.to_crs(epsg=4326)
+        return _ecoregion_gdf
+
+    # Map WWF BIOME_NAME → UI biome key
+    _BIOME_NAME_TO_UI = {
+        "Tropical & Subtropical Moist Broadleaf Forests": "Tropical & Subtropical Moist Broadleaf Forests",
+        "Tropical & Subtropical Dry Broadleaf Forests": "Tropical & Subtropical Dry Broadleaf Forests",
+        "Tropical & Subtropical Coniferous Forests": "Temperate Conifer Forests",
+        "Temperate Broadleaf & Mixed Forests": "Temperate Broadleaf & Mixed Forests",
+        "Temperate Conifer Forests": "Temperate Conifer Forests",
+        "Boreal Forests/Taiga": "Boreal Forest (Taiga)",
+        "Tropical & Subtropical Grasslands, Savannas & Shrublands": "Tropical & Subtropical Grasslands, Savannas & Shrublands",
+        "Temperate Grasslands, Savannas & Shrublands": "Temperate Grasslands, Savannas & Shrublands",
+        "Flooded Grasslands & Savannas": "Tropical & Subtropical Grasslands, Savannas & Shrublands",
+        "Montane Grasslands & Shrublands": "Montane Grasslands & Shrublands",
+        "Tundra": "Rock and Ice",
+        "Mediterranean Forests, Woodlands & Scrub": "Mediterranean Forests, Woodlands & Scrub",
+        "Deserts & Xeric Shrublands": "Deserts & Xeric Shrublands",
+        "Mangroves": "Mangroves",
+    }
+
+    def _query_ecoregion(lat, lon):
+        """Find ecoregion at given coordinates. Returns dict or None."""
+        from shapely.geometry import Point
+        gdf = _load_ecoregions()
+        pt = Point(lon, lat)
+        matches = gdf[gdf.geometry.contains(pt)]
+        if matches.empty:
+            return None
+        row = matches.iloc[0]
+        return {
+            "eco_name": row.get("ECO_NAME", ""),
+            "biome_name": row.get("BIOME_NAME", ""),
+            "realm": row.get("REALM", ""),
+            "biome_num": row.get("BIOME_NUM", ""),
+        }
+
+    @render.ui
+    @reactive.event(input.update_map)
+    def ecoregion_map():
+        """Render a Folium map centred on user coordinates with ecoregion popup."""
+        coords = input.longitude_latitude()
+        center = [0, 20]
+        zoom = 3
+        if coords and coords.strip():
+            try:
+                lat, lon = parse_lat_lon(coords)
+                center = [lat, lon]
+                zoom = 8
+            except Exception:
+                pass
+
+        m = folium.Map(location=center, zoom_start=zoom, width="100%", height="380px")
+        folium.TileLayer("OpenStreetMap").add_to(m)
+
+        if coords and coords.strip():
+            try:
+                lat, lon = parse_lat_lon(coords)
+                eco = _query_ecoregion(lat, lon)
+                popup_text = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
+                if eco:
+                    popup_text = (
+                        f"<b>{eco['eco_name']}</b><br>"
+                        f"Biome: {eco['biome_name']}<br>"
+                        f"Realm: {eco['realm']}"
+                    )
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=folium.Popup(popup_text, max_width=280),
+                    icon=folium.Icon(color="green", icon="leaf", prefix="fa"),
+                ).add_to(m)
+            except Exception:
+                pass
+
+        return ui.HTML(m._repr_html_())
+
+    @render.ui
+    @reactive.event(input.update_map)
+    def ecoregion_info():
+        """Show detected ecoregion as info pills."""
+        coords = input.longitude_latitude()
+        if not coords or not coords.strip():
+            return ui.span()
+        try:
+            lat, lon = parse_lat_lon(coords)
+        except Exception:
+            return ui.span()
+
+        eco = _query_ecoregion(lat, lon)
+        if not eco:
+            return ui.p(
+                "Ecoregion not detected for these coordinates.",
+                class_="text-muted",
+                style="font-size: 0.85em;",
+            )
+
+        pill_style = (
+            "display: inline-block; padding: 4px 12px; border-radius: 16px; "
+            "border: 1.5px solid #6cb043; color: #6cb043; font-size: 0.85em; "
+            "font-weight: 500; margin: 2px 4px;"
+        )
+        return ui.div(
+            ui.p(
+                ui.strong(eco["eco_name"]),
+                style="margin-bottom: 4px;",
+            ),
+            ui.span(eco["biome_name"], style=pill_style),
+            ui.span(eco["realm"], style=pill_style),
+            style="margin-bottom: 8px;",
+        )
+
+    @reactive.effect
+    @reactive.event(input.update_map)
+    def _auto_select_biome():
+        """Auto-select biome checkbox based on detected ecoregion."""
+        coords = input.longitude_latitude()
+        if not coords or not coords.strip():
+            return
+        try:
+            lat, lon = parse_lat_lon(coords)
+        except Exception:
+            return
+        eco = _query_ecoregion(lat, lon)
+        if not eco:
+            return
+        biome_name = eco.get("biome_name", "")
+        ui_key = _BIOME_NAME_TO_UI.get(biome_name)
+        if ui_key:
+            ui.update_checkbox_group("biome_types", selected=[ui_key])
 
     # Mapping from Climate Types to Whittaker biomes (using names from plotbiomes dataset)
     CLIMATE_TO_BIOMES = {
@@ -855,17 +1015,43 @@ def server_app(input,output,session):
             with localconverter(robjects.default_converter + pandas2ri.converter):
                 new_species = robjects.conversion.rpy2py(data)
             SPECIES_GIFT_DATAFRAME=new_species
-            families = new_species['family'].unique()
-            families_clean = sorted(families.tolist())
-            dict = {}
-            for family in families_clean:
-                print(dict)
-                dict[family] = {}
-                plants = new_species.query("family == '%s'" % family)['work_species'].tolist()
-                plants.sort()
-                for plant in plants:
-                    dict[family][plant] = plant
-            return dict
+
+            # Group by native vs non-native (Figma: "NATIVAS SUGERIDAS" / "NÃO-NATIVAS")
+            grouped = {}
+            native_key = "NATIVAS SUGERIDAS / NATIVE SUGGESTIONS"
+            nonnative_key = "NÃO-NATIVAS ADAPTADAS / NON-NATIVE ADAPTED"
+
+            native_species = {}
+            nonnative_species = {}
+
+            for _, row in new_species.iterrows():
+                name = row.get("work_species", "")
+                if not name:
+                    continue
+                is_native = row.get("native", 0)
+                if is_native == 1:
+                    native_species[name] = name
+                else:
+                    nonnative_species[name] = name
+
+            # Sort each group
+            if native_species:
+                grouped[native_key] = dict(sorted(native_species.items()))
+            if nonnative_species:
+                grouped[nonnative_key] = dict(sorted(nonnative_species.items()))
+
+            # Fallback: if no grouping possible, group by family
+            if not grouped:
+                families = new_species['family'].unique()
+                families_clean = sorted(families.tolist())
+                for family in families_clean:
+                    grouped[family] = {}
+                    plants = new_species.query("family == '%s'" % family)['work_species'].tolist()
+                    plants.sort()
+                    for plant in plants:
+                        grouped[family][plant] = plant
+
+            return grouped
         else:
             return get_Plants(FILE_NAME)
 

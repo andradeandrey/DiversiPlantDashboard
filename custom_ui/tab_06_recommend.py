@@ -1,32 +1,34 @@
 """Climate-Adapted Species Recommendation tab UI."""
 from shiny import ui
 import faicons as fa
+from custom_ui.i18n import t, tab_title
+from custom_ui.nav_buttons import nav_buttons
 
 GROWTH_FORM_CHOICES = {
-    "tree": "Tree",
-    "shrub": "Shrub",
-    "subshrub": "Subshrub",
-    "forb": "Forb",
-    "graminoid": "Graminoid",
-    "palm": "Palm",
-    "bamboo": "Bamboo",
-    "liana": "Liana",
-    "vine": "Vine",
-    "scrambler": "Scrambler",
-    "other": "Other",
+    "tree": t("Árvore", "Tree"),
+    "shrub": t("Arbusto", "Shrub"),
+    "subshrub": t("Sub-arbusto", "Subshrub"),
+    "forb": t("Herbácea", "Forb"),
+    "graminoid": t("Gramínea", "Graminoid"),
+    "palm": t("Palmeira", "Palm"),
+    "bamboo": t("Bambu", "Bamboo"),
+    "liana": t("Liana", "Liana"),
+    "vine": t("Trepadeira", "Vine"),
+    "scrambler": t("Escandente", "Scrambler"),
+    "other": t("Outro", "Other"),
 }
 
 recommend = ui.nav_panel(
-    ui.div(
-        fa.icon_svg("seedling"),
-        ui.span(" Recommend", style="margin-left: 6px;"),
-        class_="d-flex align-items-center",
-    ),
+    tab_title(5, "Recomendar", "Recommend"),
     ui.page_fluid(
-        ui.h2("Climate-Adapted Species Filter"),
+        ui.h2(t("Filtro de Espécies Adaptadas ao Clima", "Climate-Adapted Species Filter")),
         ui.p(
-            "Generate diverse species recommendations adapted to your location's climate. "
-            "The algorithm maximizes functional diversity while filtering for climate compatibility.",
+            t(
+                "Gere recomendações diversificadas de espécies adaptadas ao clima da sua localização. "
+                "O algoritmo maximiza a diversidade funcional enquanto filtra por compatibilidade climática.",
+                "Generate diverse species recommendations adapted to your location's climate. "
+                "The algorithm maximizes functional diversity while filtering for climate compatibility.",
+            ),
             class_="text-muted",
         ),
 
@@ -35,26 +37,30 @@ recommend = ui.nav_panel(
             ui.column(
                 4,
                 ui.card(
-                    ui.card_header("Location"),
+                    ui.card_header(t("Localização", "Location")),
                     ui.card_body(
                         ui.input_text(
                             "rec_tdwg_code",
-                            "TDWG Code / State:",
+                            t("Código TDWG / Estado:", "TDWG Code / State:"),
                             placeholder="e.g. BZS, BR-SP",
                         ),
-                        ui.p("-- or --", class_="text-center text-muted my-2"),
+                        ui.p(t("-- ou --", "-- or --"), class_="text-center text-muted my-2"),
                         ui.row(
                             ui.column(
                                 6,
                                 ui.input_numeric(
-                                    "rec_lat", "Latitude:", value=None,
+                                    "rec_lat",
+                                    t("Latitude:", "Latitude:"),
+                                    value=None,
                                     min=-90, max=90, step=0.01,
                                 ),
                             ),
                             ui.column(
                                 6,
                                 ui.input_numeric(
-                                    "rec_lon", "Longitude:", value=None,
+                                    "rec_lon",
+                                    t("Longitude:", "Longitude:"),
+                                    value=None,
                                     min=-180, max=180, step=0.01,
                                 ),
                             ),
@@ -62,42 +68,66 @@ recommend = ui.nav_panel(
                     ),
                 ),
                 ui.card(
-                    ui.card_header("Parameters"),
+                    ui.card_header(t("Parâmetros", "Parameters")),
                     ui.card_body(
-                        ui.input_slider(
-                            "rec_n_species",
-                            "Number of species:",
-                            min=5, max=100, value=20, step=5,
+                        ui.input_switch(
+                            "rec_all_species",
+                            t("Retornar todas as espécies", "Return all species"),
+                            value=True,
+                        ),
+                        ui.panel_conditional(
+                            "!input.rec_all_species",
+                            ui.input_slider(
+                                "rec_n_species",
+                                t("Número de espécies:", "Number of species:"),
+                                min=5, max=500, value=50, step=5,
+                            ),
                         ),
                         ui.input_slider(
                             "rec_climate_threshold",
-                            "Climate threshold:",
-                            min=0.3, max=0.9, value=0.6, step=0.05,
+                            t("Limiar climático:", "Climate threshold:"),
+                            min=0.0, max=0.9, value=0.3, step=0.05,
                         ),
                     ),
                 ),
                 ui.card(
-                    ui.card_header("Growth Forms"),
+                    ui.card_header(t("Formas de Crescimento", "Growth Forms")),
                     ui.card_body(
                         ui.input_checkbox_group(
                             "rec_growth_forms",
-                            "Include (leave empty for all):",
+                            t("Incluir (deixe vazio para todos):", "Include (leave empty for all):"),
                             choices=GROWTH_FORM_CHOICES,
                         ),
                     ),
                 ),
                 ui.card(
-                    ui.card_header("Filters"),
+                    ui.card_header(t("Filtros", "Filters")),
                     ui.card_body(
-                        ui.input_switch("rec_nitrogen_fixers", "Nitrogen fixers only", value=False),
-                        ui.input_switch("rec_exclude_threatened", "Exclude threatened species", value=False),
-                        ui.input_switch("rec_include_introduced", "Include introduced species", value=False),
-                        ui.input_switch("rec_endemics_only", "Endemics only", value=False),
+                        ui.input_switch(
+                            "rec_nitrogen_fixers",
+                            t("Apenas fixadores de nitrogênio", "Nitrogen fixers only"),
+                            value=False,
+                        ),
+                        ui.input_switch(
+                            "rec_exclude_threatened",
+                            t("Excluir espécies ameaçadas", "Exclude threatened species"),
+                            value=False,
+                        ),
+                        ui.input_switch(
+                            "rec_include_introduced",
+                            t("Incluir espécies introduzidas", "Include introduced species"),
+                            value=False,
+                        ),
+                        ui.input_switch(
+                            "rec_endemics_only",
+                            t("Apenas endêmicas", "Endemics only"),
+                            value=False,
+                        ),
                     ),
                 ),
                 ui.input_action_button(
                     "rec_generate",
-                    "Generate Recommendations",
+                    t("Gerar Recomendações", "Generate Recommendations"),
                     class_="btn-success btn-lg w-100 mt-2",
                 ),
             ),
@@ -109,6 +139,8 @@ recommend = ui.nav_panel(
                 ui.output_ui("rec_results_section"),
             ),
         ),
+
+        nav_buttons(back_value="tab_results"),
 
         # Inline CSS
         ui.tags.style("""
@@ -136,4 +168,5 @@ recommend = ui.nav_panel(
             }
         """),
     ),
+    value="tab_recommend",
 )

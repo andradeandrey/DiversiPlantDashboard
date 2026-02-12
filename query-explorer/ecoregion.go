@@ -97,12 +97,12 @@ func handleEcoregionSpecies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set defaults
-	if req.Limit <= 0 || req.Limit > 1000 {
-		req.Limit = 100
+	// Set defaults (0 = return all species, no limit)
+	if req.Limit < 0 {
+		req.Limit = 0
 	}
 	if req.ClimateThreshold < 0.1 || req.ClimateThreshold > 1.0 {
-		req.ClimateThreshold = 0.5
+		req.ClimateThreshold = 0.3
 	}
 
 	start := time.Now()
@@ -123,8 +123,16 @@ func handleEcoregionSpecies(w http.ResponseWriter, r *http.Request) {
 		climate = BiomeClimate{}
 	}
 
-	// Get species for the biome with climate adaptation
-	species, totalInBiome, err := getSpeciesForBiome(ecoregion.BiomeNum, climate, req.ClimateThreshold, req.Limit, req.GrowthForms)
+	// Resolve TDWG code for the coordinates (to merge WCVP species)
+	var tdwgCode string
+	err = db.QueryRow(`SELECT level3_code FROM get_tdwg_by_coords($1, $2)`, req.Latitude, req.Longitude).Scan(&tdwgCode)
+	if err != nil {
+		log.Printf("Warning: could not resolve TDWG code for coords: %v", err)
+		// Continue without TDWG enrichment
+	}
+
+	// Get species for the biome with climate adaptation (+ TDWG enrichment)
+	species, totalInBiome, err := getSpeciesForBiome(ecoregion.BiomeNum, climate, req.ClimateThreshold, req.Limit, req.GrowthForms, tdwgCode)
 	if err != nil {
 		log.Printf("Error getting species: %v", err)
 		http.Error(w, fmt.Sprintf(`{"error": "Failed to get species: %s"}`, err.Error()), http.StatusInternalServerError)
@@ -186,18 +194,33 @@ func getClimateAtCoords(lat, lon float64) (BiomeClimate, error) {
 	return climate, nil
 }
 
-// getSpeciesForBiome returns species from ecoregions in the given biome, ordered by climate match
-func getSpeciesForBiome(biomeNum int, climate BiomeClimate, threshold float64, limit int, growthForms []string) ([]EcoregionSpecies, int, error) {
-	// First, get total count of species in this biome
+// getSpeciesForBiome returns species from ecoregions in the given biome + WCVP/TDWG region, ordered by climate match.
+// tdwgCode enriches results with species from species_regions (WCVP) that may not have GBIF ecoregion observations.
+func getSpeciesForBiome(biomeNum int, climate BiomeClimate, threshold float64, limit int, growthForms []string, tdwgCode string) ([]EcoregionSpecies, int, error) {
+	// First, get total count of species in this biome (from both sources)
 	var totalInBiome int
-	err := db.QueryRow(`
-		SELECT COUNT(DISTINCT se.species_id)
-		FROM species_ecoregions se
-		JOIN ecoregions e ON se.eco_id = e.eco_id
-		WHERE e.biome_num = $1
-	`, biomeNum).Scan(&totalInBiome)
-	if err != nil {
-		return nil, 0, err
+	if tdwgCode != "" {
+		err := db.QueryRow(`
+			SELECT COUNT(DISTINCT species_id) FROM (
+				SELECT se.species_id FROM species_ecoregions se
+				JOIN ecoregions e ON se.eco_id = e.eco_id WHERE e.biome_num = $1
+				UNION
+				SELECT sr.species_id FROM species_regions sr WHERE sr.tdwg_code = $2
+			) combined
+		`, biomeNum, tdwgCode).Scan(&totalInBiome)
+		if err != nil {
+			return nil, 0, err
+		}
+	} else {
+		err := db.QueryRow(`
+			SELECT COUNT(DISTINCT se.species_id)
+			FROM species_ecoregions se
+			JOIN ecoregions e ON se.eco_id = e.eco_id
+			WHERE e.biome_num = $1
+		`, biomeNum).Scan(&totalInBiome)
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	// Build growth form filter
@@ -208,25 +231,56 @@ func getSpeciesForBiome(biomeNum int, climate BiomeClimate, threshold float64, l
 			if i > 0 {
 				growthFormFilter += " OR "
 			}
-			growthFormFilter += fmt.Sprintf("LOWER(su.growth_form) LIKE '%%%s%%'", gf)
+			growthFormFilter += fmt.Sprintf("su.growth_form = '%s'", gf)
 		}
 		growthFormFilter += ")"
 	}
 
-	// Build query based on whether we have climate data
-	var query string
-	var rows *sql.Rows
+	// Build LIMIT clause (0 = no limit, return all)
+	limitClause := ""
+	if limit > 0 {
+		limitClause = fmt.Sprintf("LIMIT %d", limit)
+	}
 
-	if climate.Bio1 != nil && climate.Bio5 != nil && climate.Bio6 != nil {
-		// We have climate data - use climate matching
-		query = fmt.Sprintf(`
-			WITH biome_species AS (
-				SELECT DISTINCT se.species_id, SUM(se.n_observations) as total_obs, COUNT(DISTINCT se.eco_id) as n_ecoregions
+	// Build the combined CTE: GBIF ecoregions UNION WCVP/TDWG regions
+	var combinedCTE string
+	if tdwgCode != "" {
+		combinedCTE = fmt.Sprintf(`
+			WITH combined_species AS (
+				SELECT species_id, SUM(total_obs) as total_obs, MAX(n_ecoregions) as n_ecoregions
+				FROM (
+					-- Source 1: GBIF ecoregion observations
+					SELECT se.species_id, SUM(se.n_observations) as total_obs, COUNT(DISTINCT se.eco_id) as n_ecoregions
+					FROM species_ecoregions se
+					JOIN ecoregions e ON se.eco_id = e.eco_id
+					WHERE e.biome_num = $1
+					GROUP BY se.species_id
+					UNION ALL
+					-- Source 2: WCVP/TDWG distribution records
+					SELECT sr.species_id, 0 as total_obs, 0 as n_ecoregions
+					FROM species_regions sr
+					WHERE sr.tdwg_code = '%s'
+				) sources
+				GROUP BY species_id
+			)`, tdwgCode)
+	} else {
+		combinedCTE = `
+			WITH combined_species AS (
+				SELECT se.species_id, SUM(se.n_observations) as total_obs, COUNT(DISTINCT se.eco_id) as n_ecoregions
 				FROM species_ecoregions se
 				JOIN ecoregions e ON se.eco_id = e.eco_id
 				WHERE e.biome_num = $1
 				GROUP BY se.species_id
-			)
+			)`
+	}
+
+	var query string
+	var rows *sql.Rows
+	var err error
+
+	if climate.Bio1 != nil && climate.Bio5 != nil && climate.Bio6 != nil {
+		query = fmt.Sprintf(`
+			%s
 			SELECT
 				s.id,
 				s.canonical_name,
@@ -236,29 +290,23 @@ func getSpeciesForBiome(biomeNum int, climate BiomeClimate, threshold float64, l
 				su.lifespan_years,
 				su.threat_status,
 				COALESCE(calculate_climate_match(s.id, $2, $3, $4, $5, $6), 0.5) as climate_score,
-				bs.n_ecoregions,
-				bs.total_obs
-			FROM biome_species bs
-			JOIN species s ON bs.species_id = s.id
+				cs.n_ecoregions,
+				cs.total_obs
+			FROM combined_species cs
+			JOIN species s ON cs.species_id = s.id
 			LEFT JOIN species_unified su ON s.id = su.species_id
 			WHERE COALESCE(calculate_climate_match(s.id, $2, $3, $4, $5, $6), 0.5) >= $7
+			  AND su.growth_form IS NOT NULL
 			%s
-			ORDER BY climate_score DESC, bs.total_obs DESC
-			LIMIT $8
-		`, growthFormFilter)
+			ORDER BY climate_score DESC, cs.total_obs DESC
+			%s
+		`, combinedCTE, growthFormFilter, limitClause)
 		rows, err = db.Query(query, biomeNum, *climate.Bio1, *climate.Bio5, *climate.Bio6,
 			coalesceFloat(climate.Bio12, 1000), coalesceFloat(climate.Bio15, 50),
-			threshold, limit)
+			threshold)
 	} else {
-		// No climate data - just return by observation count
 		query = fmt.Sprintf(`
-			WITH biome_species AS (
-				SELECT DISTINCT se.species_id, SUM(se.n_observations) as total_obs, COUNT(DISTINCT se.eco_id) as n_ecoregions
-				FROM species_ecoregions se
-				JOIN ecoregions e ON se.eco_id = e.eco_id
-				WHERE e.biome_num = $1
-				GROUP BY se.species_id
-			)
+			%s
 			SELECT
 				s.id,
 				s.canonical_name,
@@ -268,16 +316,17 @@ func getSpeciesForBiome(biomeNum int, climate BiomeClimate, threshold float64, l
 				su.lifespan_years,
 				su.threat_status,
 				0.5 as climate_score,
-				bs.n_ecoregions,
-				bs.total_obs
-			FROM biome_species bs
-			JOIN species s ON bs.species_id = s.id
+				cs.n_ecoregions,
+				cs.total_obs
+			FROM combined_species cs
+			JOIN species s ON cs.species_id = s.id
 			LEFT JOIN species_unified su ON s.id = su.species_id
-			WHERE 1=1 %s
-			ORDER BY bs.total_obs DESC
-			LIMIT $2
-		`, growthFormFilter)
-		rows, err = db.Query(query, biomeNum, limit)
+			WHERE su.growth_form IS NOT NULL
+			%s
+			ORDER BY cs.total_obs DESC
+			%s
+		`, combinedCTE, growthFormFilter, limitClause)
+		rows, err = db.Query(query, biomeNum)
 	}
 
 	if err != nil {

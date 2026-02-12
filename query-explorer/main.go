@@ -132,7 +132,15 @@ func main() {
 			},
 		}
 
-		// HTTP redirect to HTTPS
+		// Internal HTTP on :8080 for inter-container communication
+		go func() {
+			log.Println("Starting internal API server on :8080")
+			if err := http.ListenAndServe(":8080", handler); err != nil {
+				log.Printf("Internal API server error: %v", err)
+			}
+		}()
+
+		// HTTP redirect to HTTPS (+ ACME challenge)
 		go func() {
 			redirectServer := &http.Server{
 				Addr:    ":80",
@@ -150,7 +158,8 @@ func main() {
 }
 
 func newDashboardProxy() http.Handler {
-	target, _ := url.Parse("http://127.0.0.1:8001")
+	dashboardURL := getEnv("DASHBOARD_URL", "http://127.0.0.1:8001")
+	target, _ := url.Parse(dashboardURL)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 
 	// Custom error handler for when the Python server is offline

@@ -1,0 +1,11 @@
+# Binaries
+diversiplant-server
+query-explorer
+query-explorer-linux
+query-explorer-test
+
+# Logs
+*.log
+
+# IDE
+.vscode/

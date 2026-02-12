@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from shiny import ui, App
+from shiny import ui, App, reactive
 import os
 import uvicorn
 
@@ -18,29 +18,38 @@ from custom_ui.tab_02_climate import climate
 from custom_ui.tab_03_species import main_species
 from custom_ui.tab_05_admin import admin
 from custom_ui.tab_06_recommend import recommend
+from custom_ui.i18n import lang_toggle, lang_init_script
 
 from custom_server.server_app import server_app
 from custom_server.server_admin import server_admin
 from custom_server.server_homepage import server_homepage
 from custom_server.server_recommend import server_recommend
-css_file = os.path.join(Path(__file__).parent,"data","ui.css")
+css_file = os.path.join(Path(__file__).parent, "data", "ui.css")
 
 
 # TODO: mount each tab like litefarm dashboard.
 
-app_ui=ui.page_fluid(
+app_ui = ui.page_fluid(
     ui.include_css(css_file),
+    lang_init_script(),
     ui.page_navbar(
-    start,
-    location,
-    climate,
-    main_species,
-    # details,
-    results,
-    recommend,
-    admin,
-    title=ui.div("DiversiPlant", class_="title"),
-    )
+        start,
+        location,
+        climate,
+        main_species,
+        # details,
+        results,
+        recommend,
+        admin,
+        ui.nav_spacer(),
+        ui.nav_control(ui.output_ui("location_badge")),
+        ui.nav_control(lang_toggle()),
+        title=ui.span(
+            "\U0001F334",
+            style="font-size: 1.6rem; line-height: 1;",
+        ),
+        id="main_nav",
+    ),
 )
 
 
@@ -49,6 +58,12 @@ def combined_server(input, output, session):
     server_app(input, output, session)
     server_admin(input, output, session)
     server_recommend(input, output, session)
+
+    # Navigation handler for Voltar/Próximo buttons
+    @reactive.effect
+    @reactive.event(input._nav_to)
+    def _navigate():
+        ui.update_navs("main_nav", selected=input._nav_to())
 
 static_dir = Path(__file__).parent / "data"
 shiny_app = App(app_ui, combined_server, static_assets=static_dir)
@@ -68,4 +83,4 @@ app = Starlette(routes=routes)
 app.add_middleware(SessionMiddleware, secret_key="feur")
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host='127.0.0.1', port=8001, workers=16, ws_ping_interval = 48000, ws_ping_timeout= None)
+    uvicorn.run("app:app", host='0.0.0.0', port=8001, workers=4, ws_ping_interval = 48000, ws_ping_timeout= None)
