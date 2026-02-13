@@ -249,7 +249,7 @@ def server_app(input,output,session):
         }
 
     @render.ui
-    @reactive.event(input.update_map)
+    @reactive.event(input.update_map, input.main_nav)
     def ecoregion_map():
         """Render a Folium map centred on user coordinates with ecoregion popup."""
         coords = input.longitude_latitude()
@@ -263,7 +263,7 @@ def server_app(input,output,session):
             except Exception:
                 pass
 
-        m = folium.Map(location=center, zoom_start=zoom, width="100%", height="700px")
+        m = folium.Map(location=center, zoom_start=zoom, width="100%", height="1050px")
         folium.TileLayer("OpenStreetMap").add_to(m)
 
         if coords and coords.strip():
@@ -288,7 +288,7 @@ def server_app(input,output,session):
         return ui.HTML(m._repr_html_())
 
     @render.ui
-    @reactive.event(input.update_map)
+    @reactive.event(input.update_map, input.main_nav)
     def ecoregion_info():
         """Show detected ecoregion as info pills."""
         coords = input.longitude_latitude()
@@ -323,7 +323,7 @@ def server_app(input,output,session):
         )
 
     @reactive.effect
-    @reactive.event(input.update_map)
+    @reactive.event(input.update_map, input.main_nav)
     def _auto_select_biome():
         """Auto-select biome checkbox based on detected ecoregion."""
         coords = input.longitude_latitude()

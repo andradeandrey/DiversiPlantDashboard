@@ -657,8 +657,8 @@ background-color: #ff1a1a; /* Darker red on hover */
 }
 
 .climate-map-col iframe {
-    height: 700px !important;
-    min-height: 700px !important;
+    height: 1050px !important;
+    min-height: 1050px !important;
     border-radius: 10px;
 }
 
@@ -676,24 +676,40 @@ background-color: #ff1a1a; /* Darker red on hover */
 .climate-right-col .shiny-input-checkboxgroup,
 .climate-column .shiny-input-checkboxgroup,
 .biome-column .shiny-input-checkboxgroup {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 16px 10px !important;
+    row-gap: 16px !important;
 }
 
-.climate-right-col .shiny-input-checkboxgroup .checkbox,
-.climate-column .shiny-input-checkboxgroup .checkbox,
-.biome-column .shiny-input-checkboxgroup .checkbox {
-    margin: 0;
+.climate-right-col .shiny-input-checkboxgroup > .checkbox,
+.climate-column .shiny-input-checkboxgroup > .checkbox,
+.biome-column .shiny-input-checkboxgroup > .checkbox {
+    margin: 0 !important;
+}
+
+.tab-pane[data-value="tab_climate"] .shiny-input-checkboxgroup {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    row-gap: 16px !important;
+    gap: 16px 10px !important;
+}
+
+.tab-pane[data-value="tab_climate"] .shiny-input-checkboxgroup > .checkbox,
+.tab-pane[data-value="tab_climate"] .shiny-input-checkboxgroup > .checkbox-inline {
+    margin: 0 !important;
+    display: inline-block !important;
 }
 
 .climate-right-col .shiny-input-checkboxgroup label,
 .climate-column .shiny-input-checkboxgroup label,
-.biome-column .shiny-input-checkboxgroup label {
-    display: inline-flex;
+.biome-column .shiny-input-checkboxgroup label,
+.tab-pane[data-value="tab_climate"] .shiny-input-checkboxgroup label,
+.tab-pane[data-value="tab_climate"] .checkbox-inline {
+    display: inline-flex !important;
     align-items: center;
-    padding: 6px 14px;
-    margin: 0;
+    padding: 10px 18px !important;
+    margin: 4px 4px !important;
     border: 2px solid #ccc;
     border-radius: 25px;
     cursor: pointer;
@@ -701,6 +717,7 @@ background-color: #ff1a1a; /* Darker red on hover */
     transition: all 0.2s ease;
     font-size: 13px;
     user-select: none;
+    line-height: 1.5;
 }
 
 .climate-right-col .shiny-input-checkboxgroup label:hover,
