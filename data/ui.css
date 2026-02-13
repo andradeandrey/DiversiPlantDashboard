@@ -788,15 +788,17 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
 .navbar {
     background: transparent !important;
     border-bottom: none !important;
-    padding: 8px 0 !important;
+    padding: 15px 0 8px !important;
     box-shadow: none;
     justify-content: center;
 }
 
 .navbar .container-fluid {
-    background-color: #d4e9a2;
+    background-color: rgba(212, 233, 162, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 50px;
-    padding: 6px 20px;
+    padding: 14px 28px;
     gap: 0;
     align-items: center;
     justify-content: center;
@@ -1024,6 +1026,62 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     background-color: #3d6a4b;
     border-color: #3d6a4b;
     color: #fff;
+}
+
+/* ── Welcome hero image — full height ── */
+
+/* Float navbar over content when Start tab is active */
+body:has(.tab-pane[data-value="tab_start"].active) .navbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+}
+
+/* Kill ALL padding/margin around the start tab so the image is edge-to-edge */
+.tab-content:has(.tab-pane[data-value="tab_start"].active) {
+    padding: 0 !important;
+}
+
+.tab-content > .tab-pane[data-value="tab_start"] {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* The outer container-fluid wrapping .tab-content */
+.container-fluid:has(> .tab-content) {
+    padding: 0 !important;
+}
+
+/* The inner container-fluid from page_fluid (has inline padding: 10px 20px) */
+.tab-pane[data-value="tab_start"] .container-fluid {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+#start-step-1 {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#start-step-1 > .row {
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.welcome-hero-col {
+    height: 100vh;
+    padding: 0 !important;
+}
+
+.welcome-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 /* ── Step cards on hero image ── */

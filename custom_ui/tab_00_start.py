@@ -125,9 +125,10 @@ start = ui.nav_panel(
                     6,
                     ui.img(
                         src="img/homepage.jpg",
-                        style="width: 95%; height: 100%; object-fit: cover; border-radius: 8px;",
+                        class_="welcome-hero-img",
                     ),
-                    style="display: flex; align-items: stretch; padding: 0;",
+                    style="padding: 0; overflow: hidden;",
+                    class_="welcome-hero-col",
                 ),
             ),
             id="start-step-1",
