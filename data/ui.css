@@ -617,6 +617,106 @@ background-color: #ff1a1a; /* Darker red on hover */
 }
 
 /* =============================================== */
+/* Species Tab Styles                              */
+/* =============================================== */
+
+.species-search-bar {
+    max-width: 600px;
+    margin: 20px auto 16px;
+    text-align: center;
+}
+
+.species-search-bar .selectize-input {
+    border: 2px solid #6cb043 !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    font-size: 14px !important;
+    min-height: auto !important;
+    height: auto !important;
+    background: #fff !important;
+}
+
+.species-search-bar .selectize-input input::placeholder {
+    color: #6cb043 !important;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+.species-search-bar .selectize-control {
+    height: auto !important;
+    padding: 0 !important;
+}
+
+.species-filters-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 0 24px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.species-filter-item {
+    flex: 0 1 auto;
+}
+
+.species-filter-item .form-group {
+    margin-bottom: 0;
+}
+
+.species-filter-item select.form-select {
+    border: 1.5px solid #ccc !important;
+    border-radius: 20px !important;
+    padding: 6px 30px 6px 14px !important;
+    font-size: 13px !important;
+    background-color: #fff !important;
+    appearance: auto;
+    min-width: 120px;
+}
+
+.species-filter-simplify {
+    margin-left: auto;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 0;
+}
+
+.species-simplify-btn {
+    border-radius: 20px !important;
+    padding: 6px 16px !important;
+    font-size: 13px !important;
+    white-space: nowrap;
+}
+
+.species-grid-area {
+    background-color: #f0f7ec;
+    border-radius: 10px;
+    margin: 0 24px;
+    padding: 16px;
+    min-height: 400px;
+}
+
+/* Floating nav buttons for species tab */
+.tab-pane[data-value="tab_species"] .nav-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: 1px solid #e9ecef;
+    padding: 12px 50px;
+    max-width: 100%;
+    margin: 0;
+}
+
+.tab-pane[data-value="tab_species"] .nav-buttons .btn-outline-secondary {
+    background-color: #fff;
+}
+
+/* =============================================== */
 /* Climate Tab Styles                              */
 /* =============================================== */
 

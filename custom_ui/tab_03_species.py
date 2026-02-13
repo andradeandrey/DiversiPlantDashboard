@@ -41,278 +41,232 @@ def _symbol_badge(pt, en, color, icon):
 main_species = ui.nav_panel(
     tab_title(3, "Espécies", "Species"),
     ui.page_fluid(
-        # Top section: species search
+        # Search input — centered
+        ui.div(
+            ui.input_selectize(
+                "overview_plants",
+                "",
+                choices=get_Plants(FILE_NAME),
+                multiple=True,
+                options={
+                    "placeholder": "Digite aqui as espécies que você gostaria de plantar...",
+                    "create": True,
+                },
+            ),
+            class_="species-search-bar",
+        ),
+
+        # Filter dropdowns row
+        ui.div(
+            ui.div(
+                ui.input_select(
+                    "filter_growth_form",
+                    "",
+                    choices={
+                        "": t("Forma de crescimento", "Growth form"),
+                        "tree": t("Árvore", "Tree"),
+                        "shrub": t("Arbusto", "Shrub"),
+                        "subshrub": t("Sub-arbusto", "Subshrub"),
+                        "herb": t("Herbácea", "Herb"),
+                        "climber": t("Trepadeira", "Climber"),
+                        "palm": t("Palmeira", "Palm"),
+                        "bamboo": t("Bambu", "Bamboo"),
+                        "cactus": t("Cacto", "Cactus"),
+                    },
+                ),
+                class_="species-filter-item",
+            ),
+            ui.div(
+                ui.input_select(
+                    "filter_plant_use",
+                    "",
+                    choices={
+                        "": t("Uso da planta", "Plant use"),
+                        "food": t("Alimento", "Food"),
+                        "timber": t("Madeira", "Timber"),
+                        "medicinal": t("Medicinal", "Medicinal"),
+                        "ornamental": t("Ornamental", "Ornamental"),
+                    },
+                ),
+                class_="species-filter-item",
+            ),
+            ui.div(
+                ui.input_select(
+                    "filter_threat",
+                    "",
+                    choices={
+                        "": t("Ameaça à conservação", "Conservation threat"),
+                        "LC": "LC",
+                        "NT": "NT",
+                        "VU": "VU",
+                        "EN": "EN",
+                        "CR": "CR",
+                    },
+                ),
+                class_="species-filter-item",
+            ),
+            ui.div(
+                ui.input_select(
+                    "filter_nfix",
+                    "",
+                    choices={
+                        "": t("Fixador biológico de N", "N-fixer"),
+                        "yes": t("Sim", "Yes"),
+                        "no": t("Não", "No"),
+                    },
+                ),
+                class_="species-filter-item",
+            ),
+            ui.div(
+                ui.input_select(
+                    "filter_deciduousness",
+                    "",
+                    choices={
+                        "": t("Deciduidade", "Deciduousness"),
+                        "deciduous": t("Decídua", "Deciduous"),
+                        "evergreen": t("Perene", "Evergreen"),
+                        "semi": t("Semi-decídua", "Semi-deciduous"),
+                    },
+                ),
+                class_="species-filter-item",
+            ),
+            # Simplify button
+            ui.div(
+                ui.tags.button(
+                    t("Simplificar sistema", "Simplify system"),
+                    class_="btn btn-outline-secondary btn-sm species-simplify-btn",
+                    **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
+                ),
+                class_="species-filter-simplify",
+            ),
+            class_="species-filters-row",
+        ),
+
+        # Simplify modal
+        ui.HTML("""
+        <div class="modal fade" id="simplifyModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <span class="i18n-pt">Simplificar gráfico</span>
+                  <span class="i18n-en">Simplify chart</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" id="simplify-modal-body"></div>
+            </div>
+          </div>
+        </div>
+        """),
+
+        # Symbols modal
+        ui.HTML("""
+        <div class="modal fade" id="symbolsModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <span class="i18n-pt">Símbolos</span>
+                  <span class="i18n-en">Symbols</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" id="symbols-modal-body"></div>
+            </div>
+          </div>
+        </div>
+        """),
+
+        # Symbols modal body content (moved into modal via JS)
+        ui.div(
+            *[_symbol_badge(pt, en, color, icon) for pt, en, color, icon in _SYMBOLS],
+            id="symbols-content",
+            style="display: none;",
+        ),
+
+        # Binning controls (hidden; moved into simplify modal via JS)
         ui.div(
             ui.div(
                 ui.div(
-                    # Left: species input
-                    ui.div(
-                        ui.p(
-                            t(
-                                "Digite aqui as espécies que você gostaria de plantar...",
-                                "Type the species you'd like to plant...",
-                            ),
-                            class_="bold-text",
-                        ),
-                        ui.input_selectize(
-                            "overview_plants",
-                            "",
-                            choices=get_Plants(FILE_NAME),
-                            multiple=True,
-                            options={
-                                "placeholder": "Type name here...",
-                                "create": True,
-                            },
-                        ),
-                        class_="left-section-sm",
-                    ),
-                    # Right: instructions
-                    ui.div(
-                        ui.p(
-                            t(
-                                "Mais de 1 espécie no mesmo retângulo abaixo indica que provavelmente "
-                                "competirão. Você ainda pode combiná-las, mas precisaria reduzir a densidade.",
-                                "More than 1 species in the same rectangle below indicate that they will "
-                                "likely compete. You might still combine them, but would probably need to "
-                                "reduce the density of each.",
-                            ),
-                        ),
-                        class_="right-section-sm",
-                    ),
-                    class_="flex-container-ms",
-                ),
-                class_="grey-container",
-            ),
-
-            # Filter dropdowns (matching Figma)
-            ui.div(
-                ui.div(
-                    ui.div(
-                        ui.input_select(
-                            "filter_growth_form",
-                            t("Forma de crescimento", "Growth form"),
-                            choices={
-                                "": t("Todos", "All"),
-                                "tree": t("Árvore", "Tree"),
-                                "shrub": t("Arbusto", "Shrub"),
-                                "subshrub": t("Sub-arbusto", "Subshrub"),
-                                "herb": t("Herbácea", "Herb"),
-                                "climber": t("Trepadeira", "Climber"),
-                                "palm": t("Palmeira", "Palm"),
-                                "bamboo": t("Bambu", "Bamboo"),
-                                "cactus": t("Cacto", "Cactus"),
-                            },
-                        ),
-                        style="flex: 1; min-width: 140px;",
-                    ),
-                    ui.div(
-                        ui.input_select(
-                            "filter_plant_use",
-                            t("Uso da planta", "Plant use"),
-                            choices={
-                                "": t("Todos", "All"),
-                                "food": t("Alimento", "Food"),
-                                "timber": t("Madeira", "Timber"),
-                                "medicinal": t("Medicinal", "Medicinal"),
-                                "ornamental": t("Ornamental", "Ornamental"),
-                            },
-                        ),
-                        style="flex: 1; min-width: 140px;",
-                    ),
-                    ui.div(
-                        ui.input_select(
-                            "filter_threat",
-                            t("Ameaça à conservação", "Conservation threat"),
-                            choices={
-                                "": t("Todos", "All"),
-                                "LC": "LC",
-                                "NT": "NT",
-                                "VU": "VU",
-                                "EN": "EN",
-                                "CR": "CR",
-                            },
-                        ),
-                        style="flex: 1; min-width: 140px;",
-                    ),
-                    ui.div(
-                        ui.input_select(
-                            "filter_nfix",
-                            t("Fixador biológico de N", "N-fixer"),
-                            choices={
-                                "": t("Todos", "All"),
-                                "yes": t("Sim", "Yes"),
-                                "no": t("Não", "No"),
-                            },
-                        ),
-                        style="flex: 1; min-width: 140px;",
-                    ),
-                    ui.div(
-                        ui.input_select(
-                            "filter_deciduousness",
-                            t("Deciduidade", "Deciduousness"),
-                            choices={
-                                "": t("Todos", "All"),
-                                "deciduous": t("Decídua", "Deciduous"),
-                                "evergreen": t("Perene", "Evergreen"),
-                                "semi": t("Semi-decídua", "Semi-deciduous"),
-                            },
-                        ),
-                        style="flex: 1; min-width: 140px;",
-                    ),
-                    # Simplify button
-                    ui.div(
-                        ui.tags.button(
-                            t("Simplificar sistema", "Simplify system"),
-                            class_="btn btn-outline-secondary btn-sm",
-                            **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
-                        ),
-                        style="display: flex; align-items: end; padding-bottom: 16px;",
-                    ),
-                    style="display: flex; gap: 10px; flex-wrap: wrap;",
-                ),
-                class_="grey-container mt-2",
-            ),
-
-            # Simplify modal (Figma: "Simplificar gráfico")
-            ui.HTML("""
-            <div class="modal fade" id="simplifyModal" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">
-                      <span class="i18n-pt">Simplificar gráfico</span>
-                      <span class="i18n-en">Simplify chart</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <div class="modal-body" id="simplify-modal-body"></div>
-                </div>
-              </div>
-            </div>
-            """),
-
-            # Symbols modal (Figma screenshot 7)
-            ui.div(
-                ui.HTML("""
-                <div class="modal fade" id="symbolsModal" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title">
-                          <span class="i18n-pt">Símbolos</span>
-                          <span class="i18n-en">Symbols</span>
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                      </div>
-                      <div class="modal-body" id="symbols-modal-body"></div>
-                    </div>
-                  </div>
-                </div>
-                """),
-            ),
-
-            # Symbols modal body content (rendered by Shiny, moved into modal via JS)
-            ui.div(
-                *[_symbol_badge(pt, en, color, icon) for pt, en, color, icon in _SYMBOLS],
-                id="symbols-content",
-                style="display: none;",
-            ),
-
-            # Symbols button (floats near chart area)
-            ui.div(
-                ui.tags.button(
-                    t("Símbolos", "Symbols"),
-                    class_="btn btn-outline-success btn-sm",
-                    **{"data-bs-toggle": "modal", "data-bs-target": "#symbolsModal"},
-                ),
-                style="text-align: right; margin-top: 8px; margin-bottom: 4px;",
-            ),
-
-            # Binning controls (hidden; moved into simplify modal via JS)
-            ui.div(
-                ui.div(
-                    ui.div(
-                        ui.p(
-                            t("Nº de categorias de demanda de luz", "Light demand categories"),
-                            class_="bold-text",
-                        ),
-                        ui.input_select(
-                            "stratum_bins",
-                            "",
-                            choices={
-                                "2": "2", "3": "3", "4": "4", "5": "5",
-                                "6": "6", "7": "7", "8": "8", "9": "9",
-                            },
-                            selected="4",
-                        ),
-                        style="flex: 1; padding-right: 10px;",
-                    ),
-                    ui.div(
-                        ui.p(
-                            t("Nº de períodos de colheita", "Harvest period divisions"),
-                            class_="bold-text",
-                        ),
-                        ui.input_select(
-                            "harvest_bins",
-                            "",
-                            choices={
-                                "2": "2", "3": "3", "4": "4", "5": "5",
-                                "6": "6", "7": "7", "8": "8", "9": "9", "10": "10",
-                            },
-                            selected="4",
-                        ),
-                        style="flex: 1; padding-left: 10px;",
-                    ),
-                    style="display: flex; gap: 20px;",
-                ),
-                class_="grey-container",
-                id="binning-controls",
-                style="display: none;",
-            ),
-
-            # Visualization Output
-            ui.div(
-                output_widget("intercrops"),
-            ),
-            ui.p(""),
-
-            # Lifetime Section
-            ui.div(
-                ui.div(
                     ui.p(
-                        t("Tempo de vida", "Lifetime"),
+                        t("Nº de categorias de demanda de luz", "Light demand categories"),
                         class_="bold-text",
                     ),
-                    ui.help_text(
-                        t(
-                            "Visualize o crescimento das espécies selecionadas ao longo do tempo",
-                            "Visualize the growth of selected species over time",
-                        ),
+                    ui.input_select(
+                        "stratum_bins",
+                        "",
+                        choices={
+                            "2": "2", "3": "3", "4": "4", "5": "5",
+                            "6": "6", "7": "7", "8": "8", "9": "9",
+                        },
+                        selected="4",
                     ),
-                    ui.input_slider("life_time", "", min=0, max=101, value=1, step=0.5),
-                    class_="center-content",
+                    style="flex: 1; padding-right: 10px;",
                 ),
-                class_="grey-container",
+                ui.div(
+                    ui.p(
+                        t("Nº de períodos de colheita", "Harvest period divisions"),
+                        class_="bold-text",
+                    ),
+                    ui.input_select(
+                        "harvest_bins",
+                        "",
+                        choices={
+                            "2": "2", "3": "3", "4": "4", "5": "5",
+                            "6": "6", "7": "7", "8": "8", "9": "9", "10": "10",
+                        },
+                        selected="4",
+                    ),
+                    style="flex: 1; padding-left: 10px;",
+                ),
+                style="display: flex; gap: 20px;",
             ),
+            class_="grey-container",
+            id="binning-controls",
+            style="display: none;",
+        ),
 
-            # Growth Visualization Output
+        # Main grid visualization
+        ui.div(
+            output_widget("intercrops"),
+            class_="species-grid-area",
+        ),
+
+        # Lifetime Section
+        ui.div(
             ui.div(
-                output_widget("plot_plants"),
-                class_="main-content",
+                ui.p(
+                    t("Tempo de vida", "Lifetime"),
+                    class_="bold-text",
+                ),
+                ui.help_text(
+                    t(
+                        "Visualize o crescimento das espécies selecionadas ao longo do tempo",
+                        "Visualize the growth of selected species over time",
+                    ),
+                ),
+                ui.input_slider("life_time", "", min=0, max=101, value=1, step=0.5),
+                class_="center-content",
             ),
+            class_="grey-container",
+        ),
+
+        # Growth Visualization Output
+        ui.div(
+            output_widget("plot_plants"),
+            class_="main-content",
         ),
 
         # JS: move binning controls into simplify modal, symbols content into symbols modal
         ui.tags.script("""
             document.addEventListener('DOMContentLoaded', function() {
-                // Move binning controls into simplify modal body
                 var binning = document.getElementById('binning-controls');
                 var simplifyBody = document.getElementById('simplify-modal-body');
                 if (binning && simplifyBody) {
                     simplifyBody.appendChild(binning);
                     binning.style.display = '';
                 }
-                // Move symbols content into symbols modal body
                 var symbols = document.getElementById('symbols-content');
                 var symbolsBody = document.getElementById('symbols-modal-body');
                 if (symbols && symbolsBody) {
@@ -323,6 +277,7 @@ main_species = ui.nav_panel(
         """),
 
         nav_buttons(back_value="tab_climate", next_value="tab_results"),
+        style="position: relative; padding-bottom: 70px;",
     ),
     value="tab_species",
 )
