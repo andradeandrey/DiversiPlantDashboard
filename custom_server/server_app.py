@@ -206,6 +206,7 @@ def server_app(input,output,session):
         Path(__file__).parent.parent, "data", "ecoregions_raster", "Ecoregions2017.shp"
     )
     _ecoregion_gdf = None  # lazy-loaded
+    _ecoregion_simplified = None  # simplified for map overlay
 
     def _load_ecoregions():
         nonlocal _ecoregion_gdf
@@ -213,6 +214,15 @@ def server_app(input,output,session):
             _ecoregion_gdf = gpd.read_file(ECOREGION_SHP)
             _ecoregion_gdf = _ecoregion_gdf.to_crs(epsg=4326)
         return _ecoregion_gdf
+
+    def _load_ecoregions_simplified():
+        """Load simplified ecoregions for map overlay (much smaller geometry)."""
+        nonlocal _ecoregion_simplified
+        if _ecoregion_simplified is None:
+            gdf = _load_ecoregions().copy()
+            gdf["geometry"] = gdf["geometry"].simplify(tolerance=0.05, preserve_topology=True)
+            _ecoregion_simplified = gdf
+        return _ecoregion_simplified
 
     # Map WWF BIOME_NAME → UI biome key
     _BIOME_NAME_TO_UI = {
@@ -248,27 +258,83 @@ def server_app(input,output,session):
             "biome_num": row.get("BIOME_NUM", ""),
         }
 
+    # Biome color palette (WWF standard-ish)
+    _BIOME_COLORS = {
+        1: "#006400",   # Tropical Moist Broadleaf
+        2: "#8B8B00",   # Tropical Dry Broadleaf
+        3: "#4B8B3B",   # Tropical Coniferous
+        4: "#228B22",   # Temperate Broadleaf & Mixed
+        5: "#2E8B57",   # Temperate Conifer
+        6: "#4682B4",   # Boreal Forests/Taiga
+        7: "#DAA520",   # Tropical Grasslands/Savannas
+        8: "#BDB76B",   # Temperate Grasslands
+        9: "#5F9EA0",   # Flooded Grasslands
+        10: "#8FBC8F",  # Montane Grasslands
+        11: "#B0C4DE",  # Tundra
+        12: "#CD853F",  # Mediterranean Forests
+        13: "#DEB887",  # Deserts & Xeric
+        14: "#20B2AA",  # Mangroves
+        98: "#AAAAAA",  # Rock and Ice
+        99: "#6495ED",  # Lakes / Water
+    }
+
+    def _biome_style(feature):
+        biome_num = feature["properties"].get("BIOME_NUM", 0)
+        color = _BIOME_COLORS.get(int(biome_num), "#999999")
+        return {
+            "fillColor": color,
+            "color": "#444",
+            "weight": 0.5,
+            "fillOpacity": 0.35,
+        }
+
     @render.ui
     @reactive.event(input.update_map, input.main_nav)
     def ecoregion_map():
-        """Render a Folium map centred on user coordinates with ecoregion popup."""
+        """Render a Folium map centred on user coordinates with ecoregion overlay."""
         coords = input.longitude_latitude()
         center = [0, 20]
         zoom = 3
+        lat, lon = None, None
         if coords and coords.strip():
             try:
                 lat, lon = parse_lat_lon(coords)
                 center = [lat, lon]
                 zoom = 8
             except Exception:
-                pass
+                lat, lon = None, None
 
         m = folium.Map(location=center, zoom_start=zoom, width="100%", height="1050px")
         folium.TileLayer("OpenStreetMap").add_to(m)
 
-        if coords and coords.strip():
+        # Add ecoregion overlay — filter to visible area for performance
+        try:
+            gdf = _load_ecoregions_simplified()
+            if lat is not None and lon is not None:
+                # Filter to ~5 degrees around the point for zoomed view
+                bbox = gdf.cx[lon - 5:lon + 5, lat - 5:lat + 5]
+            else:
+                # Global view — show all but with very simplified geometry
+                bbox = gdf.copy()
+                bbox["geometry"] = bbox["geometry"].simplify(tolerance=0.2, preserve_topology=True)
+
+            if not bbox.empty:
+                folium.GeoJson(
+                    bbox[["geometry", "ECO_NAME", "BIOME_NAME", "BIOME_NUM", "REALM"]].to_json(),
+                    name="Ecoregions",
+                    style_function=_biome_style,
+                    tooltip=folium.GeoJsonTooltip(
+                        fields=["ECO_NAME", "BIOME_NAME"],
+                        aliases=["Ecoregion:", "Biome:"],
+                        style="font-size: 12px;",
+                    ),
+                ).add_to(m)
+        except Exception:
+            pass
+
+        # Add marker
+        if lat is not None and lon is not None:
             try:
-                lat, lon = parse_lat_lon(coords)
                 eco = _query_ecoregion(lat, lon)
                 popup_text = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
                 if eco:
@@ -284,6 +350,9 @@ def server_app(input,output,session):
                 ).add_to(m)
             except Exception:
                 pass
+
+        # Layer control to toggle ecoregions
+        folium.LayerControl().add_to(m)
 
         return ui.HTML(m._repr_html_())
 
