@@ -475,7 +475,7 @@ def server_app(input,output,session):
     @render_widget
     @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins)
     def intercrops():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":  
+        if input.database_choice() == "try":  
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
             
@@ -933,7 +933,7 @@ def server_app(input,output,session):
     @output
     @render.ui
     def compatibility():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.": #Ignore the creation of the graph if the we don't select the good data source
+        if input.database_choice() == "try": #Ignore the creation of the graph if the we don't select the good data source
             df=open_csv(FILE_NAME)
             plants=input.overview_plants()
             issue=[]
@@ -987,7 +987,7 @@ def server_app(input,output,session):
     # This function run the R code to get the new species list if the GIFT database is chosen. Otherwise it returns the Practitioner's Database
     @reactive.event(input.update_map)
     def get_new_species():
-        if input.database_choice() == "✔️ Most known species. ✔️ Botanical details. ✔️ Filtered for your location. ❌ Slow.":
+        if input.database_choice() == "gift":
             global SPECIES_GIFT_DATAFRAME
             flor_group=FLORISTIC_GROUP[input.floristic_group()]
             
@@ -1073,7 +1073,7 @@ def server_app(input,output,session):
     @output
     @render.download(filename=f"selected_species_data.csv")
     def export_df():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             # Get the full dataset
             df = open_csv(FILE_NAME)
             # Filter only selected plants
@@ -1098,7 +1098,7 @@ def server_app(input,output,session):
     @output
     @render.download(filename=lambda: f"selected_{input.database_choice().replace(' ', '_').lower()}_data.csv")
     def export_df_os():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
             
@@ -1155,7 +1155,7 @@ def server_app(input,output,session):
     @render_widget
     @reactive.event(input.life_time, input.overview_plants)
     def plot_plants():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             size = input.life_time()
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
@@ -1271,7 +1271,7 @@ def server_app(input,output,session):
 ## * Results
     # Define available columns based on database choice
     def get_available_columns():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             # Columns for Practitioner's Database
             return [
                 "common_en", "growth_form", "plant_max_height", "stratum", 
@@ -1322,7 +1322,7 @@ def server_app(input,output,session):
     @render.ui
     @reactive.event(input.update_map, input.selected_columns)
     def suggestion_plants():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
             
@@ -1406,7 +1406,7 @@ def server_app(input,output,session):
     @output
     @render.download(filename=lambda: f"selected_{input.database_choice().replace(' ', '_').lower()}_data.csv")
     def export_df_os():
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
             

@@ -6,7 +6,7 @@ def server_homepage(input, output, session):
     @reactive.event(input.begin_button)
     def _handle_begin_button():
         # Check which database is selected
-        if input.database_choice() == "✔️ Practical management traits. ✔️ Fast.  ❌ Few common species. ❌ Ignores location.":
+        if input.database_choice() == "try":
             # If using Practitioner's Database, navigate to the Species tab
             session.send_custom_message("navigate_to_tab", "Main Species")
         else:
