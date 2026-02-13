@@ -157,14 +157,17 @@ def server_app(input,output,session):
                 }).addTo(map);
                 clickMarker.bindPopup('Lat: ' + lat + ', Lon: ' + lon).openPopup();
 
-                // Update input field + Shiny value (no map re-render)
-                var input = document.getElementById('longitude_latitude');
+                // Access parent document (map runs inside iframe)
+                var parentDoc = window.parent.document;
+                var parentShiny = window.parent.Shiny;
+                var input = parentDoc.getElementById('longitude_latitude');
                 if (input) {
                     input.value = coords;
                     input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-                if (window.Shiny) {
-                    Shiny.setInputValue('longitude_latitude', coords);
+                if (parentShiny) {
+                    parentShiny.setInputValue('longitude_latitude', coords);
                 }
             });
         })();
