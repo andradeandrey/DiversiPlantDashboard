@@ -263,7 +263,7 @@ def server_app(input,output,session):
             except Exception:
                 pass
 
-        m = folium.Map(location=center, zoom_start=zoom, width="100%", height="380px")
+        m = folium.Map(location=center, zoom_start=zoom, width="100%", height="700px")
         folium.TileLayer("OpenStreetMap").add_to(m)
 
         if coords and coords.strip():

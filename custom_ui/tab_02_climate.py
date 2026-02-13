@@ -36,55 +36,53 @@ BIOME_TYPES = {
 climate = ui.nav_panel(
     tab_title(2, "Clima", "Climate"),
     ui.page_fluid(
-        # Title matching Figma
+        # Title bar — centered, bold title + muted subtitle inline
         ui.div(
-            ui.h4(
+            ui.span(
                 t(
                     "Clima e bioma sincronizados com a localização",
                     "Climate and biome synced with location",
                 ),
+                class_="climate-title",
             ),
-            ui.p(
+            ui.span(
                 t(
-                    "Espécies adequadas ao seu clima local. Se você ativar a localização ou selecionar "
-                    "um país botânico na aba de localização, esta etapa será preenchida automaticamente. "
-                    "Você também pode selecionar tipos de clima ou bioma abaixo.",
-                    "Species suited to your local climate. If you enable the use of your current location "
-                    "or select a botanical country in the location tab, this step will be automatically "
-                    "completed. You may also select climate or biome types below.",
+                    "Espécies adequadas ao seu clima local",
+                    "Species suited to your local climate",
                 ),
-                class_="text-muted",
+                class_="climate-subtitle",
             ),
-            class_="climate-explanation",
+            class_="climate-header",
         ),
 
-        # Ecoregion map + climate/biome pills (Figma layout: map left, pills right)
+        # Main content: map (left) + diagram & form (right)
         ui.div(
-            # Left: ecoregion map
+            # Left: ecoregion map only
             ui.div(
                 ui.output_ui("ecoregion_map"),
-                class_="ecoregion-map-col",
-                style="flex: 2; min-width: 300px;",
+                ui.output_ui("ecoregion_info"),
+                class_="climate-map-col",
             ),
-            # Right: detected info + manual selection
+            # Right: Whittaker diagram + climate/biome controls
             ui.div(
+                ui.h6(
+                    t("Diagrama de Biomas de Whittaker", "Whittaker Biomes Diagram"),
+                    style="font-weight: 600; margin-bottom: 4px;",
+                ),
                 ui.p(
                     t(
-                        "Você pode explorar! Navegue manualmente neste mapa para conferir "
-                        "os diferentes biomas e ecoregiões.",
-                        "You can explore! Navigate manually on this map to check "
-                        "the different biomes and ecoregions.",
+                        "Clique em uma região de bioma no diagrama para selecioná-la.",
+                        "Click on a biome region in the diagram to select it.",
                     ),
                     class_="text-muted",
-                    style="font-size: 0.9em;",
+                    style="font-size: 13px; margin-bottom: 8px;",
                 ),
-                # Detected ecoregion info (auto-filled from coordinates)
-                ui.output_ui("ecoregion_info"),
-
+                output_widget("whittaker_diagram"),
                 # Climate Types
-                ui.h5(
-                    t("Clima para a região selecionada", "Climate for selected region"),
+                ui.h6(
+                    t("Clima", "Climate"),
                     class_="mt-3",
+                    style="font-weight: 600;",
                 ),
                 ui.input_checkbox_group(
                     "climate_types",
@@ -93,39 +91,24 @@ climate = ui.nav_panel(
                     inline=True,
                 ),
                 # Biome Types
-                ui.h5(t("Bioma para a região selecionada", "Biome for selected region")),
+                ui.h6(
+                    t("Bioma", "Biome"),
+                    style="font-weight: 600; margin-top: 12px;",
+                ),
                 ui.input_checkbox_group(
                     "biome_types",
                     None,
                     choices=BIOME_TYPES,
                     inline=True,
                 ),
-                class_="ecoregion-info-col",
-                style="flex: 1; min-width: 280px; padding-left: 20px;",
+                class_="climate-right-col",
             ),
-            style="display: flex; gap: 16px; flex-wrap: wrap;",
+            class_="climate-main-row",
         ),
 
-        # Whittaker Diagram Section
-        ui.div(
-            ui.h4(
-                t("Diagrama de Biomas de Whittaker", "Whittaker Biomes Diagram"),
-                class_="text-center",
-            ),
-            ui.p(
-                t(
-                    "Clique em uma região de bioma no diagrama para selecioná-la. "
-                    "O diagrama mostra a relação entre temperatura média anual e precipitação.",
-                    "Click on a biome region in the diagram to select it. "
-                    "The diagram shows the relationship between mean annual temperature and precipitation.",
-                ),
-                class_="text-center text-muted",
-            ),
-            output_widget("whittaker_diagram"),
-            class_="whittaker-container",
-        ),
-
+        # Floating nav buttons footer
         nav_buttons(back_value="tab_location", next_value="tab_species"),
+        style="position: relative; padding-bottom: 70px;",
     ),
     value="tab_climate",
 )
