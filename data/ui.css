@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 html,
 /* Make h1 bold */
@@ -19,7 +19,9 @@ body {
 
 /* General page styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+    font-size: 14px;
     color: #333;
     background-color: #f9f9f9;
 }
@@ -90,7 +92,7 @@ body {
 }
 
 html {
-    font-family: "open sans", sans-serif;
+    font-family: "Inter", sans-serif;
 }
 
 body>.container-fluid:first-child {
@@ -160,7 +162,7 @@ body>.container-fluid:first-child {
 .indicators-title {
     font-variant-caps: small-caps;
     text-align: center;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Inter", sans-serif;
 }
 
 .indicator-boxes {
@@ -328,7 +330,7 @@ body>.container-fluid:first-child {
 
 /* General styling for the location tab */
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Inter", sans-serif;
     margin: 0;
     padding: 0;
     }
@@ -1082,6 +1084,11 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.sponsor-logos {
+    margin-top: auto;
+    padding-bottom: 30px;
 }
 
 /* ── Step cards on hero image ── */

@@ -42,7 +42,7 @@ start = ui.nav_panel(
                                 "Combine compatible species for your planting project",
                             ),
                             class_="bold-text",
-                            style="font-size: 19px; margin-bottom: 16px;",
+                            style="font-size: 24px; margin-bottom: 16px;",
                         ),
                         ui.p(
                             t(
@@ -118,7 +118,15 @@ start = ui.nav_panel(
                             style="margin-top: 32px;",
                         ),
                     ),
-                    style="padding: 60px 50px; font-size: 15px; display: flex; flex-direction: column; justify-content: center;",
+                    # Sponsor logos — separate flex child, pinned to bottom
+                    ui.div(
+                        ui.img(
+                            src="img/logos-pat.png",
+                            style="max-width: 100%; height: auto; opacity: 0.85;",
+                        ),
+                        class_="sponsor-logos",
+                    ),
+                    style="padding: 150px 50px 0; font-size: 15px; display: flex; flex-direction: column; height: 100vh;",
                 ),
                 # Right column: hero image with step cards overlay
                 ui.column(
