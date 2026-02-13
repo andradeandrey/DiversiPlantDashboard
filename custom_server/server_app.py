@@ -116,23 +116,20 @@ def server_app(input,output,session):
         folium.plugins.Fullscreen().add_to(world_map)
         folium.plugins.LocateControl(auto_start=False).add_to(world_map)
 
-        # Click-to-place pin: JS that updates input + triggers map refresh
+        # Click-to-place pin: JS that removes old markers, places new one, updates input
         click_js = folium.Element("""
         <script>
         (function() {
             var mapEl = document.querySelector('.folium-map');
             if (!mapEl || !mapEl._leaflet_id) {
-                // wait for leaflet to init
                 setTimeout(arguments.callee, 300);
                 return;
             }
-            var map = mapEl._leaflet_map || null;
-            // find the leaflet map instance
+            var map = null;
             for (var key in mapEl) {
                 if (mapEl[key] instanceof L.Map) { map = mapEl[key]; break; }
             }
             if (!map) {
-                // fallback: iterate L maps
                 map = Object.values(window).find(function(v) { return v instanceof L.Map; });
             }
             if (!map) return;
@@ -143,21 +140,24 @@ def server_app(input,output,session):
                 var lon = e.latlng.lng.toFixed(6);
                 var coords = lat + ', ' + lon;
 
-                // Update or create marker
-                if (clickMarker) {
-                    clickMarker.setLatLng(e.latlng);
-                } else {
-                    clickMarker = L.marker(e.latlng, {
-                        icon: L.icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                        })
-                    }).addTo(map);
-                }
+                // Remove ALL existing markers
+                map.eachLayer(function(layer) {
+                    if (layer instanceof L.Marker) {
+                        map.removeLayer(layer);
+                    }
+                });
+
+                // Place new marker
+                clickMarker = L.marker(e.latlng, {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                    })
+                }).addTo(map);
                 clickMarker.bindPopup('Lat: ' + lat + ', Lon: ' + lon).openPopup();
 
-                // Update input field
+                // Update input field + Shiny value (no map re-render)
                 var input = document.getElementById('longitude_latitude');
                 if (input) {
                     input.value = coords;
@@ -165,9 +165,6 @@ def server_app(input,output,session):
                 }
                 if (window.Shiny) {
                     Shiny.setInputValue('longitude_latitude', coords);
-                    setTimeout(function() {
-                        Shiny.setInputValue('update_map', Math.random(), {priority: 'event'});
-                    }, 200);
                 }
             });
         })();
