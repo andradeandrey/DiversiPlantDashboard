@@ -116,6 +116,65 @@ def server_app(input,output,session):
         folium.plugins.Fullscreen().add_to(world_map)
         folium.plugins.LocateControl(auto_start=False).add_to(world_map)
 
+        # Click-to-place pin: JS that updates input + triggers map refresh
+        click_js = folium.Element("""
+        <script>
+        (function() {
+            var mapEl = document.querySelector('.folium-map');
+            if (!mapEl || !mapEl._leaflet_id) {
+                // wait for leaflet to init
+                setTimeout(arguments.callee, 300);
+                return;
+            }
+            var map = mapEl._leaflet_map || null;
+            // find the leaflet map instance
+            for (var key in mapEl) {
+                if (mapEl[key] instanceof L.Map) { map = mapEl[key]; break; }
+            }
+            if (!map) {
+                // fallback: iterate L maps
+                map = Object.values(window).find(function(v) { return v instanceof L.Map; });
+            }
+            if (!map) return;
+
+            var clickMarker = null;
+            map.on('click', function(e) {
+                var lat = e.latlng.lat.toFixed(6);
+                var lon = e.latlng.lng.toFixed(6);
+                var coords = lat + ', ' + lon;
+
+                // Update or create marker
+                if (clickMarker) {
+                    clickMarker.setLatLng(e.latlng);
+                } else {
+                    clickMarker = L.marker(e.latlng, {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                        })
+                    }).addTo(map);
+                }
+                clickMarker.bindPopup('Lat: ' + lat + ', Lon: ' + lon).openPopup();
+
+                // Update input field
+                var input = document.getElementById('longitude_latitude');
+                if (input) {
+                    input.value = coords;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                if (window.Shiny) {
+                    Shiny.setInputValue('longitude_latitude', coords);
+                    setTimeout(function() {
+                        Shiny.setInputValue('update_map', Math.random(), {priority: 'event'});
+                    }, 200);
+                }
+            });
+        })();
+        </script>
+        """)
+        world_map.get_root().html.add_child(click_js)
+
         # Return the Folium map as raw HTML
         return ui.HTML(world_map._repr_html_())
 

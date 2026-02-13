@@ -378,13 +378,15 @@ body {
 
 /* Map section styling */
 .map {
-    margin: 20px auto;
+    margin: 0;
     text-align: center;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
     background-color: #fff;
-    max-width: 90%;
+    max-width: 100%;
+    width: 100%;
+    position: relative;
 }
 
 .map h3 {
@@ -474,15 +476,15 @@ cursor: pointer;
 background-color: #45a049;
 } */
 
-/* Map styling */
+/* Map styling (duplicate — keep consistent) */
 .map {
-margin: 20px auto;
+margin: 0;
 text-align: center;
-padding: 10px;
-border: 1px solid #ccc;
-border-radius: 5px;
+padding: 0;
+border: none;
+border-radius: 0;
 background-color: #fff;
-max-width: 90%;
+max-width: 100%;
 }
 
 /* Custom styling for the red button */
@@ -934,6 +936,102 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     border-radius: 20px;
     font-size: 0.8rem;
     padding: 4px 12px;
+}
+
+/* =============================================== */
+/* Location Tab                                     */
+/* =============================================== */
+
+.tab-pane[data-value="tab_location"] .map {
+    height: calc(100vh - 280px);
+    overflow: hidden;
+    position: relative;
+    margin-left: 50px;
+    margin-right: 50px;
+    border-radius: 10px;
+    width: calc(100% - 100px) !important;
+    max-width: calc(100% - 100px) !important;
+}
+
+.tab-pane[data-value="tab_location"] .map iframe,
+.tab-pane[data-value="tab_location"] .map .html-fill-container,
+.tab-pane[data-value="tab_location"] .map > div {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.tab-pane[data-value="tab_location"] .nav-buttons {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    border-top: none;
+    padding: 16px 50px;
+    margin: 0;
+    max-width: 100%;
+    display: flex;
+    justify-content: space-between;
+    background-color: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.tab-pane[data-value="tab_location"] .nav-buttons .btn-outline-secondary {
+    background-color: #fff;
+}
+
+.tab-pane[data-value="tab_location"] .container-fluid {
+    position: relative;
+    padding: 0 !important;
+}
+
+/* =============================================== */
+/* Location Bar                                     */
+/* =============================================== */
+
+.location-bar {
+    max-width: 600px;
+    margin: 30px auto 20px;
+    padding: 24px 32px;
+    background: #f6f9f2;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.location-bar .shiny-input-container {
+    width: 100% !important;
+}
+
+.location-bar .shiny-input-container input[type="text"] {
+    text-align: center;
+    font-size: 15px;
+    color: #4a7c59;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px 16px;
+}
+
+.location-bar .shiny-input-container input[type="text"]::placeholder {
+    color: #8aab7a;
+}
+
+.location-bar a {
+    color: #4a7c59;
+    text-decoration: underline;
+}
+
+.loc-btn {
+    border-color: #4a7c59;
+    color: #4a7c59;
+    border-radius: 20px;
+    padding: 8px 24px;
+    font-size: 14px;
+}
+
+.loc-btn:hover {
+    background-color: #4a7c59;
+    color: #fff;
 }
 
 /* =============================================== */

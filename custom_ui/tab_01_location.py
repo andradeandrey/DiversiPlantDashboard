@@ -12,117 +12,112 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent, "data", "MgmtTraitData_up
 location = ui.nav_panel(
     tab_title(1, "Localização", "Location"),
     ui.page_fluid(
-        # Container for flexbox layout
+        # Coordinates bar — centered, minimal
         ui.div(
+            ui.input_text(
+                "longitude_latitude",
+                "",
+                placeholder="Cole suas coordenadas (latitude, longitude)....",
+                width="100%",
+            ),
+            # Hidden update_map button (triggered by Enter or geolocation)
             ui.div(
-                ui.h4(
-                    t(
-                        "Cole suas coordenadas do ",
-                        "Copy your Project Coordinates from ",
-                    ),
-                    ui.a("Google Maps", href="https://www.google.com/maps", target="_blank", class_="link"),
-                    t(" ou ", " or "),
-                    ui.a("OpenStreetMap", href="https://www.openstreetmap.org", target="_blank", class_="link"),
-                ),
-                ui.div(
-                    ui.h5(
-                        t(
-                            "Ou ative a localização automática no seu navegador/dispositivo OU amplie e clique no local do seu projeto.",
-                            "OR enable automatic 'Location' in your web browser OR device OR Zoom & click on your planting project location.",
-                        ),
-                    ),
-                    ui.p(
-                        t(
-                            "O clima e bioma serão retornados automaticamente para filtrar espécies adaptadas nas próximas páginas.",
-                            "Your climate & biome will then be returned automatically to filter adapted species on following pages.",
-                        ),
-                    ),
-                ),
-                class_="left-section",
+                ui.input_action_button("update_map", ""),
+                style="display: none;",
+            ),
+            # Submit on Enter key
+            ui.tags.script(
+                "document.addEventListener('DOMContentLoaded',function(){"
+                "  setTimeout(function(){"
+                "    var inp=document.getElementById('longitude_latitude');"
+                "    if(inp) inp.addEventListener('keydown',function(e){"
+                "      if(e.key==='Enter'){ e.preventDefault();"
+                "        Shiny.setInputValue('update_map', Math.random(), {priority:'event'});"
+                "      }"
+                "    });"
+                "  },1000);"
+                "});"
+            ),
+            ui.p(
+                t("Encontre suas coordenadas no ", "Find your coordinates on "),
+                ui.a("Google Maps", href="https://www.google.com/maps", target="_blank"),
+                t(" ou no ", " or "),
+                ui.a("OSM", href="https://www.openstreetmap.org", target="_blank"),
+                ".",
+                style="text-align: center; font-size: 13px; color: #666; margin-top: 4px;",
             ),
             ui.div(
-                # Coordinates Input and Update Map Button
-                ui.div(
-                    ui.input_text(
-                        "longitude_latitude",
-                        t("Cole suas coordenadas:", "Paste your coordinates:"),
-                        placeholder="-23.5505, -46.6333",
-                    ),
-                    ui.input_action_button(
-                        "update_map",
-                        t("Enviar ➔", "Send ➔"),
-                    ),
-                    class_="coordinates-container",
+                ui.tags.button(
+                    t("Ou ativar localização atual", "Or enable current location"),
+                    id="current_location",
+                    class_="btn btn-outline-secondary loc-btn",
+                    onclick="",
                 ),
-                ui.div(
-                    ui.help_text(t("OU", "OR")),
-                ),
-                ui.input_action_button(
-                    "current_location",
-                    t("📍 Obter localização atual", "📍 Current Location"),
-                    class_="btn-primary",
-                ),
-                ui.tags.script("""
-                    document.addEventListener('DOMContentLoaded', function() {
-                        setTimeout(function() {
-                            var btn = document.getElementById('current_location');
-                            if (btn) {
-                                btn.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    if (navigator.geolocation) {
-                                        btn.disabled = true;
-                                        btn.textContent = '⏳ Localizando...';
-                                        navigator.geolocation.getCurrentPosition(
-                                            function(position) {
-                                                var lat = position.coords.latitude.toFixed(6);
-                                                var lon = position.coords.longitude.toFixed(6);
-                                                var input = document.getElementById('longitude_latitude');
-                                                if (input) {
-                                                    input.value = lat + ', ' + lon;
-                                                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                                                }
-                                                btn.disabled = false;
-                                                btn.textContent = '📍 Localização atual';
-                                                setTimeout(function() {
-                                                    var sendBtn = document.getElementById('update_map');
-                                                    if (sendBtn) sendBtn.click();
-                                                }, 100);
-                                            },
-                                            function(error) {
-                                                alert('Erro de geolocalização: ' + error.message);
-                                                btn.disabled = false;
-                                                btn.textContent = '📍 Localização atual';
-                                            },
-                                            { enableHighAccuracy: true, timeout: 10000 }
-                                        );
-                                    } else {
-                                        alert('Geolocalização não suportada pelo navegador');
-                                    }
-                                });
-                            }
-                        }, 1000);
-                    });
-                """),
-                ui.div(
-                    ui.p(""),
-                    ui.help_text(t("Filtrar espécies por", "Filter species by")),
-                    ui.input_selectize(
-                        "floristic_group",
-                        "",
-                        choices=["All Species", "Endemic", "Native", "Naturalized"],
-                        multiple=False,
-                    ),
-                ),
-                class_="right-section",
+                style="text-align: center; margin-top: 12px;",
             ),
-            class_="flex-container",
+            ui.tags.script("""
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(function() {
+                        var btn = document.getElementById('current_location');
+                        if (btn) {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                if (navigator.geolocation) {
+                                    btn.disabled = true;
+                                    btn.textContent = '⏳ Localizando...';
+                                    navigator.geolocation.getCurrentPosition(
+                                        function(position) {
+                                            var lat = position.coords.latitude.toFixed(6);
+                                            var lon = position.coords.longitude.toFixed(6);
+                                            var coords = lat + ', ' + lon;
+                                            var input = document.getElementById('longitude_latitude');
+                                            if (input) {
+                                                input.value = coords;
+                                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                            }
+                                            Shiny.setInputValue('longitude_latitude', coords);
+                                            btn.disabled = false;
+                                            btn.textContent = 'Ou ativar localização atual';
+                                            setTimeout(function() {
+                                                Shiny.setInputValue('update_map', Math.random(), {priority: 'event'});
+                                            }, 200);
+                                        },
+                                        function(error) {
+                                            alert('Erro de geolocalização: ' + error.message);
+                                            btn.disabled = false;
+                                            btn.textContent = 'Ou ativar localização atual';
+                                        },
+                                        { enableHighAccuracy: true, timeout: 10000 }
+                                    );
+                                } else {
+                                    alert('Geolocalização não suportada pelo navegador');
+                                }
+                            });
+                        }
+                    }, 1000);
+                });
+            """),
+            class_="location-bar",
         ),
-        # Map Section
+        # Hidden floristic_group (server depends on it)
         ui.div(
-            ui.output_ui("world_map"),
-            class_="map",
+            ui.input_selectize(
+                "floristic_group",
+                "",
+                choices=["All Species", "Endemic", "Native", "Naturalized"],
+                multiple=False,
+            ),
+            style="display: none;",
         ),
-        nav_buttons(back_value="tab_start", next_value="tab_climate"),
+        # Map + nav buttons overlay
+        ui.div(
+            ui.div(
+                ui.output_ui("world_map"),
+                class_="map",
+            ),
+            nav_buttons(back_value="tab_start", next_value="tab_climate"),
+            style="position: relative;",
+        ),
     ),
     value="tab_location",
 )
