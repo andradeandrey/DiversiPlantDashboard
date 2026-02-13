@@ -944,8 +944,6 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     border-top: 1px solid #dee2e6;
     padding-top: 16px;
     max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .nav-btn {
@@ -1062,16 +1060,15 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
     max-width: 100% !important;
 }
 
-#start-step-1 {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-#start-step-1 > .row {
+/* The single row inside the start tab */
+.tab-pane[data-value="tab_start"] .row {
     height: 100vh;
     margin: 0;
     overflow: hidden;
+}
+
+.db-selection-inline {
+    flex-direction: column;
 }
 
 .welcome-hero-col {
