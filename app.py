@@ -44,9 +44,9 @@ app_ui = ui.page_fluid(
         ui.nav_spacer(),
         ui.nav_control(ui.output_ui("location_badge")),
         ui.nav_control(lang_toggle()),
-        title=ui.span(
-            "\U0001F334",
-            style="font-size: 1.6rem; line-height: 1;",
+        title=ui.img(
+            src="img/menu-logo.png",
+            style="height: 32px; width: auto; margin-right: 30px;",
         ),
         id="main_nav",
     ),
