@@ -898,10 +898,13 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     color: #222;
 }
 
-.navbar .nav-link.active {
-    background: transparent !important;
+.navbar .navbar-nav .nav-link.active {
+    background: rgba(255, 255, 255, 0.7) !important;
     color: #222 !important;
     font-weight: 700;
+    border-radius: 20px !important;
+    padding: 6px 14px !important;
+    overflow: hidden;
 }
 
 .navbar .nav-link.active .tab-badge {
