@@ -63,15 +63,16 @@ main_species = ui.nav_panel(
                     "filter_growth_form",
                     "",
                     choices={
-                        "": t("Forma de crescimento", "Growth form"),
-                        "tree": t("Árvore", "Tree"),
-                        "shrub": t("Arbusto", "Shrub"),
-                        "subshrub": t("Sub-arbusto", "Subshrub"),
-                        "herb": t("Herbácea", "Herb"),
-                        "climber": t("Trepadeira", "Climber"),
-                        "palm": t("Palmeira", "Palm"),
-                        "bamboo": t("Bambu", "Bamboo"),
-                        "cactus": t("Cacto", "Cactus"),
+                        "": "Forma de crescimento",
+                        "tree": "Árvore",
+                        "shrub": "Arbusto",
+                        "subshrub": "Sub-arbusto",
+                        "forb": "Herbácea (forb)",
+                        "graminoid": "Gramínea",
+                        "climber": "Trepadeira",
+                        "palm": "Palmeira",
+                        "bamboo": "Bambu",
+                        "cactus": "Cacto",
                     },
                 ),
                 class_="species-filter-item",
@@ -81,11 +82,12 @@ main_species = ui.nav_panel(
                     "filter_plant_use",
                     "",
                     choices={
-                        "": t("Uso da planta", "Plant use"),
-                        "food": t("Alimento", "Food"),
-                        "timber": t("Madeira", "Timber"),
-                        "medicinal": t("Medicinal", "Medicinal"),
-                        "ornamental": t("Ornamental", "Ornamental"),
+                        "": "Uso da planta",
+                        "food": "Alimento",
+                        "timber": "Madeira",
+                        "medicinal": "Medicinal",
+                        "ornamental": "Ornamental",
+                        "fodder": "Forragem",
                     },
                 ),
                 class_="species-filter-item",
@@ -95,12 +97,12 @@ main_species = ui.nav_panel(
                     "filter_threat",
                     "",
                     choices={
-                        "": t("Ameaça à conservação", "Conservation threat"),
-                        "LC": "LC",
-                        "NT": "NT",
-                        "VU": "VU",
-                        "EN": "EN",
-                        "CR": "CR",
+                        "": "Ameaça à conservação",
+                        "LC": "Pouco preocupante (LC)",
+                        "NT": "Quase ameaçada (NT)",
+                        "VU": "Vulnerável (VU)",
+                        "EN": "Em perigo (EN)",
+                        "CR": "Criticamente em perigo (CR)",
                     },
                 ),
                 class_="species-filter-item",
@@ -110,9 +112,9 @@ main_species = ui.nav_panel(
                     "filter_nfix",
                     "",
                     choices={
-                        "": t("Fixador biológico de N", "N-fixer"),
-                        "yes": t("Sim", "Yes"),
-                        "no": t("Não", "No"),
+                        "": "Fixador biológico de N",
+                        "yes": "Sim",
+                        "no": "Não",
                     },
                 ),
                 class_="species-filter-item",
@@ -122,10 +124,10 @@ main_species = ui.nav_panel(
                     "filter_deciduousness",
                     "",
                     choices={
-                        "": t("Deciduidade", "Deciduousness"),
-                        "deciduous": t("Decídua", "Deciduous"),
-                        "evergreen": t("Perene", "Evergreen"),
-                        "semi": t("Semi-decídua", "Semi-deciduous"),
+                        "": "Deciduidade",
+                        "deciduous": "Decídua",
+                        "evergreen": "Perene",
+                        "semi": "Semi-decídua",
                     },
                 ),
                 class_="species-filter-item",
@@ -133,7 +135,7 @@ main_species = ui.nav_panel(
             # Simplify button
             ui.div(
                 ui.tags.button(
-                    t("Simplificar sistema", "Simplify system"),
+                    "Simplificar sistema",
                     class_="btn btn-outline-secondary btn-sm species-simplify-btn",
                     **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
                 ),
@@ -190,7 +192,7 @@ main_species = ui.nav_panel(
             ui.div(
                 ui.div(
                     ui.p(
-                        t("Nº de categorias de demanda de luz", "Light demand categories"),
+                        "Nº de categorias de demanda de luz",
                         class_="bold-text",
                     ),
                     ui.input_select(
@@ -206,7 +208,7 @@ main_species = ui.nav_panel(
                 ),
                 ui.div(
                     ui.p(
-                        t("Nº de períodos de colheita", "Harvest period divisions"),
+                        "Nº de períodos de colheita",
                         class_="bold-text",
                     ),
                     ui.input_select(
@@ -233,29 +235,28 @@ main_species = ui.nav_panel(
             class_="species-grid-area",
         ),
 
-        # Lifetime Section
-        ui.div(
+        # Lifetime Section — hidden until species are selected
+        ui.panel_conditional(
+            "input.overview_plants && input.overview_plants.length > 0",
             ui.div(
-                ui.p(
-                    t("Tempo de vida", "Lifetime"),
-                    class_="bold-text",
-                ),
-                ui.help_text(
-                    t(
-                        "Visualize o crescimento das espécies selecionadas ao longo do tempo",
-                        "Visualize the growth of selected species over time",
+                ui.div(
+                    ui.p(
+                        "Tempo de vida",
+                        class_="bold-text",
                     ),
+                    ui.help_text(
+                        "Visualize o crescimento das espécies selecionadas ao longo do tempo",
+                    ),
+                    ui.input_slider("life_time", "", min=0, max=101, value=1, step=0.5),
+                    class_="center-content",
                 ),
-                ui.input_slider("life_time", "", min=0, max=101, value=1, step=0.5),
-                class_="center-content",
+                class_="grey-container",
             ),
-            class_="grey-container",
-        ),
-
-        # Growth Visualization Output
-        ui.div(
-            output_widget("plot_plants"),
-            class_="main-content",
+            # Growth Visualization Output
+            ui.div(
+                output_widget("plot_plants"),
+                class_="main-content",
+            ),
         ),
 
         # JS: move binning controls into simplify modal, symbols content into symbols modal
