@@ -1,8 +1,8 @@
 import os
+import json
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import plotly.express as px
 from shinywidgets import render_widget
 from shiny import render, ui, reactive
 import plotly.graph_objects as go
@@ -43,6 +43,66 @@ SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
 colors = ['#53c5ff', '#49d1d5', '#dbb448', '#f8827a', '#ff8fda', '#45d090', '#779137', '#d7a0ff']
 color_mapping = dict(zip(growth_forms, colors))
+
+# ECharts emoji mapping per growth form
+ECHARTS_EMOJIS = {
+    'tree': '🌲',
+    'shrub': '🌳',
+    'subshrub': '🌿',
+    'forb': '🌼',
+    'herb': '🌼',
+    'graminoid': '🌾',
+    'palm': '🌴',
+    'liana': '🪢',
+    'vine': '🌱',
+    'climber': '🌱',
+    'scrambler': '🪴',
+    'bamboo': '🎋',
+    'cactus': '🌵',
+    'other': '🍃',
+}
+
+# Keep old symbol dict for backwards compat (used nowhere else now)
+ECHARTS_SYMBOLS = {k: 'circle' for k in ECHARTS_EMOJIS}
+
+
+def sqrt_transform(x):
+    """Real years → sqrt-space for plotting."""
+    if x is None or (isinstance(x, float) and np.isnan(x)):
+        return x
+    return np.sqrt(max(0, float(x)))
+
+
+def sqrt_inverse(sx):
+    """Sqrt-space → real years."""
+    return sx * sx
+
+
+def echarts_html(option: dict, chart_id: str, height: int = 700, post_init_js: str = "") -> str:
+    """Render an ECharts option dict as an HTML div + script."""
+    option_json = json.dumps(option, ensure_ascii=False)
+    # Replace JS function placeholders: "__JS__<code>__JSEND__"
+    import re
+    option_json = re.sub(
+        r'"__JS__(.*?)__JSEND__"',
+        lambda m: m.group(1).replace('\\"', '"'),
+        option_json,
+    )
+    return f"""
+    <div id="{chart_id}" style="width:100%;height:{height}px;"></div>
+    <script>
+    (function() {{
+        var el = document.getElementById('{chart_id}');
+        if (!el) return;
+        if (el._ec) {{ el._ec.dispose(); el._ec = null; }}
+        var chart = echarts.init(el);
+        el._ec = chart;
+        chart.setOption({option_json});
+        new ResizeObserver(function() {{ chart.resize(); }}).observe(el);
+        {post_init_js}
+    }})();
+    </script>
+    """
 
 
 def parse_lat_lon(lat_lon_str):
@@ -600,7 +660,7 @@ def server_app(input,output,session):
 
 ##Main Species
 
-    @render_widget
+    @render.ui
     @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins,
                     input.filter_growth_form, input.filter_plant_use, input.filter_threat,
                     input.filter_nfix, input.filter_deciduousness)
@@ -610,10 +670,7 @@ def server_app(input,output,session):
             plants = list(input.overview_plants())
 
             if not plants:
-                return go.Figure().update_layout(
-                    title="Nenhuma espécie selecionada",
-                    height=600
-                )
+                return ui.HTML('<div style="text-align:center;padding:40px;color:#888;">Nenhuma espécie selecionada</div>')
 
             # Apply filters to selected species
             f_growth = input.filter_growth_form()
@@ -648,177 +705,147 @@ def server_app(input,output,session):
                 plants = filtered['common_en'].tolist()
 
                 if not plants:
-                    return go.Figure().update_layout(
-                        title="Nenhuma espécie corresponde aos filtros",
-                        height=600
-                    )
+                    return ui.HTML('<div style="text-align:center;padding:40px;color:#888;">Nenhuma espécie corresponde aos filtros</div>')
 
             # Categorize species by available data
             complete_data = []
             missing_harvest = []
             missing_stratum = []
             missing_both = []
-            
+
             for plant in plants:
                 query = df.query("common_en == '%s'" % plant)[
                     ['common_en', 'growth_form', 'yrs_ini_prod', 'longev_prod', 'stratum']
                 ].values.tolist()
-                
+
                 if not query:
                     continue
-                
+
                 query = query[0]
                 name, growth_type, x_start, duration, y_position = query
-                
+
                 has_harvest = str(x_start) != 'nan'
                 has_stratum = str(y_position) != 'nan'
-                
-                # Use default duration if missing
+
                 if str(duration) == 'nan':
                     duration = 5.0
-                
+
                 if has_harvest and has_stratum:
                     complete_data.append([name, growth_type, x_start, duration, y_position])
                 elif has_harvest and not has_stratum:
                     missing_stratum.append([name, growth_type, x_start, duration, None])
                 elif not has_harvest and has_stratum:
-                    missing_harvest.append([name, growth_type, None, None, y_position])
+                    missing_harvest.append([name, growth_type, None, duration, y_position])
                 else:
                     missing_both.append([name, growth_type, None, None, None])
-            
+
             # Get stratum resolution from slider
             num_y_bins = int(input.stratum_bins())
             stratum_config = STRATUM[num_y_bins]
             y_bins = stratum_config[0]
             y_labels = stratum_config[1]
-            
-            # Determine X range from complete data and missing_stratum
-            all_x_values = []
+
+            # Determine X range in real years, then convert to sqrt-space
+            all_x_values_real = []
             if complete_data:
                 for plant in complete_data:
-                    all_x_values.append(plant[2])
-                    all_x_values.append(plant[2] + plant[3])
+                    all_x_values_real.append(plant[2])
+                    all_x_values_real.append(plant[2] + plant[3])
             if missing_stratum:
                 for plant in missing_stratum:
-                    all_x_values.append(plant[2])
-                    all_x_values.append(plant[2] + plant[3])
-            
-            if all_x_values:
-                min_x = round(min(all_x_values), 2)
-                max_x = round(max(all_x_values), 2)
+                    all_x_values_real.append(plant[2])
+                    all_x_values_real.append(plant[2] + plant[3])
+
+            if all_x_values_real:
+                min_x_real = round(min(all_x_values_real), 2)
+                max_x_real = round(max(all_x_values_real), 2)
             else:
-                min_x, max_x = 0, 10
-            
-            if max_x - min_x < 1:
-                max_x = min_x + 10
-            
-            num_x_bins = int(input.harvest_bins()) 
-            x_bins = [round(x, 2) for x in np.linspace(min_x, max_x, num_x_bins + 1).tolist()]
-            
-            # Calculate bin dimensions for offset calculations
-            x_bin_width = (max_x - min_x) / num_x_bins
+                min_x_real, max_x_real = 0, 10
+
+            if max_x_real - min_x_real < 1:
+                max_x_real = min_x_real + 10
+
+            # Convert to sqrt-space: bins are uniform in sqrt = quadratic in real years
+            min_x_sqrt = sqrt_transform(min_x_real)
+            max_x_sqrt = sqrt_transform(max_x_real)
+
+            num_x_bins = int(input.harvest_bins())
+            x_bins_sqrt = [round(x, 4) for x in np.linspace(min_x_sqrt, max_x_sqrt, num_x_bins + 1).tolist()]
+            # Real-year labels for each bin edge
+            x_bins_real = [round(sx ** 2, 1) for sx in x_bins_sqrt]
+
+            # Use sqrt-space bins for all positioning
+            x_bins = x_bins_sqrt
+            min_x = min_x_sqrt
+            max_x = max_x_sqrt
+
+            x_bin_width = (max_x - min_x) / num_x_bins if num_x_bins > 0 else 1
             y_bin_height = 9 / len(y_bins)
-            
-            # Growth Form Mappings
-            growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
-            colors = ['#53c5ff', '#49d1d5', "#dbb448", '#f8827a', '#ff8fda', '#45d090', "#779137", '#d7a0ff']
-            symbols = ['star', 'diamond', 'cross', 'circle', 'triangle-up', 'square', 'hexagram', 'x']
-            
-            color_map = dict(zip(growth_forms, colors))
-            symbol_map = dict(zip(growth_forms, symbols))
-            
-            fig = go.Figure()
-            
-            # === FIXED LEGEND AT TOP ===
-            fixed_legend_x = np.linspace(min_x, max_x, len(growth_forms)).tolist()
-            fixed_legend_y = [10.5] * len(growth_forms)
-            
-            for i, growth in enumerate(growth_forms):
-                fig.add_trace(go.Scatter(
-                    x=[round(fixed_legend_x[i], 2)],
-                    y=[fixed_legend_y[i]],
-                    mode="markers+text",
-                    marker=dict(size=15, color=color_map[growth], symbol=symbol_map[growth]),
-                    text=growth,
-                    textposition="top center",
-                    showlegend=False,
-                    hoverinfo='skip'
-                ))
-            
-            # === MAIN GRID BACKGROUND ===
-            for i in range(len(x_bins) - 1):
-                for j in range(len(y_bins) - 1):
-                    fig.add_shape(
-                        type="rect",
-                        x0=x_bins[i], x1=x_bins[i+1],
-                        y0=y_bins[j], y1=y_bins[j+1],
-                        line=dict(color="black", width=1),
-                        fillcolor="rgba(150,150,150,0.2)",
-                    )
-            
-            # === LEFT MARGIN BACKGROUND (for species with unknown harvest) ===
-            fig.add_shape(
-                type="rect",
-                x0=min_x - (max_x - min_x) * 0.2,
-                x1=min_x,
-                y0=0,
-                y1=9,
-                fillcolor="rgba(255,200,150,0.15)",
-                line=dict(color="orange", width=2, dash="dash"),
-                layer="below"
-            )
-            
-            # === BOTTOM MARGIN BACKGROUND (for species with unknown stratum) ===
-            fig.add_shape(
-                type="rect",
-                x0=min_x,
-                x1=max_x,
-                y0=-2,
-                y1=0,
-                fillcolor="rgba(255,150,150,0.15)",
-                line=dict(color="red", width=2, dash="dash"),
-                layer="below"
-            )
-            
-            added_species = set()
+
+            # Growth Form Mappings (legend order matches user spec)
+            gf_list = ['tree', 'shrub', 'subshrub', 'forb', 'graminoid', 'palm', 'liana', 'vine', 'scrambler', 'bamboo', 'other']
+            gf_colors = ['#d7a0ff', '#45d090', '#779137', '#f8827a', '#8BC34A', '#ff8fda', '#dbb448', '#66BB6A', '#26A69A', '#53c5ff', '#9E9E9E']
+            color_map = dict(zip(gf_list, gf_colors))
+            # Legacy aliases
+            color_map['herb'] = color_map['forb']
+            color_map['climber'] = color_map['vine']
+            color_map['cactus'] = '#49d1d5'
 
             def get_offset_position(count):
-                """
-                Returns offset (dx, dy) for the nth item in a horizontal line pattern.
-                Since bins are wider than tall, we spread species horizontally.
-                """
-                
                 if count == 0:
-                    return (0, 0)  # First species at center
-                
-                # Arrange in a horizontal line, alternating left and right
-                # Pattern: center, right, left, right, left, right, left...
-                if count % 2 == 1:  # Odd positions go right
+                    return (0, 0)
+                if count % 2 == 1:
                     position = (count + 1) // 2
                     return (0.2 * position, 0)
-                else:  # Even positions go left
+                else:
                     position = count // 2
                     return (-0.2 * position, 0)
-            # === 1. PLACE SPECIES WITH COMPLETE DATA (in main grid) ===
-            # Track how many species in each bin
+
+            # Build markArea data for grid cells
+            mark_area_data = []
+            for i in range(len(x_bins) - 1):
+                for j in range(len(y_bins) - 1):
+                    mark_area_data.append([
+                        {'xAxis': x_bins[i], 'yAxis': y_bins[j], 'itemStyle': {'color': 'white', 'borderColor': '#e0e0e0', 'borderWidth': 1}},
+                        {'xAxis': x_bins[i+1], 'yAxis': y_bins[j+1]}
+                    ])
+
+            # Left margin (missing harvest)
+            left_x0 = round(min_x - (max_x - min_x) * 0.2, 2)
+            mark_area_data.append([
+                {'xAxis': left_x0, 'yAxis': 0, 'itemStyle': {'color': 'rgba(255,200,150,0.1)', 'borderColor': 'orange', 'borderWidth': 2, 'borderType': 'dashed'}},
+                {'xAxis': min_x, 'yAxis': 9}
+            ])
+
+            # Bottom margin (missing stratum)
+            mark_area_data.append([
+                {'xAxis': min_x, 'yAxis': -2, 'itemStyle': {'color': 'rgba(255,150,150,0.1)', 'borderColor': 'red', 'borderWidth': 2, 'borderType': 'dashed'}},
+                {'xAxis': max_x, 'yAxis': 0}
+            ])
+
+            # Build species series
+            species_series = []
+            added_species = set()
+            legend_names = []
+
+            # 1. Complete data
             bin_counters = {}
-            
             for plant in complete_data:
                 name, growth_type, x_start, duration, y_position = plant
-                
                 if name in added_species:
                     continue
-                
-                # Find X bin
+
+                # Transform x_start to sqrt-space for bin lookup
+                x_start_sqrt = sqrt_transform(x_start)
+
                 x_bin_index = 0
                 for i in range(len(x_bins) - 1):
-                    if x_start >= x_bins[i] and x_start < x_bins[i+1]:
+                    if x_start_sqrt >= x_bins[i] and x_start_sqrt < x_bins[i+1]:
                         x_bin_index = i
                         break
-                if x_start >= x_bins[-1]:
+                if x_start_sqrt >= x_bins[-1]:
                     x_bin_index = len(x_bins) - 2
-                
-                # Find Y bin
+
                 y_bin_index = 0
                 for i in range(len(y_bins) - 1):
                     if y_position >= y_bins[i] and y_position < y_bins[i+1]:
@@ -826,236 +853,312 @@ def server_app(input,output,session):
                         break
                 if y_position >= y_bins[-1]:
                     y_bin_index = len(y_bins) - 2
-                
-                # Track which species is in which bin
+
                 bin_key = (x_bin_index, y_bin_index)
                 if bin_key not in bin_counters:
                     bin_counters[bin_key] = 0
                 else:
                     bin_counters[bin_key] += 1
-                
-                # Get offset for this species
+
                 offset_x, offset_y = get_offset_position(bin_counters[bin_key])
-                
-                # Calculate center with offset
-                x_center = round((x_bins[x_bin_index] + x_bins[x_bin_index + 1]) / 2, 2)
+                x_center = round((x_bins[x_bin_index] + x_bins[x_bin_index + 1]) / 2, 4)
                 y_center = round((y_bins[y_bin_index] + y_bins[y_bin_index + 1]) / 2, 2)
-                
-                # Apply offset (scaled by bin size)
                 x_final = x_center + offset_x * x_bin_width * 0.3
                 y_final = y_center + offset_y * y_bin_height * 0.3
-                
-                fig.add_trace(go.Scatter(
-                    x=[x_final],
-                    y=[y_final],
-                    mode="markers",
-                    marker=dict(
-                        size=15,
-                        color=color_map.get(growth_type, "grey"),
-                        symbol=symbol_map.get(growth_type, "circle")
-                    ),
-                    name=name,
-                    showlegend=True,
-                    legendgroup=name,
-                    hoverinfo="text",
-                    text=f"<b>{name}</b><br>Forma: {growth_type}<br>Início colheita: {round(x_start, 2)} anos<br>Duração: {round(duration, 2)} anos<br>Estrato: {round(y_position, 2)}"
-                ))
+
+                # Tooltip shows real years (not sqrt)
+                safe_name = name.replace("'", "\\'")
+                tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
+                                f"Início colheita: {round(x_start, 2)} anos<br/>"
+                                f"Duração: {round(duration, 2)} anos<br/>"
+                                f"Estrato: {round(y_position, 2)}")
+
+                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                species_series.append({
+                    'type': 'scatter',
+                    'name': name,
+                    'data': [[round(x_final, 4), round(y_final, 3)]],
+                    'symbol': 'circle',
+                    'symbolSize': 24,
+                    'itemStyle': {'color': 'transparent'},
+                    'label': {
+                        'show': True,
+                        'formatter': gf_emoji,
+                        'fontSize': 20,
+                        'offset': [0, 0],
+                    },
+                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                })
+                legend_names.append(name)
                 added_species.add(name)
-            
-            # === 2. PLACE SPECIES WITH MISSING HARVEST (left side - at their ACTUAL stratum level) ===
+
+            # 2. Missing harvest (left margin)
+            stratum_counters = {}
+            partial_info_count = 0
+            for plant in missing_harvest:
+                name, growth_type, _, exit_duration, y_position = plant
+                if name in added_species:
+                    continue
+
+                y_rounded = round(y_position, 1)
+                if y_rounded not in stratum_counters:
+                    stratum_counters[y_rounded] = 0
+                else:
+                    stratum_counters[y_rounded] += 1
+
+                y_offset = (stratum_counters[y_rounded] % 3 - 1) * 0.3
+                x_offset = (stratum_counters[y_rounded] // 3) * 0.02 * (max_x - min_x)
+                px_val = round(min_x - (max_x - min_x) * 0.1 - x_offset, 4)
+                py_val = round(y_position + y_offset, 3)
+
+                # Feature 1: check if species has exit time but no entry time
+                has_exit_time = exit_duration is not None and str(exit_duration) != 'nan'
+                exit_years = round(exit_duration, 1) if has_exit_time else None
+
+                safe_name = name.replace("'", "\\'")
+                if has_exit_time:
+                    tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
+                                    f"ℹ️ Tempo de saída: {exit_years} anos, entrada desconhecida<br/>"
+                                    f"Estrato: {round(y_position, 2)}")
+                    partial_info_count += 1
+                else:
+                    tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
+                                    f"⚠️ Colheita: Desconhecida<br/>"
+                                    f"Estrato: {round(y_position, 2)}")
+
+                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                # Combine emoji + ℹ️ when exit time is known
+                label_text = f'{gf_emoji} ℹ️' if has_exit_time else gf_emoji
+
+                series_entry = {
+                    'type': 'scatter',
+                    'name': name,
+                    'data': [[px_val, py_val]],
+                    'symbol': 'circle',
+                    'symbolSize': 24,
+                    'itemStyle': {'color': 'transparent'},
+                    'label': {
+                        'show': True,
+                        'formatter': label_text,
+                        'fontSize': 20 if not has_exit_time else 16,
+                        'offset': [0, 0],
+                    },
+                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                }
+
+                species_series.append(series_entry)
+                legend_names.append(name)
+                added_species.add(name)
+
+            # 3. Missing stratum (bottom margin)
+            x_position_counters = {}
+            for plant in missing_stratum:
+                name, growth_type, x_start, duration, _ = plant
+                if name in added_species:
+                    continue
+
+                # Transform x_start to sqrt-space for bin lookup
+                x_start_sqrt = sqrt_transform(x_start)
+
+                x_bin_index = 0
+                for i in range(len(x_bins) - 1):
+                    if x_start_sqrt >= x_bins[i] and x_start_sqrt < x_bins[i+1]:
+                        x_bin_index = i
+                        break
+                if x_start_sqrt >= x_bins[-1]:
+                    x_bin_index = len(x_bins) - 2
+
+                if x_bin_index not in x_position_counters:
+                    x_position_counters[x_bin_index] = 0
+                else:
+                    x_position_counters[x_bin_index] += 1
+
+                x_center = round((x_bins[x_bin_index] + x_bins[x_bin_index + 1]) / 2, 4)
+                x_off = (x_position_counters[x_bin_index] % 3 - 1) * 0.15 * x_bin_width
+                y_off = -(x_position_counters[x_bin_index] // 3) * 0.3
+
+                # Tooltip shows real years
+                safe_name = name.replace("'", "\\'")
+                tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
+                                f"Início colheita: {round(x_start, 2)} anos<br/>"
+                                f"Duração: {round(duration, 2)} anos<br/>"
+                                f"⚠️ Estrato: Desconhecido")
+
+                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                species_series.append({
+                    'type': 'scatter',
+                    'name': name,
+                    'data': [[round(x_center + x_off, 4), round(-1 + y_off, 3)]],
+                    'symbol': 'circle',
+                    'symbolSize': 24,
+                    'itemStyle': {'color': 'transparent'},
+                    'label': {
+                        'show': True,
+                        'formatter': gf_emoji,
+                        'fontSize': 20,
+                        'offset': [0, 0],
+                    },
+                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                })
+                legend_names.append(name)
+                added_species.add(name)
+
+            # 4. Missing both (bottom-left corner)
+            cols = 2
+            for idx, plant in enumerate(missing_both):
+                name, growth_type = plant[0], plant[1]
+                if name in added_species:
+                    continue
+
+                row = idx // cols
+                col = idx % cols
+                x_pos = round(min_x - (max_x - min_x) * 0.15 + col * 0.03 * (max_x - min_x), 4)
+                y_pos = round(-1 - row * 0.4, 3)
+
+                safe_name = name.replace("'", "\\'")
+                tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
+                                f"⚠️ Colheita: Desconhecida<br/>"
+                                f"⚠️ Estrato: Desconhecido")
+
+                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                species_series.append({
+                    'type': 'scatter',
+                    'name': name,
+                    'data': [[x_pos, y_pos]],
+                    'symbol': 'circle',
+                    'symbolSize': 24,
+                    'itemStyle': {'color': 'transparent'},
+                    'label': {
+                        'show': True,
+                        'formatter': gf_emoji,
+                        'fontSize': 20,
+                        'offset': [0, 0],
+                    },
+                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                })
+                legend_names.append(name)
+                added_species.add(name)
+
+            # Build Y-axis label formatter as JS function
+            sorted_label_items = sorted(y_labels.items(), key=lambda x: x[0])
+            y_label_map_js = json.dumps({str(pos): label for pos, label in sorted_label_items})
+            js_y_formatter = f"__JS__function(value){{var m={y_label_map_js};return m[String(value)]||'';}}__JSEND__"
+
+            # Graphic elements for annotations
+            graphic_elements = []
+
+            # "Formas de crescimento" title at top
+            graphic_elements.append({
+                'type': 'text',
+                'left': 'center',
+                'top': 8,
+                'style': {
+                    'text': 'Formas de crescimento',
+                    'fontSize': 14,
+                    'fontWeight': 'bold',
+                    'fontFamily': 'Inter, sans-serif',
+                    'fill': '#333',
+                },
+                'z': 100,
+            })
+
+            # Growth form legend row at top of chart (emoji + PT name)
+            gf_display_pt = {
+                'tree': 'Árvore', 'shrub': 'Arbusto', 'subshrub': 'Subarbusto',
+                'forb': 'Erva', 'graminoid': 'Graminóide', 'palm': 'Palmeira',
+                'liana': 'Liana', 'vine': 'Trepadeira', 'scrambler': 'Escandente',
+                'bamboo': 'Bambu', 'other': 'Outro',
+            }
+
+            # Fixed legend series (growth forms at top)
+            fixed_legend_x_vals = np.linspace(min_x, max_x, len(gf_list)).tolist()
+            for i, gf in enumerate(gf_list):
+                emoji = ECHARTS_EMOJIS.get(gf, '🍃')
+                pt_name = gf_display_pt.get(gf, gf)
+                species_series.append({
+                    'type': 'scatter',
+                    'data': [[round(fixed_legend_x_vals[i], 4), 10.5]],
+                    'symbol': 'circle',
+                    'symbolSize': 14,
+                    'itemStyle': {'color': 'transparent'},
+                    'label': {
+                        'show': True,
+                        'position': 'top',
+                        'formatter': f'{emoji} {pt_name}',
+                        'fontSize': 12,
+                        'fontFamily': 'Inter, sans-serif',
+                        'color': '#333',
+                    },
+                    'silent': True,
+                    'z': 100,
+                    'tooltip': {'show': False},
+                    'showInLegend': False,
+                    'legendHoverLink': False,
+                })
+
+            # Annotation labels for margin areas
             if missing_harvest:
-                # Add label at top of left margin
-                fig.add_annotation(
-                    x=min_x - (max_x - min_x) * 0.1,
-                    y=9.5,
-                    text="⚠️ Colheita desconhecida",
-                    showarrow=False,
-                    font=dict(size=11, color="darkorange"),
-                    bgcolor="rgba(255,255,255,0.8)",
-                    bordercolor="orange",
-                    borderwidth=1
-                )
-                
-                # Track species at each stratum level for offsetting
-                stratum_counters = {}
-                
-                for plant in missing_harvest:
-                    name, growth_type, _, _, y_position = plant
-                    
-                    if name in added_species:
-                        continue
-                    
-                    # Round stratum to bin it
-                    y_rounded = round(y_position, 1)
-                    if y_rounded not in stratum_counters:
-                        stratum_counters[y_rounded] = 0
-                    else:
-                        stratum_counters[y_rounded] += 1
-                    
-                    # Calculate offset
-                    y_offset = (stratum_counters[y_rounded] % 3 - 1) * 0.3  # -0.3, 0, 0.3
-                    x_offset = (stratum_counters[y_rounded] // 3) * 0.02 * (max_x - min_x)
-                    
-                    fig.add_trace(go.Scatter(
-                        x=[min_x - (max_x - min_x) * 0.1 - x_offset],
-                        y=[y_position + y_offset],
-                        mode="markers",
-                        marker=dict(
-                            size=15,
-                            color=color_map.get(growth_type, "grey"),
-                            symbol=symbol_map.get(growth_type, "circle"),
-                            line=dict(width=2, color="orange")
-                        ),
-                        name=name,
-                        showlegend=True,
-                        legendgroup=name,
-                        hoverinfo="text",
-                        text=f"<b>{name}</b><br>Forma: {growth_type}<br>⚠️ Colheita: Desconhecida<br>Estrato: {round(y_position, 2)}"
-                    ))
-                    added_species.add(name)
-            
-            # === 3. PLACE SPECIES WITH MISSING STRATUM (bottom - at their ACTUAL harvest time) ===
+                annot_text = '⚠️ Colheita desconhecida'
+                if partial_info_count > 0:
+                    annot_text += f' (ℹ️ {partial_info_count} com saída)'
+                graphic_elements.append({
+                    'type': 'text',
+                    'left': 20,
+                    'top': 55,
+                    'style': {
+                        'text': annot_text,
+                        'fontSize': 11,
+                        'fill': 'darkorange',
+                        'fontFamily': 'Inter, sans-serif',
+                        'backgroundColor': 'rgba(255,255,255,0.8)',
+                        'borderColor': 'orange',
+                        'borderWidth': 1,
+                        'padding': [3, 6],
+                    },
+                    'z': 50,
+                })
+
             if missing_stratum:
-                # Add label at left of bottom margin
-                fig.add_annotation(
-                    x=min_x,
-                    y=-0.5,
-                    text="⚠️ Estrato desconhecido",
-                    showarrow=False,
-                    xanchor="left",
-                    font=dict(size=11, color="darkred"),
-                    bgcolor="rgba(255,255,255,0.8)",
-                    bordercolor="red",
-                    borderwidth=1
-                )
-                
-                # Track species at each x position for offsetting
-                x_position_counters = {}
-                
-                for plant in missing_stratum:
-                    name, growth_type, x_start, duration, _ = plant
-                    
-                    if name in added_species:
-                        continue
-                    
-                    # Find X bin
-                    x_bin_index = 0
-                    for i in range(len(x_bins) - 1):
-                        if x_start >= x_bins[i] and x_start < x_bins[i+1]:
-                            x_bin_index = i
-                            break
-                    if x_start >= x_bins[-1]:
-                        x_bin_index = len(x_bins) - 2
-                    
-                    # Track by bin
-                    if x_bin_index not in x_position_counters:
-                        x_position_counters[x_bin_index] = 0
-                    else:
-                        x_position_counters[x_bin_index] += 1
-                    
-                    x_center = round((x_bins[x_bin_index] + x_bins[x_bin_index + 1]) / 2, 2)
-                    
-                    # Calculate offset
-                    x_offset = (x_position_counters[x_bin_index] % 3 - 1) * 0.15 * x_bin_width
-                    y_offset = -(x_position_counters[x_bin_index] // 3) * 0.3
-                    
-                    fig.add_trace(go.Scatter(
-                        x=[x_center + x_offset],
-                        y=[-1 + y_offset],
-                        mode="markers",
-                        marker=dict(
-                            size=15,
-                            color=color_map.get(growth_type, "grey"),
-                            symbol=symbol_map.get(growth_type, "circle"),
-                            line=dict(width=2, color="red")
-                        ),
-                        name=name,
-                        showlegend=True,
-                        legendgroup=name,
-                        hoverinfo="text",
-                        text=f"<b>{name}</b><br>Forma: {growth_type}<br>Início colheita: {round(x_start, 2)} anos<br>Duração: {round(duration, 2)} anos<br>⚠️ Estrato: Desconhecido"
-                    ))
-                    added_species.add(name)
-            
-            # === 4. PLACE SPECIES WITH MISSING BOTH (bottom-left corner) ===
+                graphic_elements.append({
+                    'type': 'text',
+                    'left': 90,
+                    'bottom': 90,
+                    'style': {
+                        'text': '⚠️ Estrato desconhecido',
+                        'fontSize': 11,
+                        'fill': 'darkred',
+                        'fontFamily': 'Inter, sans-serif',
+                        'backgroundColor': 'rgba(255,255,255,0.8)',
+                        'borderColor': 'red',
+                        'borderWidth': 1,
+                        'padding': [3, 6],
+                    },
+                    'z': 50,
+                })
+
             if missing_both:
-                # Add label
-                fig.add_annotation(
-                    x=min_x - (max_x - min_x) * 0.15,
-                    y=-1.5,
-                    text="⚠️ Ambos<br>desconhecidos",
-                    showarrow=False,
-                    font=dict(size=9, color="darkred"),
-                    bgcolor="rgba(255,255,255,0.8)",
-                    bordercolor="darkred",
-                    borderwidth=1
-                )
-                
-                # Arrange in a grid pattern
-                cols = 2
-                for idx, plant in enumerate(missing_both):
-                    name, growth_type = plant[0], plant[1]
-                    
-                    if name in added_species:
-                        continue
-                    
-                    row = idx // cols
-                    col = idx % cols
-                    
-                    x_pos = min_x - (max_x - min_x) * 0.15 + col * 0.03 * (max_x - min_x)
-                    y_pos = -1 - row * 0.4
-                    
-                    fig.add_trace(go.Scatter(
-                        x=[x_pos],
-                        y=[y_pos],
-                        mode="markers",
-                        marker=dict(
-                            size=15,
-                            color=color_map.get(growth_type, "grey"),
-                            symbol=symbol_map.get(growth_type, "circle"),
-                            line=dict(width=2, color="darkred")
-                        ),
-                        name=name,
-                        showlegend=True,
-                        legendgroup=name,
-                        hoverinfo="text",
-                        text=f"<b>{name}</b><br>Forma: {growth_type}<br>⚠️ Colheita: Desconhecida<br>⚠️ Estrato: Desconhecido"
-                    ))
-                    added_species.add(name)
-                    
-            # === CONFIGURE AXES ===
-            fig.update_xaxes(
-                title_text="Período de colheita (anos após plantio)",
-                zeroline=False,
-                tickvals=x_bins,
-                tickformat=".2f",
-                range=[min_x - (max_x - min_x) * 0.25, max_x + (max_x - min_x) * 0.05]
-            )
+                graphic_elements.append({
+                    'type': 'text',
+                    'left': 10,
+                    'bottom': 75,
+                    'style': {
+                        'text': '⚠️ Ambos desconhecidos',
+                        'fontSize': 9,
+                        'fill': 'darkred',
+                        'fontFamily': 'Inter, sans-serif',
+                        'backgroundColor': 'rgba(255,255,255,0.8)',
+                        'borderColor': 'darkred',
+                        'borderWidth': 1,
+                        'padding': [2, 4],
+                    },
+                    'z': 50,
+                })
 
-            # === CONFIGURE Y-AXIS WITH STRATUM TEXT LABELS ===
-            # Extract tick positions and labels from STRATUM configuration
-            # y_labels is a dict like {1.5: "Low", 4: "Medium", 6: "High", 8: "Emergent"}
-            sorted_label_items = sorted(y_labels.items(), key=lambda x: x[0])  # Sort by position
-            y_tick_positions = [pos for pos, label in sorted_label_items]
-            y_tick_text = [label for pos, label in sorted_label_items]
-
-            fig.update_yaxes(
-                title_text="Demanda de luz / Estrato",
-                zeroline=False,
-                range=[-2.5, 11],  # Always show full range 0-9 plus margins
-                tickmode='array',  # Use custom tick positions
-                tickvals=y_tick_positions,  # Numeric positions
-                ticktext=y_tick_text,  # Text labels
-                showgrid=True,
-                gridcolor='lightgray'
-            )
-            
-            # === LAYOUT ===
+            # Title
             complete_count = len(complete_data)
             missing_h_count = len(missing_harvest)
             missing_s_count = len(missing_stratum)
             missing_b_count = len(missing_both)
-
             title_parts = [f"Mostrando {len(added_species)} espécies selecionadas"]
             if complete_count:
                 title_parts.append(f"{complete_count} completas")
@@ -1066,37 +1169,233 @@ def server_app(input,output,session):
             if missing_b_count:
                 title_parts.append(f"{missing_b_count} sem ambos")
 
-            fig.update_layout(
-                height=700,
-                plot_bgcolor="white",
-                showlegend=True,
-                legend=dict(
-                    orientation="v",
-                    yanchor="top",
-                    y=0.98,
-                    xanchor="left",
-                    x=1.02,
-                    tracegroupgap=5,
-                    title=dict(
-                        text="<b>Espécies selecionadas</b>",
-                        font=dict(size=14)
-                    )
-                ),
-                title=" | ".join(title_parts)
+            x_axis_min = round(min_x - (max_x - min_x) * 0.25, 4)
+            x_axis_max = round(max_x + (max_x - min_x) * 0.05, 4)
+
+            # X-axis formatter: convert sqrt-space value → real years
+            js_x_formatter = "__JS__function(v){var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}__JSEND__"
+
+            option = {
+                'title': {
+                    'text': ' | '.join(title_parts),
+                    'left': 'center',
+                    'top': 25,
+                    'textStyle': {'fontSize': 13, 'fontFamily': 'Inter, sans-serif', 'color': '#555'},
+                },
+                'tooltip': {'trigger': 'item', 'confine': True},
+                'toolbox': {
+                    'feature': {'brush': {'type': ['rect'], 'title': {'rect': 'Selecionar setor'}}},
+                    'right': 210, 'top': 30,
+                },
+                'brush': {
+                    'toolbox': ['rect'],
+                    'xAxisIndex': 0, 'yAxisIndex': 0,
+                    'brushStyle': {
+                        'borderWidth': 2,
+                        'color': 'rgba(120,180,120,0.15)',
+                        'borderColor': 'rgba(120,180,120,0.6)',
+                    },
+                    'throttleType': 'debounce', 'throttleDelay': 300,
+                },
+                'legend': {
+                    'type': 'scroll',
+                    'orient': 'vertical',
+                    'right': 10,
+                    'top': 60,
+                    'bottom': 20,
+                    'data': legend_names,
+                    'textStyle': {'fontFamily': 'Inter, sans-serif', 'fontSize': 12},
+                },
+                'grid': {'left': 80, 'right': 200, 'top': 60, 'bottom': 80},
+                'xAxis': {
+                    'type': 'value',
+                    'name': 'Período de colheita (anos após plantio)',
+                    'nameLocation': 'middle',
+                    'nameGap': 35,
+                    'nameTextStyle': {'color': '#555', 'fontSize': 14, 'fontFamily': 'Inter, sans-serif'},
+                    'axisLabel': {
+                        'formatter': js_x_formatter,
+                        'fontFamily': 'Inter, sans-serif',
+                        'fontSize': 12,
+                        'color': '#171717',
+                    },
+                    'min': x_axis_min,
+                    'max': x_axis_max,
+                    'splitLine': {'show': False},
+                },
+                'yAxis': {
+                    'type': 'value',
+                    'name': 'Demanda de luz / Estrato',
+                    'nameLocation': 'middle',
+                    'nameGap': 50,
+                    'nameTextStyle': {'color': '#555', 'fontSize': 14, 'fontFamily': 'Inter, sans-serif'},
+                    'min': -2.5,
+                    'max': 11,
+                    'axisLabel': {
+                        'formatter': js_y_formatter,
+                        'fontFamily': 'Inter, sans-serif',
+                        'fontSize': 12,
+                        'color': '#171717',
+                    },
+                    'splitLine': {'lineStyle': {'color': '#e6e6e6'}},
+                },
+                'series': [
+                    {
+                        'type': 'scatter',
+                        'data': [],
+                        'silent': True,
+                        'tooltip': {'show': False},
+                        'markArea': {'silent': True, 'data': mark_area_data},
+                    },
+                    *species_series,
+                ],
+                'graphic': {'elements': graphic_elements},
+                'textStyle': {'fontFamily': 'Inter, sans-serif'},
+                'backgroundColor': 'transparent',
+            }
+
+            # Brush handler JS — sends selection to Shiny as real years
+            brush_js = """
+            if (window.Shiny) Shiny.setInputValue('brush_range', null);
+            chart.on('brushEnd', function(params) {
+                if (!params.areas || !params.areas.length) return;
+                var area = params.areas[0];
+                if (!area.coordRange) return;
+                var xR = area.coordRange[0], yR = area.coordRange[1];
+                if (window.Shiny) {
+                    Shiny.setInputValue('brush_range', {
+                        x0: xR[0]*xR[0], x1: xR[1]*xR[1],
+                        y0: yR[0], y1: yR[1],
+                        timestamp: Date.now()
+                    }, {priority:'event'});
+                }
+            });
+            """
+
+            return ui.HTML(echarts_html(option, 'echart_intercrops', height=700, post_init_js=brush_js))
+        
+    # Brush selection results — shows species matching the selected sector
+    @render.ui
+    @reactive.event(input.brush_range)
+    def brush_results():
+        br = input.brush_range()
+        if not br:
+            return ui.span()
+
+        x0_real = float(br.get('x0', 0))
+        x1_real = float(br.get('x1', 100))
+        y0 = float(br.get('y0', 0))
+        y1 = float(br.get('y1', 9))
+
+        # Ensure correct order
+        if x0_real > x1_real:
+            x0_real, x1_real = x1_real, x0_real
+        if y0 > y1:
+            y0, y1 = y1, y0
+
+        df = open_csv(FILE_NAME)
+        selected_plants = set(input.overview_plants() or [])
+
+        # Filter species that overlap with selected sector
+        candidates = []
+        for _, row in df.iterrows():
+            name = row.get('common_en', '')
+            if not name or name in selected_plants:
+                continue
+
+            yrs_ini = row.get('yrs_ini_prod')
+            longev = row.get('longev_prod')
+            stratum = row.get('stratum')
+
+            # Must have stratum in range
+            if pd.isna(stratum) or stratum < y0 or stratum > y1:
+                continue
+
+            # Must have harvest overlap with selected X range
+            if pd.isna(yrs_ini) or pd.isna(longev):
+                continue
+
+            harvest_start = float(yrs_ini)
+            harvest_end = harvest_start + float(longev)
+
+            # Check overlap: species harvest period intersects [x0, x1]
+            if harvest_end < x0_real or harvest_start > x1_real:
+                continue
+
+            gf = row.get('growth_form', '')
+            gf = gf if pd.notna(gf) else ''
+            candidates.append((name, gf, round(stratum, 1), round(harvest_start, 1)))
+
+        if not candidates:
+            return ui.div(
+                ui.p("Nenhuma espécie encontrada neste setor.", style="color:#888; text-align:center;"),
             )
 
-            # === ADD "GROWTH FORMS" LABEL ABOVE TOP LEGEND ===
-            fig.add_annotation(
-                x=sum(fixed_legend_x) / len(fixed_legend_x),  # Center of the growth form symbols
-                y=11.2,  # Above the growth form symbols
-                text="<b>Formas de crescimento</b>",
-                showarrow=False,
-                font=dict(size=14, color="black"),
-                xanchor="center",
-                yanchor="bottom"
+        # Try to split into native/non-native using climate scores
+        native_names = set()
+        try:
+            lat_lon_str = input.longitude_latitude()
+            if lat_lon_str:
+                lat, lon = parse_lat_lon(lat_lon_str)
+                from database.connection import get_climate_match_scores
+                sci_names = df['sci_name'].dropna().unique().tolist()
+                scores = get_climate_match_scores(lat, lon, sci_names, threshold=0.3)
+                # Build sci_name → common_en mapping
+                for _, row in df.iterrows():
+                    sn = row.get('sci_name')
+                    cn = row.get('common_en')
+                    if pd.notna(sn) and pd.notna(cn) and sn in scores:
+                        native_names.add(cn)
+        except Exception:
+            pass
+
+        # Build add buttons
+        def make_add_btn(name):
+            safe = name.replace("'", "\\'").replace('"', '\\"')
+            js = (f"var s=$('#overview_plants')[0].selectize;"
+                  f"s.addOption({{value:'{safe}',text:'{safe}'}});"
+                  f"s.addItem('{safe}');")
+            return ui.tags.button(
+                f"+ {name}",
+                class_="btn btn-outline-success btn-sm brush-add-btn",
+                onclick=js,
+                style="margin: 3px;",
             )
-            return fig
-        
+
+        sections = []
+
+        # Native candidates
+        native_cands = [c for c in candidates if c[0] in native_names]
+        other_cands = [c for c in candidates if c[0] not in native_names]
+
+        if native_cands:
+            sections.append(ui.h6("Nativas sugeridas", style="color:#2E7D32; margin-top:8px;"))
+            sections.append(ui.div(
+                *[make_add_btn(c[0]) for c in sorted(native_cands, key=lambda x: x[0])],
+                style="display:flex; flex-wrap:wrap;",
+            ))
+
+        if other_cands:
+            label = "Não-nativas adaptadas" if native_cands else "Espécies disponíveis"
+            sections.append(ui.h6(label, style="color:#555; margin-top:8px;"))
+            sections.append(ui.div(
+                *[make_add_btn(c[0]) for c in sorted(other_cands, key=lambda x: x[0])],
+                style="display:flex; flex-wrap:wrap;",
+            ))
+
+        # Range info
+        if x0_real < 1:
+            range_label = f"{int(round(x0_real*12))}m – {round(x1_real, 1)}a"
+        else:
+            range_label = f"{round(x0_real, 1)}a – {round(x1_real, 1)}a"
+
+        sections.insert(0, ui.p(
+            f"Período: {range_label} | Estrato: {round(y0,1)}–{round(y1,1)} | {len(candidates)} espécies",
+            style="font-size:0.85em; color:#777; margin-bottom:4px;",
+        ))
+
+        return ui.div(*sections)
+
     #This function creates a card showing what species are incompatible with each other
     @output
     @render.ui
@@ -1403,7 +1702,7 @@ def server_app(input,output,session):
 
     #  This functions creates the barchart and make it evolve depending on the lifetime chosen
 
-    @render_widget
+    @render.ui
     @reactive.event(input.life_time, input.overview_plants)
     def plot_plants():
         if input.database_choice() == "try":
@@ -1411,21 +1710,15 @@ def server_app(input,output,session):
             df = open_csv(FILE_NAME)
             plants = input.overview_plants()
 
-            # Growth form -> color mapping
             color_discrete_map = color_mapping.copy()
             color_discrete_map['removed'] = 'black'
-            
-            if not plants:
-                return go.Figure().update_layout(
-                    title="Nenhuma espécie selecionada",
-                    height=650
-                )
 
-            # Prepare data containers
-            variables_x, variables_y = [], []
-            color, family, function = [], [], []
-            time_to_fh, life_hist, longev_prod = [], [], []
-            graph_y, color_change = [], []
+            if not plants:
+                return ui.HTML('<div style="text-align:center;padding:40px;color:#888;">Nenhuma espécie selecionada</div>')
+
+            species_names = []
+            bar_data = []
+            color_change = set()
 
             for plant in plants:
                 query = df.query("common_en == '%s'" % plant)[
@@ -1435,89 +1728,103 @@ def server_app(input,output,session):
                         'life_hist', 'longev_prod', 'threat_status', 'ref'
                     ]
                 ].values.tolist()
-                
+
                 if not query:
                     continue
-                    
+
                 query = query[0]
-
-                variables_x.append(query[0])
-                color.append(str(query[1]))
-                family.append(str(query[3]))
-                function.append(str(query[4]))
-                time_to_fh.append(str(query[5]))
-                life_hist.append(str(query[6]))
-                longev_prod.append(str(query[7]))
-
-                # Handle missing max height
+                name = query[0]
+                growth_type = str(query[1])
                 max_height = 3 if pd.isna(query[2]) else query[2]
-                variables_y.append(max_height)
+                fam = str(query[3])
+                func = str(query[4])
+                ttfh = str(query[5])
+                lh = str(query[6])
+                lp = str(query[7])
 
-                # Calculate expected longevity
                 expect = 7 if pd.isna(query[7]) or query[7] == 0 else query[7]
 
-                # Scale bar height by lifetime
                 if size == 0:
                     graph_y_value = 0.1
                 else:
                     graph_y_value = min(max_height, size * max_height / expect)
-                graph_y.append(graph_y_value)
 
-                # Mark dead plants
-                if size > expect:
-                    color_change.append(query[0])
+                is_dead = size > expect
+                if is_dead:
+                    color_change.add(name)
 
-            # Build dataframe
-            dataframe = pd.DataFrame({
-                'Espécie': variables_x,
-                'Altura máxima': variables_y,
-                'Forma de crescimento': color,
-                'Família': family,
-                'Função': function,
-                'Tempo até colheita': time_to_fh,
-                'Ciclo de vida': life_hist,
-                'Longevidade': longev_prod,
-                'Altura no gráfico': graph_y
-            })
+                bar_color = 'black' if is_dead else color_discrete_map.get(growth_type, 'grey')
 
-            # Set color (mark dead plants)
-            dataframe['Cor'] = dataframe['Forma de crescimento']
-            dataframe.loc[dataframe['Espécie'].isin(color_change), 'Cor'] = 'removed'
+                tooltip_text = (
+                    f"<b>{name}</b><br/>"
+                    f"Altura máxima: {round(max_height, 1)} m<br/>"
+                    f"Família: {fam}<br/>"
+                    f"Forma: {growth_type}<br/>"
+                    f"Função: {func}<br/>"
+                    f"Tempo até colheita: {ttfh}<br/>"
+                    f"Ciclo de vida: {lh}<br/>"
+                    f"Longevidade: {lp}"
+                )
 
-            # Create bar chart
-            fig = px.bar(
-                dataframe,
-                x='Espécie',
-                y='Altura no gráfico',
-                color='Cor',
-                labels={
-                    'Espécie': 'Espécie',
-                    'Altura no gráfico': 'Altura (m)'
+                species_names.append(name)
+                bar_data.append({
+                    'value': round(graph_y_value, 2),
+                    'itemStyle': {'color': bar_color},
+                    'tooltip_text': tooltip_text,
+                })
+
+            if not species_names:
+                return ui.HTML('<div style="text-align:center;padding:40px;color:#888;">Nenhuma espécie selecionada</div>')
+
+            # Build tooltip formatter that reads from data
+            bar_series_data = []
+            for d in bar_data:
+                bar_series_data.append({
+                    'value': d['value'],
+                    'itemStyle': d['itemStyle'],
+                })
+
+            # Build tooltip texts array for JS
+            tooltip_texts = [d['tooltip_text'] for d in bar_data]
+            tooltip_texts_json = json.dumps(tooltip_texts, ensure_ascii=False)
+
+            option = {
+                'title': {
+                    'text': f'Crescimento das espécies no ano {size}',
+                    'left': 'center',
+                    'textStyle': {'fontSize': 14, 'fontFamily': 'Inter, sans-serif'},
                 },
-                category_orders={'Espécie': variables_x},
-                hover_name="Espécie",
-                hover_data={
-                    'Altura máxima': True,
-                    'Família': True,
-                    'Forma de crescimento': True,
-                    'Função': True,
-                    'Tempo até colheita': True,
-                    'Ciclo de vida': True,
-                    'Longevidade': True,
-                    'Altura no gráfico': False
+                'tooltip': {
+                    'trigger': 'axis',
+                    'axisPointer': {'type': 'shadow'},
+                    'formatter': f'__JS__function(params){{var t={tooltip_texts_json};var i=params[0].dataIndex;return t[i]||"";}}__JSEND__',
                 },
-                color_discrete_map=color_discrete_map
-            )
+                'grid': {'left': 60, 'right': 30, 'top': 50, 'bottom': 80},
+                'xAxis': {
+                    'type': 'category',
+                    'data': species_names,
+                    'axisLabel': {
+                        'rotate': 45,
+                        'fontFamily': 'Inter, sans-serif',
+                        'fontSize': 11,
+                        'color': '#171717',
+                    },
+                },
+                'yAxis': {
+                    'type': 'value',
+                    'name': 'Altura (m)',
+                    'nameTextStyle': {'fontFamily': 'Inter, sans-serif', 'fontSize': 13},
+                    'splitLine': {'show': False},
+                },
+                'series': [{
+                    'type': 'bar',
+                    'data': bar_series_data,
+                }],
+                'backgroundColor': '#d3d3d3',
+                'textStyle': {'fontFamily': 'Inter, sans-serif'},
+            }
 
-            fig.update_layout(
-                height=650,
-                plot_bgcolor='lightgrey',
-                title=f"Crescimento das espécies no ano {size}"
-            )
-            fig.update_xaxes(showgrid=False)
-            fig.update_yaxes(showgrid=False, title_text="Altura (m)")
-            
-            return fig
+            return ui.HTML(echarts_html(option, 'echart_plot_plants', height=650))
         
 ## * Results
     # Define available columns based on database choice

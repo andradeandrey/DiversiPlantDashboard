@@ -860,11 +860,29 @@ background-color: #ff1a1a; /* Darker red on hover */
 }
 
 .species-grid-area {
-    background-color: #f0f7ec;
+    background-color: transparent;
     border-radius: 10px;
     margin: 0 24px;
     padding: 16px;
     min-height: 400px;
+}
+
+/* Brush selection results panel */
+.brush-results-panel {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 12px 24px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.brush-add-btn {
+    font-size: 0.85em;
+    border-radius: 20px;
+    padding: 4px 12px;
 }
 
 /* Species tab background gradient */

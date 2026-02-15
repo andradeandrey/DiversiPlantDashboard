@@ -2,7 +2,6 @@
 import os
 from shiny import ui, App
 from pathlib import Path
-from shinywidgets import output_widget
 from custom_server.agroforestry_server import get_Plants
 from custom_ui.i18n import t, tab_title
 from custom_ui.nav_buttons import nav_buttons
@@ -11,19 +10,19 @@ FILE_NAME = os.path.join(
     Path(__file__).parent.parent, "data", "MgmtTraitData_updated.csv"
 )
 
-# Growth form symbols for the legend modal (matching Figma screenshot 7)
+# Growth form symbols for the legend modal
 _SYMBOLS = [
-    ("Arbusto", "Shrub", "#6cb043", "●"),
-    ("Sub-arbusto", "Subshrub", "#8B0A50", "■"),
-    ("Trepadeira herbácea", "Herbaceous climber", "#E91E63", "S"),
-    ("Gramíneas e afins", "Graminoids", "#2E7D32", "≋"),
-    ("Árvore", "Tree", "#AD1457", "♣"),
-    ("Herbáceas", "Herbs", "#F57C00", "△"),
-    ("Palmeira", "Palm", "#4CAF50", "¥"),
-    ("Bambu", "Bamboo", "#BF360C", "¥"),
-    ("Trepadeira lenhosa", "Woody climber", "#880E4F", "S"),
-    ("Rasteira", "Creeper", "#1B5E20", "···"),
-    ("Outro", "Other", "#757575", "◎"),
+    ("Árvore", "Tree", "#d7a0ff", "🌲"),
+    ("Arbusto", "Shrub", "#45d090", "🌳"),
+    ("Subarbusto", "Subshrub", "#779137", "🌿"),
+    ("Erva", "Forb", "#f8827a", "🌼"),
+    ("Graminóide", "Graminoid", "#8BC34A", "🌾"),
+    ("Palmeira", "Palm", "#ff8fda", "🌴"),
+    ("Liana", "Liana", "#dbb448", "🪢"),
+    ("Trepadeira", "Vine", "#66BB6A", "🌱"),
+    ("Escandente", "Scrambler", "#26A69A", "🪴"),
+    ("Bambu", "Bamboo", "#53c5ff", "🎋"),
+    ("Outro", "Other", "#9E9E9E", "🍃"),
 ]
 
 
@@ -237,8 +236,24 @@ main_species = ui.nav_panel(
 
         # Main grid visualization
         ui.div(
-            output_widget("intercrops"),
+            ui.output_ui("intercrops"),
             class_="species-grid-area",
+        ),
+
+        # Brush selection results panel
+        ui.panel_conditional(
+            "input.brush_range",
+            ui.div(
+                ui.tags.button(
+                    "×",
+                    class_="btn-close",
+                    style="position:absolute; top:12px; right:16px;",
+                    onclick="Shiny.setInputValue('brush_range',null,{priority:'event'});",
+                ),
+                ui.h5("Espécies no setor selecionado", style="margin-bottom:8px;"),
+                ui.output_ui("brush_results"),
+                class_="brush-results-panel",
+            ),
         ),
 
         # Lifetime Section — hidden until species are selected
@@ -260,7 +275,7 @@ main_species = ui.nav_panel(
             ),
             # Growth Visualization Output
             ui.div(
-                output_widget("plot_plants"),
+                ui.output_ui("plot_plants"),
                 class_="main-content",
             ),
         ),
