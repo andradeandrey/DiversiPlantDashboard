@@ -1296,6 +1296,12 @@ def server_app(input,output,session):
             var oldOv = document.getElementById('brush-overlay');
             if (oldOv) oldOv.remove();
 
+            // Persist hide state across chart re-renders
+            if (window._brushActive) {
+                var w = document.getElementById('lifetime-growth-wrapper');
+                if (w) w.style.display = 'none';
+            }
+
             chart.on('brushEnd', function(params) {
                 if (!params.areas || !params.areas.length) return;
                 var area = params.areas[0];
@@ -1331,9 +1337,11 @@ def server_app(input,output,session):
 
                 ov.addEventListener('click', function() {
                     ov.remove();
+                    window._brushActive = true;
+                    var w = document.getElementById('lifetime-growth-wrapper');
+                    if (w) w.style.display = 'none';
                     if (window.Shiny) {
                         Shiny.setInputValue('brush_range', rangeData, {priority:'event'});
-                        // Scroll to brush results panel after Shiny renders it
                         setTimeout(function() {
                             var panel = document.querySelector('.brush-results-panel');
                             if (panel) panel.scrollIntoView({behavior:'smooth', block:'center'});
@@ -1347,7 +1355,10 @@ def server_app(input,output,session):
                 if (!params.areas || !params.areas.length) {
                     var o = document.getElementById('brush-overlay');
                     if (o) o.remove();
+                    window._brushActive = false;
                     if (window.Shiny) Shiny.setInputValue('brush_range', null, {priority:'event'});
+                    var w = document.getElementById('lifetime-growth-wrapper');
+                    if (w) w.style.display = '';
                 }
             });
             """

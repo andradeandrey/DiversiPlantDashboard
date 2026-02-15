@@ -221,7 +221,7 @@ main_species = ui.nav_panel(
                     "×",
                     class_="btn-close",
                     style="position:absolute; top:12px; right:16px;",
-                    onclick="Shiny.setInputValue('brush_range',null,{priority:'event'});",
+                    onclick="window._brushActive=false;Shiny.setInputValue('brush_range',null,{priority:'event'});var w=document.getElementById('lifetime-growth-wrapper');if(w)w.style.display='';",
                 ),
                 ui.h5("Espécies no setor selecionado", style="margin-bottom:8px;"),
                 ui.output_ui("brush_results"),
@@ -230,33 +230,8 @@ main_species = ui.nav_panel(
             ),
         ),
 
-        # Lifetime Section — hidden when brush results are open
-        ui.panel_conditional(
-            "input.overview_plants && input.overview_plants.length > 0 && !input.brush_range",
-            ui.div(
-                ui.div(
-                    ui.p(
-                        "Tempo de vida",
-                        class_="bold-text",
-                    ),
-                    ui.help_text(
-                        "Visualize o crescimento das espécies selecionadas ao longo do tempo",
-                    ),
-                    ui.input_slider("life_time", "", min=0, max=101, value=1, step=0.5),
-                    class_="center-content",
-                ),
-                class_="grey-container",
-                id="lifetime-section",
-            ),
-            # Growth Visualization Output
-            ui.div(
-                ui.output_ui("plot_plants"),
-                class_="main-content",
-                id="growth-section",
-            ),
-        ),
 
-        # JS: move binning controls into simplify modal + fix selectize input width
+        # JS: move binning controls into simplify modal + fix selectize input width + brush toggle
         ui.tags.script("""
             document.addEventListener('DOMContentLoaded', function() {
                 var binning = document.getElementById('binning-controls');
@@ -265,6 +240,7 @@ main_species = ui.nav_panel(
                     simplifyBody.appendChild(binning);
                     binning.style.display = '';
                 }
+
 
                 // Wait for Shiny selectize to initialize, then sync tags
                 function initTagSync() {
