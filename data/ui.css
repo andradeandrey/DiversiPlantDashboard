@@ -699,6 +699,53 @@ background-color: #ff1a1a; /* Darker red on hover */
     white-space: nowrap;
 }
 
+.species-symbols-btn {
+    border-radius: 20px !important;
+    padding: 6px 16px !important;
+    font-size: 13px !important;
+    white-space: nowrap;
+    background-color: #4a7c3f !important;
+    color: white !important;
+    border: none !important;
+}
+.species-symbols-btn:hover {
+    background-color: #3d6834 !important;
+}
+
+/* Symbols dropdown panel */
+.symbols-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1050;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    min-width: 320px;
+    margin-top: 6px;
+}
+.symbols-dropdown.symbols-open {
+    display: block;
+}
+.symbols-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px 8px;
+}
+.symbols-dropdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px 18px 18px;
+}
+.symbols-dropdown-grid .symbol-badge {
+    margin: 0 !important;
+    text-align: center;
+    font-size: 0.85em;
+}
+
 .species-grid-area {
     background-color: #f0f7ec;
     border-radius: 10px;

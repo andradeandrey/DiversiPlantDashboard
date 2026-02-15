@@ -141,6 +141,33 @@ main_species = ui.nav_panel(
                 ),
                 class_="species-filter-simplify",
             ),
+            # Symbols button + dropdown panel
+            ui.div(
+                ui.tags.button(
+                    "Símbolos",
+                    class_="btn btn-sm species-symbols-btn",
+                    onclick="document.getElementById('symbolsDropdown').classList.toggle('symbols-open');",
+                ),
+                ui.div(
+                    ui.div(
+                        ui.span("Símbolos", style="font-weight: 600; font-size: 15px;"),
+                        ui.tags.button(
+                            "×",
+                            class_="btn-close",
+                            onclick="document.getElementById('symbolsDropdown').classList.remove('symbols-open');",
+                        ),
+                        class_="symbols-dropdown-header",
+                    ),
+                    ui.div(
+                        *[_symbol_badge(pt, en, color, icon) for pt, en, color, icon in _SYMBOLS],
+                        class_="symbols-dropdown-grid",
+                    ),
+                    id="symbolsDropdown",
+                    class_="symbols-dropdown",
+                ),
+                class_="species-filter-simplify",
+                style="position: relative;",
+            ),
             class_="species-filters-row",
         ),
 
@@ -162,30 +189,6 @@ main_species = ui.nav_panel(
         </div>
         """),
 
-        # Symbols modal
-        ui.HTML("""
-        <div class="modal fade" id="symbolsModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">
-                  <span class="i18n-pt">Símbolos</span>
-                  <span class="i18n-en">Symbols</span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body" id="symbols-modal-body"></div>
-            </div>
-          </div>
-        </div>
-        """),
-
-        # Symbols modal body content (moved into modal via JS)
-        ui.div(
-            *[_symbol_badge(pt, en, color, icon) for pt, en, color, icon in _SYMBOLS],
-            id="symbols-content",
-            style="display: none;",
-        ),
 
         # Binning controls (hidden; moved into simplify modal via JS)
         ui.div(
@@ -259,7 +262,7 @@ main_species = ui.nav_panel(
             ),
         ),
 
-        # JS: move binning controls into simplify modal, symbols content into symbols modal
+        # JS: move binning controls into simplify modal
         ui.tags.script("""
             document.addEventListener('DOMContentLoaded', function() {
                 var binning = document.getElementById('binning-controls');
@@ -267,12 +270,6 @@ main_species = ui.nav_panel(
                 if (binning && simplifyBody) {
                     simplifyBody.appendChild(binning);
                     binning.style.display = '';
-                }
-                var symbols = document.getElementById('symbols-content');
-                var symbolsBody = document.getElementById('symbols-modal-body');
-                if (symbols && symbolsBody) {
-                    symbolsBody.appendChild(symbols);
-                    symbols.style.display = '';
                 }
             });
         """),
