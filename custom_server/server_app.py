@@ -1307,11 +1307,12 @@ def server_app(input,output,session):
                 'tooltip': {'trigger': 'item', 'confine': True},
                 'toolbox': {
                     'feature': {'brush': {'type': ['rect'], 'title': {'rect': 'Selecionar setor'}}},
-                    'right': 210, 'top': 30,
+                    'right': 210, 'top': 10,
                 },
                 'brush': {
                     'toolbox': ['rect'],
                     'xAxisIndex': 0, 'yAxisIndex': 0,
+                    'brushMode': 'single',
                     'brushStyle': {
                         'borderWidth': 2,
                         'color': 'rgba(120,180,120,0.15)',
@@ -1381,6 +1382,9 @@ def server_app(input,output,session):
             // Remove any existing overlay
             var oldOv = document.getElementById('brush-overlay');
             if (oldOv) oldOv.remove();
+
+            // Auto-activate brush tool ("Selecionar setor" always on)
+            chart.dispatchAction({ type: 'takeGlobalCursor', key: 'brush', brushOption: { brushType: 'rect', brushMode: 'single' } });
 
             // Persist hide state across chart re-renders
             if (window._brushActive) {
@@ -2056,7 +2060,7 @@ def server_app(input,output,session):
     # Modified suggestion_plants function to use selected columns
     @output
     @render.ui
-    @reactive.event(input.update_map, input.selected_columns)
+    @reactive.event(input.update_map, input.selected_columns, input.overview_plants)
     def suggestion_plants():
         if input.database_choice() == "try":
             df = open_csv(FILE_NAME)

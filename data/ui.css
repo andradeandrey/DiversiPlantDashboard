@@ -1713,16 +1713,16 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 
 .results-table td {
     padding: 8px 12px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e8ebe9;
     color: #333;
 }
 
 .results-table tbody tr:nth-child(odd) {
-    background: #ffffff;
+    background: #FFFFFF;
 }
 
 .results-table tbody tr:nth-child(even) {
-    background: #e2e2e2;
+    background: #D2DED6;
 }
 
 .results-table .sci-link {
@@ -1777,6 +1777,12 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 
 .results-download-btn:hover {
     background-color: #2f5228 !important;
+}
+
+/* Results tab background gradient (Figma: white → forest green-100) */
+.tab-pane[data-value="tab_results"] > .container-fluid {
+    background: linear-gradient(180deg, #ffffff 0%, #d2ded6 100%);
+    min-height: 100vh;
 }
 
 /* Results tab floating nav */

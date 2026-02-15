@@ -272,6 +272,13 @@ main_species = ui.nav_panel(
                                     e.preventDefault();
                                     var origRemove = item.querySelector('.remove');
                                     if (origRemove) origRemove.click();
+                                    // Blur selectize to prevent dropdown from opening
+                                    setTimeout(function() {
+                                        var inp = searchBar.querySelector('input');
+                                        if (inp) inp.blur();
+                                        var s = $('#overview_plants')[0];
+                                        if (s && s.selectize) s.selectize.close();
+                                    }, 50);
                                 });
                             }
                             tagsContainer.appendChild(clone);
