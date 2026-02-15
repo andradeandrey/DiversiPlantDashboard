@@ -10,13 +10,14 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent, "data", "MgmtTraitData_up
 results = ui.nav_panel(
     tab_title(4, "Resultados", "Results"),
     ui.page_fluid(
-        # Title
+        ui.tags.style(".tab-pane[data-value='tab_results'] .container-fluid { padding: 0 80px; }"),
+        # Title — centered
         ui.h5(
             t(
                 "Adicione mais colunas à sua tabela de resultados:",
                 "Add more columns to your results table:",
             ),
-            class_="mt-3 mb-2",
+            class_="mt-3 mb-2 text-center",
         ),
 
         # Column pill selector (checkbox group styled as pills via CSS)
@@ -33,31 +34,41 @@ results = ui.nav_panel(
 
         # Data table
         ui.div(
-            ui.output_ui("suggestion_plants", class_="input-selectize"),
+            ui.output_ui("suggestion_plants"),
             class_="mt-3",
         ),
 
-        # Bottom actions
+        # Bottom actions: Voltar left, Baixar right (in nav-buttons row)
         ui.div(
-            nav_buttons(back_value="tab_species"),
-            ui.div(
-                ui.download_button(
-                    "export_df_os",
-                    t("Baixar", "Download"),
-                    class_="btn-success",
-                ),
-                style="position: absolute; right: 20px; bottom: 16px;",
+            ui.tags.button(
+                t("Voltar", "Back"),
+                class_="btn btn-outline-secondary nav-btn",
+                onclick="Shiny.setInputValue('_nav_to', 'tab_species', {priority: 'event'});",
             ),
-            style="position: relative;",
+            ui.div(style="flex-grow: 1;"),
+            ui.download_button(
+                "export_df_os",
+                ui.span(t("Baixar", "Download"), " \u2228"),
+                class_="results-download-btn",
+            ),
+            class_="nav-buttons d-flex mt-4 mb-3",
         ),
 
-        # CSS: transform checkboxes into green pills
+        # CSS: transform checkboxes into green pills with +/- prefix (Figma match)
         ui.tags.style("""
-            .column-pills-container .shiny-input-checkboxgroup {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
+            .column-pills-container {
+                text-align: center;
+            }
+            .column-pills-container > div,
+            .column-pills-container .shiny-input-container,
+            .column-pills-container .shiny-input-checkboxgroup,
+            .column-pills-container .shiny-options-group {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 6px !important;
                 padding: 10px 0;
+                justify-content: center !important;
+                width: 100% !important;
             }
             .column-pills-container .checkbox,
             .column-pills-container .form-check {
@@ -68,13 +79,14 @@ results = ui.nav_panel(
             .column-pills-container .form-check-input {
                 display: none !important;
             }
+            /* Base pill style: white bg, green border, "+" prefix */
             .column-pills-container .checkbox label,
             .column-pills-container .form-check-label {
                 display: inline-block;
                 padding: 5px 14px;
                 border-radius: 20px;
-                border: 1.5px solid #6cb043;
-                color: #6cb043;
+                border: 1.5px solid #3d6834;
+                color: #3d6834;
                 background: white;
                 font-size: 0.85em;
                 font-weight: 500;
@@ -83,20 +95,31 @@ results = ui.nav_panel(
                 white-space: nowrap;
                 user-select: none;
             }
+            .column-pills-container .checkbox label::before,
+            .column-pills-container .form-check-label::before {
+                content: "+ ";
+                font-weight: 600;
+            }
             .column-pills-container .checkbox label:hover,
             .column-pills-container .form-check-label:hover {
                 background: #f0f9e8;
             }
+            /* Selected pill: dark green bg, white text, "−" prefix */
+            /* sibling selector (Bootstrap 5) */
+            .column-pills-container .form-check-input:checked + .form-check-label,
             .column-pills-container .checkbox input:checked + label,
-            .column-pills-container .form-check-input:checked + .form-check-label {
-                background: #6cb043;
-                color: white;
+            /* :has() selector (input nested inside label) */
+            .column-pills-container .checkbox label:has(input:checked),
+            .column-pills-container .form-check-label:has(input:checked) {
+                background: #3d6834 !important;
+                color: white !important;
+                border-color: #3d6834 !important;
             }
-            .column-pills-container .checkbox input:checked + label::after,
-            .column-pills-container .form-check-input:checked + .form-check-label::after {
-                content: " \\00d7";
-                margin-left: 6px;
-                font-weight: bold;
+            .column-pills-container .form-check-input:checked + .form-check-label::before,
+            .column-pills-container .checkbox input:checked + label::before,
+            .column-pills-container .checkbox label:has(input:checked)::before,
+            .column-pills-container .form-check-label:has(input:checked)::before {
+                content: "\\2212  ";
             }
         """),
     ),

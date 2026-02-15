@@ -1689,3 +1689,112 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 .db-con {
     color: #888;
 }
+
+/* =============================================== */
+/* Results Tab — Custom Table (Figma)              */
+/* =============================================== */
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+}
+
+.results-table th {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #3d6834;
+    border-bottom: 2px solid #ccc;
+    padding: 10px 12px;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.results-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+}
+
+.results-table tbody tr:nth-child(odd) {
+    background: #ffffff;
+}
+
+.results-table tbody tr:nth-child(even) {
+    background: #e2e2e2;
+}
+
+.results-table .sci-link {
+    color: #3d6834;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.results-table .sci-link:hover {
+    color: #2a4e24;
+}
+
+.results-table .th-sort {
+    cursor: pointer;
+    opacity: 0.4;
+    margin-left: 4px;
+    font-size: 0.9em;
+}
+
+.results-table .th-sort:hover {
+    opacity: 1;
+}
+
+.results-table .th-remove {
+    cursor: pointer;
+    opacity: 0.5;
+    margin-left: 6px;
+    font-size: 1em;
+}
+
+.results-table .th-remove:hover {
+    opacity: 1;
+    color: #c00;
+}
+
+.results-table .text-center {
+    text-align: center;
+}
+
+/* Download button — Figma dark green pill */
+.results-download-btn {
+    background-color: #3d6834 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 22px !important;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.results-download-btn:hover {
+    background-color: #2f5228 !important;
+}
+
+/* Results tab floating nav */
+.tab-pane[data-value="tab_results"] .nav-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: 1px solid #e9ecef;
+    padding: 12px 50px;
+    max-width: 100%;
+    margin: 0;
+}
+
+.tab-pane[data-value="tab_results"] .nav-buttons .btn-outline-secondary {
+    background-color: #fff;
+}

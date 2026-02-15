@@ -6,7 +6,6 @@ from pathlib import Path
 from shinywidgets import render_widget
 from shiny import render, ui, reactive
 import plotly.graph_objects as go
-from itables.shiny import DT
 from custom_server.agroforestry_server import open_csv, get_Plants
 import logging
 import geopandas as gpd
@@ -37,6 +36,93 @@ STRATUM = [0,1,[[0,4,9],{2:"Baixo", 6.5:"Alto"}],
             [[0,1,2,3,4,5,6,7,8,9],{0.5: "Rasteiro",1.5: "Rasteiro-Baixo",2.5: "Baixo",3.5: "Baixo-Médio",4.5: "Médio",5.5: "Médio-Alto",6.5: "Alto",7.5: "Alto-Emergente",8.5: "Emergente"}]]
 
 FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'naturalized',  "All Species":'all'}
+
+# PT-BR display names for results table columns (Figma match)
+COLUMN_DISPLAY_NAMES = {
+    'common_en': 'Nome científico',
+    'growth_form': 'Forma de crescimento',
+    'plant_max_height': 'Altura máxima (m)',
+    'stratum': 'Estrato (demanda de luz)',
+    'family': 'Família',
+    'function': 'Função',
+    'yrs_ini_prod': 'Prod. inicial (anos)',
+    'life_hist': 'História de vida',
+    'longev_prod': 'Long. produtiva (anos)',
+    'threat_status': 'Ameaça à conservação',
+    'ref': 'Referência',
+}
+
+# Numeric columns that should be center-aligned in results table
+_NUMERIC_COLS = {'plant_max_height', 'yrs_ini_prod', 'longev_prod'}
+
+
+def _render_results_table(df, columns):
+    """Build a custom HTML table matching the Figma design.
+
+    Features: zebra striping, PT-BR headers, sort icons, column-remove
+    buttons, scientific-name links.
+    """
+    import html as _html
+
+    header_cells = []
+    for col in columns:
+        display = COLUMN_DISPLAY_NAMES.get(col, col.replace('_', ' ').title())
+        display_esc = _html.escape(display)
+        col_esc = _html.escape(col)
+        header_cells.append(
+            f'<th>'
+            f'<span class="th-sort" data-col="{col_esc}" title="Ordenar">&#9671;</span> '
+            f'{display_esc} '
+            f'<span class="th-remove" data-col="{col_esc}" title="Remover coluna"'
+            f' onclick="var cb=document.querySelector(\'input[value=&quot;{col_esc}&quot;]\');if(cb)cb.click();"'
+            f'>&times;</span>'
+            f'</th>'
+        )
+
+    rows = []
+    for _, row in df.iterrows():
+        cells = []
+        for col in columns:
+            val = row[col]
+            val_str = _html.escape(str(val))
+            td_class = ' class="text-center"' if col in _NUMERIC_COLS else ''
+            if col == 'common_en':
+                cells.append(f'<td{td_class}><span class="sci-link">{val_str}</span></td>')
+            else:
+                cells.append(f'<td{td_class}>{val_str}</td>')
+        rows.append('<tr>' + ''.join(cells) + '</tr>')
+
+    sort_js = """
+<script>
+(function(){
+  document.querySelectorAll('.results-table .th-sort').forEach(function(el){
+    el.addEventListener('click', function(){
+      var table = el.closest('table');
+      var colIdx = Array.from(el.closest('tr').children).indexOf(el.closest('th'));
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      var asc = el.dataset.asc !== '1';
+      el.dataset.asc = asc ? '1' : '0';
+      rows.sort(function(a,b){
+        var av = a.children[colIdx].textContent.trim();
+        var bv = b.children[colIdx].textContent.trim();
+        var an = parseFloat(av), bn = parseFloat(bv);
+        if(!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      rows.forEach(function(r){ tbody.appendChild(r); });
+    });
+  });
+})();
+</script>"""
+
+    return (
+        '<table class="results-table">'
+        '<thead><tr>' + ''.join(header_cells) + '</tr></thead>'
+        '<tbody>' + ''.join(rows) + '</tbody>'
+        '</table>'
+        + sort_js
+    )
 
 SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 
@@ -1955,8 +2041,8 @@ def server_app(input,output,session):
     def update_column_choices():
         available_cols = get_available_columns()
         
-        # Get readable column names for display
-        readable_cols = {col: col.replace('_', ' ').title() for col in available_cols}
+        # Get readable column names for display (PT-BR from Figma)
+        readable_cols = {col: COLUMN_DISPLAY_NAMES.get(col, col.replace('_', ' ').title()) for col in available_cols}
         
         # Set default selections (first few columns)
         default_selected = available_cols[:5] if len(available_cols) >= 5 else available_cols
@@ -1980,8 +2066,8 @@ def server_app(input,output,session):
             selected_plants_df = df[df['common_en'].isin(plants)]
             
             # Get selected columns (convert from readable back to actual column names if needed)
-            columns = input.selected_columns()
-            
+            columns = list(input.selected_columns())
+
             # Ensure "common_en" is always included for identification
             if "common_en" not in columns and "common_en" in df.columns:
                 columns = ["common_en"] + columns
@@ -2003,10 +2089,9 @@ def server_app(input,output,session):
                 table = table.sort_values(by='common_en')
             table = table.reset_index(drop=True)
             
-            # Display the table with DataTable
-            with pd.option_context("display.float_format", "{:,.2f}".format):
-                return ui.HTML(DT(table))
-        
+            # Display custom HTML table (Figma design)
+            return ui.HTML(_render_results_table(table, valid_columns))
+
         else:  # For GIFT database
             if SPECIES_GIFT_DATAFRAME.empty:
                 return ui.p("No species data available. Please update your location.")
@@ -2022,8 +2107,8 @@ def server_app(input,output,session):
                 return ui.p("Unable to filter GIFT database. Please check column structure.")
             
             # Get selected columns from input
-            columns = input.selected_columns()
-            
+            columns = list(input.selected_columns())
+
             # Ensure species identifier column is always included
             id_column = 'work_species' if 'work_species' in selected_gift_df.columns else None
             if id_column and id_column not in columns:
@@ -2049,8 +2134,7 @@ def server_app(input,output,session):
                 
             table = table.reset_index(drop=True)
             
-            with pd.option_context("display.float_format", "{:,.2f}".format):
-                return ui.HTML(DT(table))
+            return ui.HTML(_render_results_table(table, valid_columns))
 
     # Also update the export function to use selected columns
     @output
@@ -2064,8 +2148,8 @@ def server_app(input,output,session):
             selected_df = df[df['common_en'].isin(plants)]
             
             # Get selected columns
-            columns = input.selected_columns()
-            
+            columns = list(input.selected_columns())
+
             # Ensure "common_en" is always included
             if "common_en" not in columns and "common_en" in df.columns:
                 columns = ["common_en"] + columns
@@ -2081,8 +2165,10 @@ def server_app(input,output,session):
             
             if "common_en" in valid_columns:
                 selected_df = selected_df.sort_values(by='common_en')
-            
-            yield selected_df.to_csv(index=False)
+
+            # Rename columns to PT-BR display names for the CSV
+            rename_map = {c: COLUMN_DISPLAY_NAMES.get(c, c) for c in valid_columns}
+            yield selected_df.rename(columns=rename_map).to_csv(index=False)
         else:
             global SPECIES_GIFT_DATAFRAME
             if SPECIES_GIFT_DATAFRAME.empty:
@@ -2096,8 +2182,8 @@ def server_app(input,output,session):
                     selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
                     
                     # Get selected columns
-                    columns = input.selected_columns()
-                    
+                    columns = list(input.selected_columns())
+
                     # Ensure species identifier is always included
                     if "work_species" not in columns and "work_species" in selected_df.columns:
                         columns = ["work_species"] + columns
