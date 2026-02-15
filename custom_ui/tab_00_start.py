@@ -104,12 +104,15 @@ start = ui.nav_panel(
                             ),
                             class_="welcome-bullets-container",
                         ),
-                        # Começar button
+                        # Começar button — go straight to location tab
                         ui.div(
                             ui.tags.button(
                                 t("Começar →", "Get started →"),
                                 class_="btn btn-success btn-comecar",
-                                onclick=_SHOW_STEP2,
+                                onclick=(
+                                    "Shiny.setInputValue('database_choice', 'try', {priority: 'event'});"
+                                    "Shiny.setInputValue('_nav_to', 'tab_location', {priority: 'event'});"
+                                ),
                             ),
                             style="margin-top: 32px;",
                         ),
