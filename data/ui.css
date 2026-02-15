@@ -649,60 +649,74 @@ background-color: #ff1a1a; /* Darker red on hover */
 
 .species-filters-row {
     display: flex;
-    align-items: flex-end;
-    gap: 8px;
+    align-items: center;
+    gap: 10px;
     padding: 0 24px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .species-filter-item {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
+    width: auto !important;
 }
 
 .species-filter-item .form-group {
     margin-bottom: 0;
+    width: auto !important;
+}
+
+.species-filter-item .shiny-input-container {
+    width: auto !important;
 }
 
 .species-filter-item .shiny-input-select,
 .species-filter-item select,
 .species-filter-item select.form-select,
 .species-filter-item .form-select {
-    border: 1.5px solid #ccc !important;
-    border-radius: 20px !important;
-    padding: 7px 32px 7px 14px !important;
-    font-size: 13px !important;
-    font-weight: 400;
-    background-color: #f8f9fa !important;
+    border: none !important;
+    border-radius: 5px !important;
+    padding: 5px 24px 5px 10px !important;
+    font-size: 12px !important;
+    font-weight: 500;
+    color: #333 !important;
+    background-color: #ececec !important;
     appearance: none !important;
     -webkit-appearance: none !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 10px center !important;
-    background-size: 14px !important;
+    background-size: 10px !important;
     cursor: pointer;
     white-space: nowrap;
-    min-width: 120px;
+    min-width: 0;
+    width: auto !important;
 }
 
 .species-filter-simplify {
-    margin-left: auto;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     padding-bottom: 0;
+}
+
+.species-filter-item + .species-filter-simplify {
+    margin-left: auto;
 }
 
 .species-simplify-btn {
     border-radius: 20px !important;
-    padding: 6px 16px !important;
+    padding: 6px 14px !important;
     font-size: 13px !important;
+    font-weight: 500;
     white-space: nowrap;
 }
 
 .species-symbols-btn {
     border-radius: 20px !important;
-    padding: 6px 16px !important;
+    padding: 6px 14px !important;
     font-size: 13px !important;
+    font-weight: 500;
     white-space: nowrap;
     background-color: #4a7c3f !important;
     color: white !important;
@@ -1164,11 +1178,11 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
 }
 
 .tab-pane[data-value="tab_location"] .nav-buttons {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 10;
+    z-index: 100;
     border-top: none;
     padding: 16px 50px;
     margin: 0;
