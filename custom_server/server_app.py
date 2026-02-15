@@ -206,24 +206,30 @@ def server_app(input,output,session):
     ECOREGION_SHP = os.path.join(
         Path(__file__).parent.parent, "data", "ecoregions_raster", "Ecoregions2017.shp"
     )
-    _ecoregion_gdf = None  # lazy-loaded
-    _ecoregion_simplified = None  # simplified for map overlay
+    _ecoregion_gdf = None  # lazy-loaded (with spatial index)
 
     def _load_ecoregions():
         nonlocal _ecoregion_gdf
         if _ecoregion_gdf is None:
             _ecoregion_gdf = gpd.read_file(ECOREGION_SHP)
-            _ecoregion_gdf = _ecoregion_gdf.to_crs(epsg=4326)
+            # Build spatial index on first load
+            _ = _ecoregion_gdf.sindex
         return _ecoregion_gdf
 
-    def _load_ecoregions_simplified():
-        """Load simplified ecoregions for map overlay (much smaller geometry)."""
-        nonlocal _ecoregion_simplified
-        if _ecoregion_simplified is None:
-            gdf = _load_ecoregions().copy()
-            gdf["geometry"] = gdf["geometry"].simplify(tolerance=0.05, preserve_topology=True)
-            _ecoregion_simplified = gdf
-        return _ecoregion_simplified
+    def _find_ecoregion_at_point(lat, lon):
+        """Fast spatial lookup: returns single-row GeoDataFrame or None."""
+        from shapely.geometry import Point
+        gdf = _load_ecoregions()
+        pt = Point(lon, lat)
+        # Use spatial index for O(log n) candidate lookup
+        candidates = gdf.sindex.query(pt, predicate="intersects")
+        if len(candidates) == 0:
+            return None
+        matches = gdf.iloc[candidates]
+        exact = matches[matches.geometry.contains(pt)]
+        if exact.empty:
+            return None
+        return exact.iloc[[0]]
 
     # Map WWF BIOME_NAME → UI biome key
     _BIOME_NAME_TO_UI = {
@@ -245,13 +251,10 @@ def server_app(input,output,session):
 
     def _query_ecoregion(lat, lon):
         """Find ecoregion at given coordinates. Returns dict or None."""
-        from shapely.geometry import Point
-        gdf = _load_ecoregions()
-        pt = Point(lon, lat)
-        matches = gdf[gdf.geometry.contains(pt)]
-        if matches.empty:
+        result = _find_ecoregion_at_point(lat, lon)
+        if result is None:
             return None
-        row = matches.iloc[0]
+        row = result.iloc[0]
         return {
             "eco_name": row.get("ECO_NAME", ""),
             "biome_name": row.get("BIOME_NAME", ""),
@@ -308,31 +311,26 @@ def server_app(input,output,session):
         m = folium.Map(location=center, zoom_start=zoom, width="100%", height="1050px")
         folium.TileLayer("OpenStreetMap").add_to(m)
 
-        # Add ecoregion overlay — show only the ecoregion containing the user's point
-        try:
-            gdf = _load_ecoregions_simplified()
-            if lat is not None and lon is not None:
-                from shapely.geometry import Point
-                pt = Point(lon, lat)
-                bbox = gdf[gdf.geometry.contains(pt)]
-            else:
-                # Global view — show all but with very simplified geometry
-                bbox = gdf.copy()
-                bbox["geometry"] = bbox["geometry"].simplify(tolerance=0.2, preserve_topology=True)
-
-            if not bbox.empty:
-                folium.GeoJson(
-                    bbox[["geometry", "ECO_NAME", "BIOME_NAME", "BIOME_NUM", "REALM"]].to_json(),
-                    name="Ecoregions",
-                    style_function=_biome_style,
-                    tooltip=folium.GeoJsonTooltip(
-                        fields=["ECO_NAME", "BIOME_NAME"],
-                        aliases=["Ecorregião:", "Bioma:"],
-                        style="font-size: 12px;",
-                    ),
-                ).add_to(m)
-        except Exception:
-            pass
+        # Add ecoregion overlay — only the ecoregion at the user's point
+        if lat is not None and lon is not None:
+            try:
+                eco_gdf = _find_ecoregion_at_point(lat, lon)
+                if eco_gdf is not None:
+                    # Simplify only this single polygon for fast rendering
+                    display = eco_gdf[["geometry", "ECO_NAME", "BIOME_NAME", "BIOME_NUM", "REALM"]].copy()
+                    display["geometry"] = display["geometry"].simplify(tolerance=0.01, preserve_topology=True)
+                    folium.GeoJson(
+                        display.to_json(),
+                        name="Ecorregião",
+                        style_function=_biome_style,
+                        tooltip=folium.GeoJsonTooltip(
+                            fields=["ECO_NAME", "BIOME_NAME"],
+                            aliases=["Ecorregião:", "Bioma:"],
+                            style="font-size: 12px;",
+                        ),
+                    ).add_to(m)
+            except Exception:
+                pass
 
         # Add marker
         if lat is not None and lon is not None:
