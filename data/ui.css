@@ -811,6 +811,15 @@ background-color: #ff1a1a; /* Darker red on hover */
     white-space: nowrap;
 }
 
+#simplifyModal .modal-body .shiny-input-container {
+    width: 100% !important;
+}
+#simplifyModal .modal-body .js-range-slider,
+#simplifyModal .modal-body .irs,
+#simplifyModal .modal-body .irs-with-grid {
+    width: 100% !important;
+}
+
 .species-symbols-btn {
     border-radius: 20px !important;
     padding: 6px 14px !important;

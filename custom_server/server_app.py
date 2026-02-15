@@ -1292,10 +1292,6 @@ def server_app(input,output,session):
 
             # Brush handler JS — shows clickable overlay, then sends to Shiny on click
             brush_js = """
-            if (window.Shiny) {
-                Shiny.setInputValue('brush_range', null);
-                Shiny.setInputValue('brush_show_results', null);
-            }
             // Remove any existing overlay
             var oldOv = document.getElementById('brush-overlay');
             if (oldOv) oldOv.remove();
@@ -1337,6 +1333,11 @@ def server_app(input,output,session):
                     ov.remove();
                     if (window.Shiny) {
                         Shiny.setInputValue('brush_range', rangeData, {priority:'event'});
+                        // Scroll to brush results panel after Shiny renders it
+                        setTimeout(function() {
+                            var panel = document.querySelector('.brush-results-panel');
+                            if (panel) panel.scrollIntoView({behavior:'smooth', block:'center'});
+                        }, 300);
                     }
                 });
             });
@@ -1433,7 +1434,8 @@ def server_app(input,output,session):
             safe = name.replace("'", "\\'").replace('"', '\\"')
             js = (f"var s=$('#overview_plants')[0].selectize;"
                   f"s.addOption({{value:'{safe}',text:'{safe}'}});"
-                  f"s.addItem('{safe}');")
+                  f"s.addItem('{safe}');"
+                  f"this.style.opacity='0.5';this.disabled=true;")
             return ui.tags.button(
                 f"+ {name}",
                 class_="btn btn-outline-success btn-sm brush-add-btn",

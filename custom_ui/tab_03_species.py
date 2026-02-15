@@ -137,7 +137,7 @@ main_species = ui.nav_panel(
             # Simplify button
             ui.div(
                 ui.tags.button(
-                    "Simplificar sistema",
+                    "Simplificar gráfico",
                     class_="btn btn-outline-secondary btn-sm species-simplify-btn",
                     **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
                 ),
@@ -195,43 +195,16 @@ main_species = ui.nav_panel(
         # Binning controls (hidden; moved into simplify modal via JS)
         ui.div(
             ui.div(
-                ui.div(
-                    ui.p(
-                        "Nº de categorias de demanda de luz",
-                        class_="bold-text",
-                    ),
-                    ui.input_select(
-                        "stratum_bins",
-                        "",
-                        choices={
-                            "2": "2", "3": "3", "4": "4", "5": "5",
-                            "6": "6", "7": "7", "8": "8", "9": "9",
-                        },
-                        selected="4",
-                    ),
-                    style="flex: 1; padding-right: 10px;",
-                ),
-                ui.div(
-                    ui.p(
-                        "Nº de períodos de colheita",
-                        class_="bold-text",
-                    ),
-                    ui.input_select(
-                        "harvest_bins",
-                        "",
-                        choices={
-                            "2": "2", "3": "3", "4": "4", "5": "5",
-                            "6": "6", "7": "7", "8": "8", "9": "9", "10": "10",
-                        },
-                        selected="4",
-                    ),
-                    style="flex: 1; padding-left: 10px;",
-                ),
-                style="display: flex; gap: 20px;",
+                ui.p("Nº de categorias de demanda de luz", class_="bold-text"),
+                ui.input_slider("stratum_bins", "", min=2, max=9, value=4, step=1),
+                style="margin-bottom: 24px;",
             ),
-            class_="grey-container",
+            ui.div(
+                ui.p("Nº de períodos de colheita feito", class_="bold-text"),
+                ui.input_slider("harvest_bins", "", min=2, max=10, value=4, step=1),
+            ),
             id="binning-controls",
-            style="display: none;",
+            style="display: none; padding: 8px 0;",
         ),
 
         # Main grid visualization
@@ -253,12 +226,13 @@ main_species = ui.nav_panel(
                 ui.h5("Espécies no setor selecionado", style="margin-bottom:8px;"),
                 ui.output_ui("brush_results"),
                 class_="brush-results-panel",
+                id="brush-results-panel",
             ),
         ),
 
-        # Lifetime Section — hidden until species are selected
+        # Lifetime Section — hidden when brush results are open
         ui.panel_conditional(
-            "input.overview_plants && input.overview_plants.length > 0",
+            "input.overview_plants && input.overview_plants.length > 0 && !input.brush_range",
             ui.div(
                 ui.div(
                     ui.p(
@@ -272,11 +246,13 @@ main_species = ui.nav_panel(
                     class_="center-content",
                 ),
                 class_="grey-container",
+                id="lifetime-section",
             ),
             # Growth Visualization Output
             ui.div(
                 ui.output_ui("plot_plants"),
                 class_="main-content",
+                id="growth-section",
             ),
         ),
 
