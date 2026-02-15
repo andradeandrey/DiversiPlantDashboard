@@ -874,6 +874,12 @@ def server_app(input,output,session):
                                 f"Estrato: {round(y_position, 2)}")
 
                 gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                gf_color = color_map.get(growth_type, '#999')
+
+                # Harvest period line endpoints (in sqrt-space)
+                x_line_start = round(sqrt_transform(x_start), 4)
+                x_line_end = round(sqrt_transform(x_start + duration), 4)
+
                 species_series.append({
                     'type': 'scatter',
                     'name': name,
@@ -888,6 +894,17 @@ def server_app(input,output,session):
                         'offset': [0, 0],
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                    'markLine': {
+                        'silent': True,
+                        'symbol': ['circle', 'arrow'],
+                        'symbolSize': [4, 6],
+                        'label': {'show': False},
+                        'lineStyle': {'color': gf_color, 'width': 2.5, 'type': 'solid'},
+                        'data': [[
+                            {'coord': [x_line_start, round(y_final, 3)]},
+                            {'coord': [x_line_end, round(y_final, 3)]},
+                        ]],
+                    },
                 })
                 legend_names.append(name)
                 added_species.add(name)
@@ -985,10 +1002,17 @@ def server_app(input,output,session):
                                 f"⚠️ Estrato: Desconhecido")
 
                 gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                gf_color = color_map.get(growth_type, '#999')
+
+                # Harvest period line (in sqrt-space)
+                x_line_start = round(sqrt_transform(x_start), 4)
+                x_line_end = round(sqrt_transform(x_start + duration), 4)
+                y_pt = round(-1 + y_off, 3)
+
                 species_series.append({
                     'type': 'scatter',
                     'name': name,
-                    'data': [[round(x_center + x_off, 4), round(-1 + y_off, 3)]],
+                    'data': [[round(x_center + x_off, 4), y_pt]],
                     'symbol': 'circle',
                     'symbolSize': 24,
                     'itemStyle': {'color': 'transparent'},
@@ -999,6 +1023,17 @@ def server_app(input,output,session):
                         'offset': [0, 0],
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                    'markLine': {
+                        'silent': True,
+                        'symbol': ['circle', 'arrow'],
+                        'symbolSize': [4, 6],
+                        'label': {'show': False},
+                        'lineStyle': {'color': gf_color, 'width': 2.5, 'type': 'solid'},
+                        'data': [[
+                            {'coord': [x_line_start, y_pt]},
+                            {'coord': [x_line_end, y_pt]},
+                        ]],
+                    },
                 })
                 legend_names.append(name)
                 added_species.add(name)
