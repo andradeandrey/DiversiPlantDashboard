@@ -56,6 +56,9 @@ main_species = ui.nav_panel(
             class_="species-search-bar",
         ),
 
+        # Selected species tags — wider container below search bar
+        ui.div(id="species-tags-container", class_="species-tags-container"),
+
         # Filter dropdowns row
         ui.div(
             ui.div(
@@ -262,7 +265,7 @@ main_species = ui.nav_panel(
             ),
         ),
 
-        # JS: move binning controls into simplify modal
+        # JS: move binning controls into simplify modal + fix selectize input width
         ui.tags.script("""
             document.addEventListener('DOMContentLoaded', function() {
                 var binning = document.getElementById('binning-controls');
@@ -271,6 +274,51 @@ main_species = ui.nav_panel(
                     simplifyBody.appendChild(binning);
                     binning.style.display = '';
                 }
+
+                // Wait for Shiny selectize to initialize, then sync tags
+                function initTagSync() {
+                    var searchBar = document.querySelector('.species-search-bar .selectize-input');
+                    var tagsContainer = document.getElementById('species-tags-container');
+                    if (!searchBar || !tagsContainer) {
+                        setTimeout(initTagSync, 200);
+                        return;
+                    }
+
+                    var syncing = false;
+                    function syncTags() {
+                        if (syncing) return;
+                        syncing = true;
+
+                        // Force input width
+                        var inp = searchBar.querySelector('input');
+                        if (inp) inp.style.setProperty('width', '603px', 'important');
+
+                        // Clone .item elements to external container
+                        var items = searchBar.querySelectorAll('.item');
+                        tagsContainer.innerHTML = '';
+                        items.forEach(function(item) {
+                            var clone = item.cloneNode(true);
+                            clone.style.display = '';
+                            var removeBtn = clone.querySelector('.remove');
+                            if (removeBtn) {
+                                removeBtn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    var origRemove = item.querySelector('.remove');
+                                    if (origRemove) origRemove.click();
+                                });
+                            }
+                            tagsContainer.appendChild(clone);
+                            item.style.display = 'none';
+                        });
+
+                        syncing = false;
+                    }
+
+                    var obs = new MutationObserver(syncTags);
+                    obs.observe(searchBar, { childList: true, subtree: true });
+                    syncTags();
+                }
+                initTagSync();
             });
         """),
 
