@@ -867,6 +867,30 @@ background-color: #ff1a1a; /* Darker red on hover */
     min-height: 400px;
 }
 
+/* Brush click overlay on chart */
+.brush-click-overlay {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.92);
+    border: 2px solid #6cb043;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2E7D32;
+    text-align: center;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    transition: background 0.15s, transform 0.15s;
+    line-height: 1.4;
+}
+.brush-click-overlay:hover {
+    background: #f0f8f0;
+    transform: translate(-50%, -50%) scale(1.04);
+}
+
 /* Brush selection results panel */
 .brush-results-panel {
     position: relative;

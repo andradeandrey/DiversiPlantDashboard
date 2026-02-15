@@ -1290,20 +1290,63 @@ def server_app(input,output,session):
                 'backgroundColor': 'transparent',
             }
 
-            # Brush handler JS — sends selection to Shiny as real years
+            # Brush handler JS — shows clickable overlay, then sends to Shiny on click
             brush_js = """
-            if (window.Shiny) Shiny.setInputValue('brush_range', null);
+            if (window.Shiny) {
+                Shiny.setInputValue('brush_range', null);
+                Shiny.setInputValue('brush_show_results', null);
+            }
+            // Remove any existing overlay
+            var oldOv = document.getElementById('brush-overlay');
+            if (oldOv) oldOv.remove();
+
             chart.on('brushEnd', function(params) {
                 if (!params.areas || !params.areas.length) return;
                 var area = params.areas[0];
                 if (!area.coordRange) return;
                 var xR = area.coordRange[0], yR = area.coordRange[1];
-                if (window.Shiny) {
-                    Shiny.setInputValue('brush_range', {
-                        x0: xR[0]*xR[0], x1: xR[1]*xR[1],
-                        y0: yR[0], y1: yR[1],
-                        timestamp: Date.now()
-                    }, {priority:'event'});
+
+                // Store range data for later
+                var rangeData = {
+                    x0: xR[0]*xR[0], x1: xR[1]*xR[1],
+                    y0: yR[0], y1: yR[1],
+                    timestamp: Date.now()
+                };
+
+                // Convert coord range to pixel for overlay positioning
+                var p1 = chart.convertToPixel({xAxisIndex:0, yAxisIndex:0}, [xR[0], yR[1]]);
+                var p2 = chart.convertToPixel({xAxisIndex:0, yAxisIndex:0}, [xR[1], yR[0]]);
+                var cx = (p1[0] + p2[0]) / 2;
+                var cy = (p1[1] + p2[1]) / 2;
+
+                // Remove old overlay
+                var old = document.getElementById('brush-overlay');
+                if (old) old.remove();
+
+                // Create clickable overlay
+                var ov = document.createElement('div');
+                ov.id = 'brush-overlay';
+                ov.className = 'brush-click-overlay';
+                ov.innerHTML = 'Clique para conhecer<br>espécies novas!';
+                ov.style.left = cx + 'px';
+                ov.style.top = cy + 'px';
+                el.style.position = 'relative';
+                el.appendChild(ov);
+
+                ov.addEventListener('click', function() {
+                    ov.remove();
+                    if (window.Shiny) {
+                        Shiny.setInputValue('brush_range', rangeData, {priority:'event'});
+                    }
+                });
+            });
+
+            // Clear overlay when brush is cleared
+            chart.on('brush', function(params) {
+                if (!params.areas || !params.areas.length) {
+                    var o = document.getElementById('brush-overlay');
+                    if (o) o.remove();
+                    if (window.Shiny) Shiny.setInputValue('brush_range', null, {priority:'event'});
                 }
             });
             """
