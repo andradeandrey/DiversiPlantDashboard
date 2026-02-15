@@ -722,20 +722,21 @@ def server_app(input,output,session):
                     continue
 
                 query = query[0]
-                name, growth_type, x_start, duration, y_position = query
+                name, growth_type, x_start, duration_raw, y_position = query
 
                 has_harvest = str(x_start) != 'nan'
                 has_stratum = str(y_position) != 'nan'
+                has_duration = str(duration_raw) != 'nan'
 
-                if str(duration) == 'nan':
-                    duration = 5.0
+                duration = duration_raw if has_duration else 5.0
 
                 if has_harvest and has_stratum:
                     complete_data.append([name, growth_type, x_start, duration, y_position])
                 elif has_harvest and not has_stratum:
                     missing_stratum.append([name, growth_type, x_start, duration, None])
                 elif not has_harvest and has_stratum:
-                    missing_harvest.append([name, growth_type, None, duration, y_position])
+                    # Keep original duration_raw so ℹ️ only shows for real data
+                    missing_harvest.append([name, growth_type, None, duration_raw, y_position])
                 else:
                     missing_both.append([name, growth_type, None, None, None])
 
