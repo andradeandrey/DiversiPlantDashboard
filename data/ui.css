@@ -709,7 +709,7 @@ background-color: #ff1a1a; /* Darker red on hover */
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
-    margin: 12px 0 16px;
+    margin: 12px 0 50px;
     padding: 0 120px;
     min-height: 0;
 }
@@ -865,6 +865,12 @@ background-color: #ff1a1a; /* Darker red on hover */
     margin: 0 24px;
     padding: 16px;
     min-height: 400px;
+}
+
+/* Species tab background gradient */
+.tab-pane[data-value="tab_species"] > .container-fluid {
+    background: linear-gradient(180deg, #ffffff 0%, #d2ded6 100%);
+    min-height: 100vh;
 }
 
 /* Floating nav buttons for species tab */
