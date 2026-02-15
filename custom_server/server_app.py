@@ -8,6 +8,7 @@ from shiny import render, ui, reactive
 import plotly.graph_objects as go
 from itables.shiny import DT
 from custom_server.agroforestry_server import open_csv, get_Plants
+import logging
 import geopandas as gpd
 import folium
 from folium import plugins
@@ -26,14 +27,14 @@ FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_upda
 
 COLOR = {'herb' : '#f8827a','climber':"#dbb448",'subshrub' : "#779137",'shrub' :'#45d090','cactus' : '#49d1d5','bamboo' : '#53c5ff','tree' : '#d7a0ff','palm' : '#ff8fda'}
 
-STRATUM = [0,1,[[0,4,9],{2:"Shade tolerant", 6.5:"Light demanding"}],
-            [[0,3,6,9],{1.5:"Shade tolerant", 4.5:"Medium", 7.5:"Light demanding"}],
-            [[0,3,5,7,9],{1.5:"Low", 4:"Medium", 6:"High", 8:"Emergent"}],
-            [[0,2,4,6,7,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High", 8:"Emergent"}],
-            [[0,2,4,6,7,8,9],{1:"Ground", 3:"Low", 5:"Medium", 6.5:"High",7.5:"High-Emergent", 8.5:"Emergent"}],
-            [[0,2,4,5,6,7,8,9],{1:"Ground", 3:"Low", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
-            [[0,2,3,4,5,6,7,8,9],{1:"Ground", 2.5:"Low", 3.5:"Low-Medium", 4.5:"Medium", 5.5:"Medium-High", 6.5:"High", 7.5:"High-Emergent", 8.5:"Emergent"}],
-            [[0,1,2,3,4,5,6,7,8,9],{0.5: "Ground",1.5: "Ground-Low",2.5: "Low",3.5: "Low-Medium",4.5: "Medium",5.5: "Medium-High",6.5: "High",7.5: "High-Emergent",8.5: "Emergent"}]]
+STRATUM = [0,1,[[0,4,9],{2:"Baixo", 6.5:"Alto"}],
+            [[0,3,6,9],{1.5:"Baixo", 4.5:"Médio", 7.5:"Alto"}],
+            [[0,3,5,7,9],{1.5:"Baixo", 4:"Médio", 6:"Alto", 8:"Emergente"}],
+            [[0,2,4,6,7,9],{1:"Rasteiro", 3:"Baixo", 5:"Médio", 6.5:"Alto", 8:"Emergente"}],
+            [[0,2,4,6,7,8,9],{1:"Rasteiro", 3:"Baixo", 5:"Médio", 6.5:"Alto",7.5:"Alto-Emergente", 8.5:"Emergente"}],
+            [[0,2,4,5,6,7,8,9],{1:"Rasteiro", 3:"Baixo", 4.5:"Médio", 5.5:"Médio-Alto", 6.5:"Alto", 7.5:"Alto-Emergente", 8.5:"Emergente"}],
+            [[0,2,3,4,5,6,7,8,9],{1:"Rasteiro", 2.5:"Baixo", 3.5:"Baixo-Médio", 4.5:"Médio", 5.5:"Médio-Alto", 6.5:"Alto", 7.5:"Alto-Emergente", 8.5:"Emergente"}],
+            [[0,1,2,3,4,5,6,7,8,9],{0.5: "Rasteiro",1.5: "Rasteiro-Baixo",2.5: "Baixo",3.5: "Baixo-Médio",4.5: "Médio",5.5: "Médio-Alto",6.5: "Alto",7.5: "Alto-Emergente",8.5: "Emergente"}]]
 
 FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'naturalized',  "All Species":'all'}
 
@@ -601,18 +602,58 @@ def server_app(input,output,session):
 ##Main Species
 
     @render_widget
-    @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins)
+    @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins,
+                    input.filter_growth_form, input.filter_plant_use, input.filter_threat,
+                    input.filter_nfix, input.filter_deciduousness)
     def intercrops():
-        if input.database_choice() == "try":  
+        if input.database_choice() == "try":
             df = open_csv(FILE_NAME)
-            plants = input.overview_plants()
-            
+            plants = list(input.overview_plants())
+
             if not plants:
                 return go.Figure().update_layout(
-                    title="No species selected",
+                    title="Nenhuma espécie selecionada",
                     height=600
                 )
-            
+
+            # Apply filters to selected species
+            f_growth = input.filter_growth_form()
+            f_use = input.filter_plant_use()
+            f_threat = input.filter_threat()
+            f_nfix = input.filter_nfix()
+            f_decid = input.filter_deciduousness()
+
+            if f_growth or f_use or f_threat or f_nfix or f_decid:
+                filtered = df[df['common_en'].isin(plants)]
+                if f_growth:
+                    filtered = filtered[filtered['growth_form'] == f_growth]
+                if f_use:
+                    filtered = filtered[
+                        filtered['function'].str.contains(f_use, case=False, na=False) |
+                        filtered['function2'].str.contains(f_use, case=False, na=False)
+                    ] if 'function2' in filtered.columns else filtered[
+                        filtered['function'].str.contains(f_use, case=False, na=False)
+                    ]
+                if f_threat:
+                    filtered = filtered[filtered['threat_status'] == f_threat]
+                if f_nfix:
+                    if f_nfix == "yes":
+                        filtered = filtered[filtered['family'] == 'Fabaceae']
+                    else:
+                        filtered = filtered[filtered['family'] != 'Fabaceae']
+                if f_decid:
+                    if f_decid == "semi":
+                        filtered = filtered[filtered['leaf_phenol'].str.contains('semi', case=False, na=False)]
+                    else:
+                        filtered = filtered[filtered['leaf_phenol'].str.contains(f_decid, case=False, na=False)]
+                plants = filtered['common_en'].tolist()
+
+                if not plants:
+                    return go.Figure().update_layout(
+                        title="Nenhuma espécie corresponde aos filtros",
+                        height=600
+                    )
+
             # Categorize species by available data
             complete_data = []
             missing_harvest = []
@@ -818,7 +859,7 @@ def server_app(input,output,session):
                     showlegend=True,
                     legendgroup=name,
                     hoverinfo="text",
-                    text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {round(x_start, 2)} yrs<br>Duration: {round(duration, 2)} yrs<br>Stratum: {round(y_position, 2)}"
+                    text=f"<b>{name}</b><br>Forma: {growth_type}<br>Início colheita: {round(x_start, 2)} anos<br>Duração: {round(duration, 2)} anos<br>Estrato: {round(y_position, 2)}"
                 ))
                 added_species.add(name)
             
@@ -828,7 +869,7 @@ def server_app(input,output,session):
                 fig.add_annotation(
                     x=min_x - (max_x - min_x) * 0.1,
                     y=9.5,
-                    text="⚠️ Unknown harvest period",
+                    text="⚠️ Colheita desconhecida",
                     showarrow=False,
                     font=dict(size=11, color="darkorange"),
                     bgcolor="rgba(255,255,255,0.8)",
@@ -870,7 +911,7 @@ def server_app(input,output,session):
                         showlegend=True,
                         legendgroup=name,
                         hoverinfo="text",
-                        text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>⚠️ Harvest period: Unknown<br>Stratum: {round(y_position, 2)}"
+                        text=f"<b>{name}</b><br>Forma: {growth_type}<br>⚠️ Colheita: Desconhecida<br>Estrato: {round(y_position, 2)}"
                     ))
                     added_species.add(name)
             
@@ -880,7 +921,7 @@ def server_app(input,output,session):
                 fig.add_annotation(
                     x=min_x,
                     y=-0.5,
-                    text="⚠️ Unknown stratum",
+                    text="⚠️ Estrato desconhecido",
                     showarrow=False,
                     xanchor="left",
                     font=dict(size=11, color="darkred"),
@@ -933,7 +974,7 @@ def server_app(input,output,session):
                         showlegend=True,
                         legendgroup=name,
                         hoverinfo="text",
-                        text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>Harvest Start: {round(x_start, 2)} yrs<br>Duration: {round(duration, 2)} yrs<br>⚠️ Stratum: Unknown"
+                        text=f"<b>{name}</b><br>Forma: {growth_type}<br>Início colheita: {round(x_start, 2)} anos<br>Duração: {round(duration, 2)} anos<br>⚠️ Estrato: Desconhecido"
                     ))
                     added_species.add(name)
             
@@ -943,7 +984,7 @@ def server_app(input,output,session):
                 fig.add_annotation(
                     x=min_x - (max_x - min_x) * 0.15,
                     y=-1.5,
-                    text="⚠️ Missing<br>both values",
+                    text="⚠️ Ambos<br>desconhecidos",
                     showarrow=False,
                     font=dict(size=9, color="darkred"),
                     bgcolor="rgba(255,255,255,0.8)",
@@ -979,13 +1020,13 @@ def server_app(input,output,session):
                         showlegend=True,
                         legendgroup=name,
                         hoverinfo="text",
-                        text=f"<b>{name}</b><br>Growth Form: {growth_type}<br>⚠️ Harvest period: Unknown<br>⚠️ Stratum: Unknown"
+                        text=f"<b>{name}</b><br>Forma: {growth_type}<br>⚠️ Colheita: Desconhecida<br>⚠️ Estrato: Desconhecido"
                     ))
                     added_species.add(name)
                     
             # === CONFIGURE AXES ===
             fig.update_xaxes(
-                title_text="Harvest Period (Years After Planting)",
+                title_text="Período de colheita (anos após plantio)",
                 zeroline=False,
                 tickvals=x_bins,
                 tickformat=".2f",
@@ -1000,7 +1041,7 @@ def server_app(input,output,session):
             y_tick_text = [label for pos, label in sorted_label_items]
 
             fig.update_yaxes(
-                title_text="Light Demand (Stratum)",
+                title_text="Demanda de luz / Estrato",
                 zeroline=False,
                 range=[-2.5, 11],  # Always show full range 0-9 plus margins
                 tickmode='array',  # Use custom tick positions
@@ -1016,15 +1057,15 @@ def server_app(input,output,session):
             missing_s_count = len(missing_stratum)
             missing_b_count = len(missing_both)
 
-            title_parts = [f"Showing all {len(added_species)} selected species"]
+            title_parts = [f"Mostrando {len(added_species)} espécies selecionadas"]
             if complete_count:
-                title_parts.append(f"{complete_count} complete")
+                title_parts.append(f"{complete_count} completas")
             if missing_h_count:
-                title_parts.append(f"{missing_h_count} missing harvest")
+                title_parts.append(f"{missing_h_count} sem colheita")
             if missing_s_count:
-                title_parts.append(f"{missing_s_count} missing stratum")
+                title_parts.append(f"{missing_s_count} sem estrato")
             if missing_b_count:
-                title_parts.append(f"{missing_b_count} missing both")
+                title_parts.append(f"{missing_b_count} sem ambos")
 
             fig.update_layout(
                 height=700,
@@ -1038,7 +1079,7 @@ def server_app(input,output,session):
                     x=1.02,
                     tracegroupgap=5,
                     title=dict(
-                        text="<b>Plants selected</b>",  # Add title to right legend
+                        text="<b>Espécies selecionadas</b>",
                         font=dict(size=14)
                     )
                 ),
@@ -1049,7 +1090,7 @@ def server_app(input,output,session):
             fig.add_annotation(
                 x=sum(fixed_legend_x) / len(fixed_legend_x),  # Center of the growth form symbols
                 y=11.2,  # Above the growth form symbols
-                text="<b>Growth forms</b>",
+                text="<b>Formas de crescimento</b>",
                 showarrow=False,
                 font=dict(size=14, color="black"),
                 xanchor="center",
@@ -1118,7 +1159,7 @@ def server_app(input,output,session):
         if input.database_choice() == "gift":
             global SPECIES_GIFT_DATAFRAME
             flor_group=FLORISTIC_GROUP[input.floristic_group()]
-            
+
             lat, lon = parse_lat_lon(input.longitude_latitude())
             robjects.r.assign("flor_group",flor_group)
             robjects.r.assign("long",float(lon))
@@ -1126,14 +1167,14 @@ def server_app(input,output,session):
             data = robjects.r(f'''
                             library("GIFT")
                 coord <- cbind(long,lat)
-                natvasc <- GIFT_checklists(taxon_name="Tracheophyta", 
-                                        complete_taxon=F, 
+                natvasc <- GIFT_checklists(taxon_name="Tracheophyta",
+                                        complete_taxon=F,
                                         floristic_group=flor_group,
-                                        complete_floristic=F, 
+                                        complete_floristic=F,
                                         coordinates = coord,
-                                        overlap="extent_intersect", 
-                                        list_set_only=F, 
-                                        remove_overlap=T, 
+                                        overlap="extent_intersect",
+                                        list_set_only=F,
+                                        remove_overlap=T,
                                         area_threshold_mainland=100)
                 natvasc[["lists"]]
                 natvascl <- natvasc[["checklists"]]
@@ -1181,16 +1222,99 @@ def server_app(input,output,session):
 
             return grouped
         else:
+            return _get_plants_with_climate_score()
+
+    def _get_plants_with_climate_score():
+        """Return selectize choices ordered by climate match score when location is available."""
+        df = pd.read_csv(FILE_NAME)
+
+        # Try to get coordinates from user's location input
+        try:
+            lat_lon_str = input.longitude_latitude()
+            if lat_lon_str:
+                lat, lon = parse_lat_lon(lat_lon_str)
+            else:
+                lat, lon = None, None
+        except Exception:
+            lat, lon = None, None
+
+        # If we have coordinates, try to compute climate scores
+        scores = {}
+        if lat is not None and lon is not None:
+            try:
+                from database.connection import get_climate_match_scores
+                sci_names = df['sci_name'].dropna().unique().tolist()
+                scores = get_climate_match_scores(lat, lon, sci_names, threshold=0.3)
+            except Exception as e:
+                logging.warning(f"[SPECIES] Climate scoring unavailable: {e}")
+
+        if scores:
+            # Build a mapping from sci_name → common_en
+            sci_to_common = {}
+            for _, row in df.iterrows():
+                sn = row.get('sci_name')
+                cn = row.get('common_en')
+                if pd.notna(sn) and pd.notna(cn):
+                    sci_to_common[sn] = cn
+
+            # Build scored and unscored lists
+            scored = []  # (common_en, score, growth_form)
+            unscored = []  # (common_en, growth_form)
+            seen = set()
+
+            for sci_name, score in scores.items():
+                common = sci_to_common.get(sci_name)
+                if common and common not in seen:
+                    gf = df.loc[df['common_en'] == common, 'growth_form'].values
+                    gf = gf[0] if len(gf) > 0 and pd.notna(gf[0]) else ''
+                    scored.append((common, score, gf))
+                    seen.add(common)
+
+            # Add species without climate data
+            for _, row in df.iterrows():
+                cn = row.get('common_en')
+                if pd.notna(cn) and cn not in seen:
+                    gf = row.get('growth_form', '')
+                    gf = gf if pd.notna(gf) else ''
+                    unscored.append((cn, gf))
+                    seen.add(cn)
+
+            # Sort scored by score desc, unscored alphabetically
+            scored.sort(key=lambda x: (-x[1], x[0]))
+            unscored.sort(key=lambda x: x[0])
+
+            # Build grouped dict: scored species first, then unscored
+            result = {}
+            adapted_key = "ADAPTADAS AO CLIMA / CLIMATE ADAPTED"
+            other_key = "OUTRAS ESPÉCIES / OTHER SPECIES"
+
+            adapted = {}
+            for common, score, gf in scored:
+                pct = int(round(score * 100))
+                adapted[common] = f"{common} ({pct}%)"  # key=value, val=display label
+
+            others = {}
+            for common, gf in unscored:
+                others[common] = common  # key=value=label
+
+            if adapted:
+                result[adapted_key] = adapted
+            if others:
+                result[other_key] = others
+
+            return result
+        else:
+            # No climate data — fall back to default grouping
             return get_Plants(FILE_NAME)
 
     # This function updates the choices on the sidebar of main species
     @reactive.effect
     @reactive.event(input.update_map)
     def update_main_species():
-        dict=get_new_species()
+        choices = get_new_species()
         ui.update_selectize(
             "overview_plants",
-            choices=dict,
+            choices=choices,
             selected=[],
             server=True,
         )
@@ -1294,7 +1418,7 @@ def server_app(input,output,session):
             
             if not plants:
                 return go.Figure().update_layout(
-                    title="No plants selected",
+                    title="Nenhuma espécie selecionada",
                     height=650
                 )
 
@@ -1346,42 +1470,42 @@ def server_app(input,output,session):
 
             # Build dataframe
             dataframe = pd.DataFrame({
-                'Plant Name': variables_x,
-                'Maximum height': variables_y,
-                'Growth form': color,
-                'Family': family,
-                'Function': function,
-                'Time before harvest': time_to_fh,
-                'Life history': life_hist,
-                'Longevity': longev_prod,
-                'Graph height': graph_y
+                'Espécie': variables_x,
+                'Altura máxima': variables_y,
+                'Forma de crescimento': color,
+                'Família': family,
+                'Função': function,
+                'Tempo até colheita': time_to_fh,
+                'Ciclo de vida': life_hist,
+                'Longevidade': longev_prod,
+                'Altura no gráfico': graph_y
             })
 
             # Set color (mark dead plants)
-            dataframe['Graph color'] = dataframe['Growth form']
-            dataframe.loc[dataframe['Plant Name'].isin(color_change), 'Graph color'] = 'removed'
+            dataframe['Cor'] = dataframe['Forma de crescimento']
+            dataframe.loc[dataframe['Espécie'].isin(color_change), 'Cor'] = 'removed'
 
             # Create bar chart
             fig = px.bar(
                 dataframe,
-                x='Plant Name',
-                y='Graph height',
-                color='Graph color',
+                x='Espécie',
+                y='Altura no gráfico',
+                color='Cor',
                 labels={
-                    'Plant Name': 'Plant Name',
-                    'Graph height': 'Height (m)'
+                    'Espécie': 'Espécie',
+                    'Altura no gráfico': 'Altura (m)'
                 },
-                category_orders={'Plant Name': variables_x},
-                hover_name="Plant Name",
+                category_orders={'Espécie': variables_x},
+                hover_name="Espécie",
                 hover_data={
-                    'Maximum height': True,
-                    'Family': True,
-                    'Growth form': True,
-                    'Function': True,
-                    'Time before harvest': True,
-                    'Life history': True,
-                    'Longevity': True,
-                    'Graph height': False
+                    'Altura máxima': True,
+                    'Família': True,
+                    'Forma de crescimento': True,
+                    'Função': True,
+                    'Tempo até colheita': True,
+                    'Ciclo de vida': True,
+                    'Longevidade': True,
+                    'Altura no gráfico': False
                 },
                 color_discrete_map=color_discrete_map
             )
@@ -1389,10 +1513,10 @@ def server_app(input,output,session):
             fig.update_layout(
                 height=650,
                 plot_bgcolor='lightgrey',
-                title=f"Species Growth at Year {size}"
+                title=f"Crescimento das espécies no ano {size}"
             )
             fig.update_xaxes(showgrid=False)
-            fig.update_yaxes(showgrid=False, title_text="Height (m)")
+            fig.update_yaxes(showgrid=False, title_text="Altura (m)")
             
             return fig
         
