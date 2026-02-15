@@ -308,12 +308,13 @@ def server_app(input,output,session):
         m = folium.Map(location=center, zoom_start=zoom, width="100%", height="1050px")
         folium.TileLayer("OpenStreetMap").add_to(m)
 
-        # Add ecoregion overlay — filter to visible area for performance
+        # Add ecoregion overlay — show only the ecoregion containing the user's point
         try:
             gdf = _load_ecoregions_simplified()
             if lat is not None and lon is not None:
-                # Filter to ~5 degrees around the point for zoomed view
-                bbox = gdf.cx[lon - 5:lon + 5, lat - 5:lat + 5]
+                from shapely.geometry import Point
+                pt = Point(lon, lat)
+                bbox = gdf[gdf.geometry.contains(pt)]
             else:
                 # Global view — show all but with very simplified geometry
                 bbox = gdf.copy()
@@ -326,7 +327,7 @@ def server_app(input,output,session):
                     style_function=_biome_style,
                     tooltip=folium.GeoJsonTooltip(
                         fields=["ECO_NAME", "BIOME_NAME"],
-                        aliases=["Ecoregion:", "Biome:"],
+                        aliases=["Ecorregião:", "Bioma:"],
                         style="font-size: 12px;",
                     ),
                 ).add_to(m)
