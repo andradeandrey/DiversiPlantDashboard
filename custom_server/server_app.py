@@ -11,17 +11,39 @@ import logging
 import geopandas as gpd
 import folium
 from folium import plugins
-from rpy2.robjects.conversion import localconverter
-from rpy2 import robjects
-from rpy2.robjects.packages import importr
-from rpy2.robjects.vectors import StrVector
-import rpy2.robjects.packages as rpackages, data
-from rpy2.robjects import r, pandas2ri 
+try:
+    from rpy2.robjects.conversion import localconverter
+    from rpy2 import robjects
+    from rpy2.robjects.packages import importr
+    from rpy2.robjects.vectors import StrVector
+    import rpy2.robjects.packages as rpackages, data
+    from rpy2.robjects import r, pandas2ri
+    HAS_RPY2 = True
+except ImportError:
+    HAS_RPY2 = False
+    logging.warning("[INIT] rpy2 not available — GIFT database mode disabled")
 from collections import Counter
 
 
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 # FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","practitioners.csv")
+
+# Preload ecoregion shapefile in background thread at module import
+_ECOREGION_SHP_PATH = os.path.join(Path(__file__).parent.parent, "data", "ecoregions_raster", "Ecoregions2017.shp")
+_ECOREGION_GDF_CACHE = {"gdf": None}
+
+def _preload_ecoregions():
+    try:
+        logging.info("[PRELOAD] Loading Ecoregions2017.shp into memory...")
+        gdf = gpd.read_file(_ECOREGION_SHP_PATH)
+        _ = gdf.sindex  # build spatial index
+        _ECOREGION_GDF_CACHE["gdf"] = gdf
+        logging.info(f"[PRELOAD] Ecoregions loaded: {len(gdf)} features, sindex ready")
+    except Exception as e:
+        logging.warning(f"[PRELOAD] Failed to load ecoregions: {e}")
+
+import threading
+threading.Thread(target=_preload_ecoregions, daemon=True).start()
 
 
 COLOR = {'herb' : '#f8827a','climber':"#dbb448",'subshrub' : "#779137",'shrub' :'#45d090','cactus' : '#49d1d5','bamboo' : '#53c5ff','tree' : '#d7a0ff','palm' : '#ff8fda'}
@@ -349,18 +371,17 @@ def server_app(input,output,session):
 ##Climate
 
     # --- Ecoregion lookup (WWF Ecoregions 2017) ---
-    ECOREGION_SHP = os.path.join(
-        Path(__file__).parent.parent, "data", "ecoregions_raster", "Ecoregions2017.shp"
-    )
-    _ecoregion_gdf = None  # lazy-loaded (with spatial index)
-
     def _load_ecoregions():
-        nonlocal _ecoregion_gdf
-        if _ecoregion_gdf is None:
-            _ecoregion_gdf = gpd.read_file(ECOREGION_SHP)
-            # Build spatial index on first load
-            _ = _ecoregion_gdf.sindex
-        return _ecoregion_gdf
+        """Return ecoregion GeoDataFrame from preloaded cache or load on demand."""
+        gdf = _ECOREGION_GDF_CACHE.get("gdf")
+        if gdf is not None:
+            return gdf
+        # Fallback: load synchronously if preload hasn't finished yet
+        logging.info("[ECO] Cache miss — loading shapefile synchronously")
+        gdf = gpd.read_file(_ECOREGION_SHP_PATH)
+        _ = gdf.sindex
+        _ECOREGION_GDF_CACHE["gdf"] = gdf
+        return gdf
 
     def _find_ecoregion_at_point(lat, lon):
         """Fast spatial lookup: returns single-row GeoDataFrame or None."""
@@ -396,7 +417,16 @@ def server_app(input,output,session):
     }
 
     def _query_ecoregion(lat, lon):
-        """Find ecoregion at given coordinates. Returns dict or None."""
+        """Find ecoregion at given coordinates. Uses DB (fast) with shapefile fallback."""
+        # Try PostgreSQL first — instant with spatial index
+        try:
+            from database.connection import get_ecoregion_by_coords
+            result = get_ecoregion_by_coords(lat, lon)
+            if result:
+                return result
+        except Exception as e:
+            logging.debug(f"[ECO] DB lookup failed, falling back to shapefile: {e}")
+        # Fallback to shapefile (slow first load)
         result = _find_ecoregion_at_point(lat, lon)
         if result is None:
             return None
@@ -1384,7 +1414,9 @@ def server_app(input,output,session):
             if (oldOv) oldOv.remove();
 
             // Auto-activate brush tool ("Selecionar setor" always on)
-            chart.dispatchAction({ type: 'takeGlobalCursor', key: 'brush', brushOption: { brushType: 'rect', brushMode: 'single' } });
+            setTimeout(function() {
+                chart.dispatchAction({ type: 'takeGlobalCursor', key: 'brush', brushOption: { brushType: 'rect', brushMode: 'single' } });
+            }, 200);
 
             // Persist hide state across chart re-renders
             if (window._brushActive) {
