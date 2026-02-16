@@ -32,7 +32,6 @@ __pycache__/
 figma/
 docs/
 scripts/
-crawlers/
 migrations/
 
 # Binaries
