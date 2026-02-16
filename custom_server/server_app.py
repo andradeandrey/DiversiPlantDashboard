@@ -1006,9 +1006,11 @@ def server_app(input,output,session):
                     'itemStyle': {'color': 'transparent'},
                     'label': {
                         'show': True,
-                        'formatter': gf_emoji,
-                        'fontSize': 20,
+                        'formatter': f'{gf_emoji} {name}',
+                        'fontSize': 11,
                         'offset': [0, 0],
+                        'color': '#333',
+                        'fontFamily': 'Inter, sans-serif',
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
                     'markLine': {
@@ -1073,9 +1075,11 @@ def server_app(input,output,session):
                     'itemStyle': {'color': 'transparent'},
                     'label': {
                         'show': True,
-                        'formatter': label_text,
-                        'fontSize': 20 if not has_exit_time else 16,
+                        'formatter': f'{label_text} {name}',
+                        'fontSize': 11,
                         'offset': [0, 0],
+                        'color': '#333',
+                        'fontFamily': 'Inter, sans-serif',
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
                 }
@@ -1135,9 +1139,11 @@ def server_app(input,output,session):
                     'itemStyle': {'color': 'transparent'},
                     'label': {
                         'show': True,
-                        'formatter': gf_emoji,
-                        'fontSize': 20,
+                        'formatter': f'{gf_emoji} {name}',
+                        'fontSize': 11,
                         'offset': [0, 0],
+                        'color': '#333',
+                        'fontFamily': 'Inter, sans-serif',
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
                     'markLine': {
@@ -1182,9 +1188,11 @@ def server_app(input,output,session):
                     'itemStyle': {'color': 'transparent'},
                     'label': {
                         'show': True,
-                        'formatter': gf_emoji,
-                        'fontSize': 20,
+                        'formatter': f'{gf_emoji} {name}',
+                        'fontSize': 11,
                         'offset': [0, 0],
+                        'color': '#333',
+                        'fontFamily': 'Inter, sans-serif',
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
                 })
