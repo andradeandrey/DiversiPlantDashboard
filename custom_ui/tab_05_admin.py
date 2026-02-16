@@ -33,7 +33,7 @@ admin = ui.nav_panel(
                                 style="display: flex; align-items: center;"
                             )
                         ),
-                        ui.card_body(
+                        ui.div(
                             ui.output_ui("crawler_status_cards")
                         )
                     )
@@ -49,7 +49,7 @@ admin = ui.nav_panel(
                                 style="display: flex; align-items: center;"
                             )
                         ),
-                        ui.card_body(
+                        ui.div(
                             ui.output_ui("database_metrics")
                         )
                     )
@@ -285,7 +285,7 @@ admin = ui.nav_panel(
                             4,
                             ui.card(
                                 ui.card_header("Page Views (24h)"),
-                                ui.card_body(
+                                ui.div(
                                     ui.output_text("page_views_24h"),
                                     class_="metric-value"
                                 )
@@ -295,7 +295,7 @@ admin = ui.nav_panel(
                             4,
                             ui.card(
                                 ui.card_header("Unique Sessions (24h)"),
-                                ui.card_body(
+                                ui.div(
                                     ui.output_text("unique_sessions_24h"),
                                     class_="metric-value"
                                 )
@@ -305,7 +305,7 @@ admin = ui.nav_panel(
                             4,
                             ui.card(
                                 ui.card_header("Species Searches (24h)"),
-                                ui.card_body(
+                                ui.div(
                                     ui.output_text("species_searches_24h"),
                                     class_="metric-value"
                                 )

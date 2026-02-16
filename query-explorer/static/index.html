@@ -1659,6 +1659,59 @@ function copySpeciesToClipboard() {
             </div>
         </section>
 
+        <!-- Data Upload -->
+        <section class="animate-slide-up" style="animation-delay: 0.35s">
+            <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                Data Upload
+            </h2>
+            <div class="card-gradient rounded-2xl border border-white/10 p-8 glow">
+                <p class="text-gray-400 text-sm mb-6">Upload the updated Practitioners CSV (~3,650 Brazilian threatened species). The file will be saved and the crawler will run automatically.</p>
+
+                <!-- Drop zone -->
+                <div id="upload-dropzone"
+                     class="relative border-2 border-dashed border-white/20 rounded-xl p-10 text-center hover:border-violet-500/50 transition-all duration-300 cursor-pointer"
+                     onclick="document.getElementById('upload-file-input').click()">
+                    <input type="file" id="upload-file-input" accept=".csv" class="hidden" onchange="handleFileSelect(this)">
+                    <svg class="w-12 h-12 mx-auto text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <p class="text-gray-300 font-medium" id="upload-filename">Drop CSV file here or click to browse</p>
+                    <p class="text-gray-500 text-sm mt-2">Required columns: sci_names, family, growth_form</p>
+                </div>
+
+                <!-- Upload button -->
+                <div class="mt-6 flex items-center gap-4">
+                    <button id="upload-btn" onclick="uploadPractitioners()" disabled
+                            class="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-gray-700 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 transition-all duration-300 transform hover:scale-[1.02] disabled:hover:scale-100 disabled:shadow-none flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Upload & Process
+                    </button>
+                    <!-- Spinner -->
+                    <div id="upload-spinner" class="hidden flex items-center gap-3">
+                        <svg class="animate-spin h-5 w-5 text-violet-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <span class="text-violet-400 text-sm">Processing... this may take a few minutes</span>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="upload-result" class="hidden mt-8">
+                    <h3 class="text-lg font-semibold text-white mb-4">Import Results</h3>
+                    <div id="upload-stats" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+                </div>
+
+                <!-- Error -->
+                <div id="upload-error" class="hidden mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400"></div>
+            </div>
+        </section>
+
         <!-- Data Quality Check -->
         <section class="animate-slide-up" style="animation-delay: 0.4s">
             <h2 class="text-lg font-semibold text-gray-300 mb-6 flex items-center gap-2">
@@ -2517,6 +2570,100 @@ species (1) ─────┬───── (1) species_unified     [consolida
                     </div>
                 `;
             }).join('');
+        }
+
+        // ── Practitioners Upload ──
+
+        let selectedFile = null;
+
+        function handleFileSelect(input) {
+            selectedFile = input.files[0];
+            if (selectedFile) {
+                document.getElementById('upload-filename').textContent = selectedFile.name + ' (' + (selectedFile.size / 1024).toFixed(1) + ' KB)';
+                document.getElementById('upload-btn').disabled = false;
+                document.getElementById('upload-dropzone').classList.add('border-violet-500/50');
+                // Reset previous results
+                document.getElementById('upload-result').classList.add('hidden');
+                document.getElementById('upload-error').classList.add('hidden');
+            }
+        }
+
+        // Drag-and-drop support
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropzone = document.getElementById('upload-dropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('border-violet-500/50', 'bg-violet-500/5'); });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('bg-violet-500/5'); });
+            });
+            dropzone.addEventListener('drop', e => {
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.csv')) {
+                    const input = document.getElementById('upload-file-input');
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    handleFileSelect(input);
+                }
+            });
+        });
+
+        async function uploadPractitioners() {
+            if (!selectedFile) return;
+
+            const btn = document.getElementById('upload-btn');
+            const spinner = document.getElementById('upload-spinner');
+            const resultDiv = document.getElementById('upload-result');
+            const errorDiv = document.getElementById('upload-error');
+
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/upload/practitioners`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    errorDiv.textContent = data.error || 'Upload failed';
+                    errorDiv.classList.remove('hidden');
+                } else {
+                    // Show stats
+                    const statItems = [
+                        { label: 'Processed', value: data.processed, color: 'violet' },
+                        { label: 'Inserted', value: data.inserted, color: 'emerald' },
+                        { label: 'Updated', value: data.updated, color: 'cyan' },
+                        { label: 'Skipped', value: data.skipped, color: 'amber' },
+                        { label: 'Errors', value: data.errors, color: 'red' },
+                    ];
+
+                    document.getElementById('upload-stats').innerHTML = statItems.map(s => `
+                        <div class="p-4 bg-${s.color}-500/10 rounded-xl border border-${s.color}-500/20 text-center">
+                            <p class="text-2xl font-bold text-${s.color}-400">${formatNumber(s.value)}</p>
+                            <p class="text-sm text-gray-400 mt-1">${s.label}</p>
+                        </div>
+                    `).join('');
+
+                    resultDiv.classList.remove('hidden');
+                }
+            } catch (e) {
+                errorDiv.textContent = 'Connection error: ' + e.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
         }
 
         async function loadClimateStats() {

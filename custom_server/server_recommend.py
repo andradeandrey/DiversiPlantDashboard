@@ -240,7 +240,7 @@ def _metric_card(label, value, width):
     return ui.column(
         width,
         ui.card(
-            ui.card_body(
+            ui.div(
                 ui.div(value, class_="rec-metric-value"),
                 ui.div(label, class_="rec-metric-label"),
                 class_="rec-metric-card",

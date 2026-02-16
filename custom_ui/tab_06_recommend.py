@@ -38,7 +38,7 @@ recommend = ui.nav_panel(
                 4,
                 ui.card(
                     ui.card_header(t("Localização", "Location")),
-                    ui.card_body(
+                    ui.div(
                         ui.input_text(
                             "rec_tdwg_code",
                             t("Código TDWG / Estado:", "TDWG Code / State:"),
@@ -69,7 +69,7 @@ recommend = ui.nav_panel(
                 ),
                 ui.card(
                     ui.card_header(t("Parâmetros", "Parameters")),
-                    ui.card_body(
+                    ui.div(
                         ui.input_switch(
                             "rec_all_species",
                             t("Retornar todas as espécies", "Return all species"),
@@ -92,7 +92,7 @@ recommend = ui.nav_panel(
                 ),
                 ui.card(
                     ui.card_header(t("Formas de Crescimento", "Growth Forms")),
-                    ui.card_body(
+                    ui.div(
                         ui.input_checkbox_group(
                             "rec_growth_forms",
                             t("Incluir (deixe vazio para todos):", "Include (leave empty for all):"),
@@ -102,7 +102,7 @@ recommend = ui.nav_panel(
                 ),
                 ui.card(
                     ui.card_header(t("Filtros", "Filters")),
-                    ui.card_body(
+                    ui.div(
                         ui.input_switch(
                             "rec_nitrogen_fixers",
                             t("Apenas fixadores de nitrogênio", "Nitrogen fixers only"),

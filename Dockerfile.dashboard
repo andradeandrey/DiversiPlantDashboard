@@ -19,6 +19,7 @@ COPY app.py .
 COPY custom_server/ custom_server/
 COPY custom_ui/ custom_ui/
 COPY database/ database/
+COPY crawlers/ crawlers/
 COPY i18n/ i18n/
 
 # Small data files baked into image

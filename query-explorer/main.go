@@ -3,10 +3,14 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"bytes"
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -104,6 +108,7 @@ func main() {
 	mux.HandleFunc("/api/climate/point", handleClimatePoint)
 	mux.HandleFunc("/api/recommend", handleRecommend)
 	mux.HandleFunc("/api/ecoregion/species", handleEcoregionSpecies)
+	mux.HandleFunc("/api/upload/practitioners", handleUploadPractitioners)
 
 	// Static files
 	mux.Handle("/", http.FileServer(http.Dir("static")))
@@ -1060,4 +1065,103 @@ func handleClimatePoint(w http.ResponseWriter, r *http.Request) {
 	climateData["source"] = "worldclim_raster"
 
 	json.NewEncoder(w).Encode(climateData)
+}
+
+// handleUploadPractitioners receives a CSV file, validates required columns,
+// and forwards it to the dashboard's /api/admin/run-crawler endpoint.
+func handleUploadPractitioners(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, `{"error": "POST required"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Limit to 10MB
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, `{"error": "Failed to read uploaded file. Max 10MB."}`, http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	log.Printf("Received practitioners CSV upload: %s (%d bytes)", header.Filename, header.Size)
+
+	// Read file contents
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to read file contents"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// Validate CSV: check required columns
+	reader := csv.NewReader(bytes.NewReader(fileBytes))
+	headerRow, err := reader.Read()
+	if err != nil {
+		http.Error(w, `{"error": "Invalid CSV: cannot read header row"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Strip BOM from first column if present
+	if len(headerRow) > 0 {
+		headerRow[0] = strings.TrimPrefix(headerRow[0], "\xef\xbb\xbf")
+	}
+
+	requiredCols := []string{"sci_names", "family", "growth_form"}
+	colSet := make(map[string]bool)
+	for _, col := range headerRow {
+		colSet[strings.TrimSpace(col)] = true
+	}
+
+	var missing []string
+	for _, req := range requiredCols {
+		if !colSet[req] {
+			missing = append(missing, req)
+		}
+	}
+	if len(missing) > 0 {
+		msg := fmt.Sprintf(`{"error": "Missing required columns: %s", "found": "%s"}`,
+			strings.Join(missing, ", "),
+			strings.Join(headerRow, ", "))
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	// Forward CSV to dashboard
+	dashboardURL := getEnv("DASHBOARD_URL", "http://127.0.0.1:8001")
+	targetURL := dashboardURL + "/api/admin/run-crawler"
+
+	// Build multipart request
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+	part, err := writer.CreateFormFile("file", header.Filename)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to build forwarding request"}`, http.StatusInternalServerError)
+		return
+	}
+	part.Write(fileBytes)
+	writer.Close()
+
+	req2, err := http.NewRequest("POST", targetURL, &buf)
+	if err != nil {
+		http.Error(w, `{"error": "Failed to create request to dashboard"}`, http.StatusInternalServerError)
+		return
+	}
+	req2.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{Timeout: 5 * time.Minute}
+	resp, err := client.Do(req2)
+	if err != nil {
+		log.Printf("Dashboard forward error: %v", err)
+		http.Error(w, fmt.Sprintf(`{"error": "Dashboard unreachable: %s"}`, err.Error()), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Forward response from dashboard to client
+	respBody, _ := io.ReadAll(resp.Body)
+	w.WriteHeader(resp.StatusCode)
+	w.Write(respBody)
 }
