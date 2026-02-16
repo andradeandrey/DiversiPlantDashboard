@@ -11,6 +11,7 @@ from .iucn import IUCNCrawler
 from .try_db import TRYCrawler
 from .practitioners import PractitionersCrawler
 from .gbif_occurrences import GBIFOccurrenceCrawler
+from .ecocrop import EcoCropCrawler
 
 CRAWLERS = {
     'gbif': GBIFCrawler,
@@ -23,6 +24,7 @@ CRAWLERS = {
     'iucn': IUCNCrawler,
     'try': TRYCrawler,
     'practitioners': PractitionersCrawler,
+    'ecocrop': EcoCropCrawler,
 }
 
 
@@ -51,6 +53,7 @@ __all__ = [
     'IUCNCrawler',
     'TRYCrawler',
     'PractitionersCrawler',
+    'EcoCropCrawler',
     'get_crawler',
     'list_crawlers',
 ]

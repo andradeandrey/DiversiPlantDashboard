@@ -1745,7 +1745,13 @@ def server_app(input,output,session):
             return _get_plants_with_climate_score()
 
     def _get_plants_with_climate_score():
-        """Return selectize choices ordered by climate match score when location is available."""
+        """Return selectize choices ordered by climate match score when location is available.
+
+        Groups:
+        1. ADAPTADAS AO CLIMA - CSV species with climate score
+        2. CULTIVADAS ADAPTADAS - EcoCrop cultivated species with climate score
+        3. OUTRAS ESPÉCIES - CSV species without score
+        """
         df = pd.read_csv(FILE_NAME)
 
         # Try to get coordinates from user's location input
@@ -1777,6 +1783,9 @@ def server_app(input,output,session):
                 if pd.notna(sn) and pd.notna(cn):
                     sci_to_common[sn] = cn
 
+            # Reverse mapping for dedup
+            csv_sci_names = set(df['sci_name'].dropna().unique())
+
             # Build scored and unscored lists
             scored = []  # (common_en, score, growth_form)
             unscored = []  # (common_en, growth_form)
@@ -1806,19 +1815,43 @@ def server_app(input,output,session):
             # Build grouped dict: scored species first, then unscored
             result = {}
             adapted_key = "ADAPTADAS AO CLIMA / CLIMATE ADAPTED"
+            cultivated_key = "CULTIVADAS ADAPTADAS / CULTIVATED SPECIES"
             other_key = "OUTRAS ESPÉCIES / OTHER SPECIES"
 
             adapted = {}
             for common, score, gf in scored:
                 pct = int(round(score * 100))
-                adapted[common] = f"{common} ({pct}%)"  # key=value, val=display label
+                adapted[common] = f"{common} ({pct}%)"
+
+            # Fetch cultivated species from EcoCrop with climate scoring
+            cultivated = {}
+            try:
+                from database.connection import get_cultivated_species
+                cult_species = get_cultivated_species(lat, lon, threshold=0.3)
+                for sp in cult_species:
+                    sci = sp['canonical_name']
+                    # Skip if already in CSV (CSV has priority)
+                    if sci in csv_sci_names:
+                        continue
+                    display = sp['common_name'] or sci
+                    if display in seen:
+                        continue
+                    seen.add(display)
+                    score_val = sp.get('score')
+                    if score_val is not None and score_val > 0:
+                        pct = int(round(score_val * 100))
+                        cultivated[display] = f"{display} ({pct}%)"
+            except Exception as e:
+                logging.warning(f"[SPECIES] Cultivated species unavailable: {e}")
 
             others = {}
             for common, gf in unscored:
-                others[common] = common  # key=value=label
+                others[common] = common
 
             if adapted:
                 result[adapted_key] = adapted
+            if cultivated:
+                result[cultivated_key] = cultivated
             if others:
                 result[other_key] = others
 

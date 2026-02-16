@@ -237,3 +237,100 @@ def get_climate_match_scores(
     except Exception as e:
         logging.warning(f"[CLIMATE] Failed to get climate scores: {e}")
         return {}
+
+
+def get_cultivated_species(
+    lat: float = None, lon: float = None, threshold: float = 0.3
+) -> List[Dict]:
+    """Get EcoCrop cultivated species, optionally with climate match scores.
+
+    Returns list of dicts with keys:
+    canonical_name, common_name, family, growth_form, categories, life_span, score
+    """
+    db = get_db()
+
+    # Base query: species with ecocrop data
+    base_query = """
+        SELECT s.canonical_name,
+               cn.common_name,
+               s.family,
+               su.growth_form,
+               cee.categories,
+               cee.life_span
+        FROM species s
+        JOIN climate_envelope_ecocrop cee ON s.id = cee.species_id
+        LEFT JOIN species_unified su ON s.id = su.species_id
+        LEFT JOIN LATERAL (
+            SELECT common_name FROM common_names
+            WHERE species_id = s.id AND language = 'en'
+            LIMIT 1
+        ) cn ON TRUE
+        WHERE s.ecocrop_id IS NOT NULL
+    """
+
+    # If coordinates provided, also compute climate match score
+    if lat is not None and lon is not None:
+        bioclim = get_bioclim_at_coords(lat, lon)
+        if bioclim:
+            query = f"""
+                SELECT s.canonical_name,
+                       cn.common_name,
+                       s.family,
+                       su.growth_form,
+                       cee.categories,
+                       cee.life_span,
+                       calculate_climate_match(s.id, :bio1, :bio5, :bio6, :bio12, :bio15) as score
+                FROM species s
+                JOIN climate_envelope_ecocrop cee ON s.id = cee.species_id
+                JOIN species_climate_envelope sce ON s.id = sce.species_id
+                LEFT JOIN species_unified su ON s.id = su.species_id
+                LEFT JOIN LATERAL (
+                    SELECT common_name FROM common_names
+                    WHERE species_id = s.id AND language = 'en'
+                    LIMIT 1
+                ) cn ON TRUE
+                WHERE s.ecocrop_id IS NOT NULL
+                ORDER BY score DESC
+            """
+            try:
+                rows = db.execute(query, {
+                    'bio1': bioclim['bio1'],
+                    'bio5': bioclim['bio5'],
+                    'bio6': bioclim['bio6'],
+                    'bio12': bioclim['bio12'],
+                    'bio15': bioclim['bio15'],
+                })
+                return [
+                    {
+                        'canonical_name': r[0],
+                        'common_name': r[1],
+                        'family': r[2],
+                        'growth_form': r[3],
+                        'categories': r[4],
+                        'life_span': r[5],
+                        'score': float(r[6]) if r[6] is not None else 0,
+                    }
+                    for r in rows
+                    if r[6] is not None and float(r[6]) >= threshold
+                ]
+            except Exception as e:
+                logging.warning(f"[CULTIVATED] Climate scoring failed: {e}")
+
+    # Fallback: return all without score
+    try:
+        rows = db.execute(base_query)
+        return [
+            {
+                'canonical_name': r[0],
+                'common_name': r[1],
+                'family': r[2],
+                'growth_form': r[3],
+                'categories': r[4],
+                'life_span': r[5],
+                'score': None,
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logging.warning(f"[CULTIVATED] Failed to get cultivated species: {e}")
+        return []

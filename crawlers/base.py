@@ -216,6 +216,8 @@ class BaseCrawler(ABC):
             return 'wcvp_id', data['wcvp_id']
         elif self.name == 'iucn' and data.get('iucn_taxon_id'):
             return 'iucn_taxon_id', data['iucn_taxon_id']
+        elif self.name == 'ecocrop' and data.get('ecocrop_id'):
+            return 'ecocrop_id', data['ecocrop_id']
         return None, None
 
     def _insert_species(self, session: Session, data: Dict) -> int:
@@ -248,6 +250,9 @@ class BaseCrawler(ABC):
         elif self.name == 'iucn' and data.get('iucn_taxon_id'):
             fields.append('iucn_taxon_id')
             values['iucn_taxon_id'] = data['iucn_taxon_id']
+        elif self.name == 'ecocrop' and data.get('ecocrop_id'):
+            fields.append('ecocrop_id')
+            values['ecocrop_id'] = data['ecocrop_id']
 
         cols_str = ', '.join(fields)
         vals_str = ', '.join(f':{f}' for f in fields)
@@ -279,6 +284,9 @@ class BaseCrawler(ABC):
         elif self.name == 'iucn' and data.get('iucn_taxon_id'):
             id_field = 'iucn_taxon_id'
             id_value = data['iucn_taxon_id']
+        elif self.name == 'ecocrop' and data.get('ecocrop_id'):
+            id_field = 'ecocrop_id'
+            id_value = data['ecocrop_id']
 
         if id_field and id_value:
             session.execute(
