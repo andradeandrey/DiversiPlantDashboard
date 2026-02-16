@@ -1744,6 +1744,44 @@ def server_app(input,output,session):
         else:
             return _get_plants_with_climate_score()
 
+    def _build_search_label(common_en, common_pt=None, sci_name=None, pct=None):
+        """Build a selectize label searchable by common_en, common_pt and sci_name.
+
+        Display: "avocado · abacate · Persea americana (85%)"
+        Selectize searches the full label text, so typing any name matches.
+        """
+        parts = [common_en]
+        if common_pt and str(common_pt) != common_en:
+            parts.append(str(common_pt))
+        if sci_name:
+            parts.append(str(sci_name))
+        label = " · ".join(parts)
+        if pct is not None:
+            label += f" ({pct}%)"
+        return label
+
+    def _get_plants_default(df=None):
+        """Fallback: group by growth_form with searchable labels (common_pt + sci_name)."""
+        if df is None:
+            df = pd.read_csv(FILE_NAME)
+        life_forms = sorted([f for f in df["growth_form"].dropna().unique()])
+        result = {}
+        for gf in life_forms:
+            group = {}
+            subset = df[df["growth_form"] == gf]
+            for _, row in subset.iterrows():
+                cn = row.get('common_en')
+                if not pd.notna(cn):
+                    continue
+                pt = row.get('common_pt')
+                pt = pt if pd.notna(pt) else None
+                sn = row.get('sci_name')
+                sn = sn if pd.notna(sn) else None
+                group[cn] = _build_search_label(cn, pt, sn)
+            if group:
+                result[gf] = dict(sorted(group.items()))
+        return result
+
     def _get_plants_with_climate_score():
         """Return selectize choices ordered by climate match score when location is available.
 
@@ -1753,6 +1791,19 @@ def server_app(input,output,session):
         3. OUTRAS ESPÉCIES - CSV species without score
         """
         df = pd.read_csv(FILE_NAME)
+
+        # Build lookup tables for common_pt and sci_name
+        common_pt_map = {}
+        sci_name_map = {}
+        for _, row in df.iterrows():
+            cn = row.get('common_en')
+            if pd.notna(cn):
+                pt = row.get('common_pt')
+                if pd.notna(pt):
+                    common_pt_map[cn] = pt
+                sn = row.get('sci_name')
+                if pd.notna(sn):
+                    sci_name_map[cn] = sn
 
         # Try to get coordinates from user's location input
         try:
@@ -1787,30 +1838,26 @@ def server_app(input,output,session):
             csv_sci_names = set(df['sci_name'].dropna().unique())
 
             # Build scored and unscored lists
-            scored = []  # (common_en, score, growth_form)
-            unscored = []  # (common_en, growth_form)
+            scored = []  # (common_en, score)
+            unscored = []  # (common_en,)
             seen = set()
 
             for sci_name, score in scores.items():
                 common = sci_to_common.get(sci_name)
                 if common and common not in seen:
-                    gf = df.loc[df['common_en'] == common, 'growth_form'].values
-                    gf = gf[0] if len(gf) > 0 and pd.notna(gf[0]) else ''
-                    scored.append((common, score, gf))
+                    scored.append((common, score))
                     seen.add(common)
 
             # Add species without climate data
             for _, row in df.iterrows():
                 cn = row.get('common_en')
                 if pd.notna(cn) and cn not in seen:
-                    gf = row.get('growth_form', '')
-                    gf = gf if pd.notna(gf) else ''
-                    unscored.append((cn, gf))
+                    unscored.append(cn)
                     seen.add(cn)
 
             # Sort scored by score desc, unscored alphabetically
             scored.sort(key=lambda x: (-x[1], x[0]))
-            unscored.sort(key=lambda x: x[0])
+            unscored.sort()
 
             # Build grouped dict: scored species first, then unscored
             result = {}
@@ -1819,9 +1866,12 @@ def server_app(input,output,session):
             other_key = "OUTRAS ESPÉCIES / OTHER SPECIES"
 
             adapted = {}
-            for common, score, gf in scored:
+            for common, score in scored:
                 pct = int(round(score * 100))
-                adapted[common] = f"{common} ({pct}%)"
+                label = _build_search_label(
+                    common, common_pt_map.get(common), sci_name_map.get(common), pct
+                )
+                adapted[common] = label
 
             # Fetch cultivated species from EcoCrop with climate scoring
             cultivated = {}
@@ -1840,13 +1890,17 @@ def server_app(input,output,session):
                     score_val = sp.get('score')
                     if score_val is not None and score_val > 0:
                         pct = int(round(score_val * 100))
-                        cultivated[display] = f"{display} ({pct}%)"
+                        label = _build_search_label(display, None, sci, pct)
+                        cultivated[display] = label
             except Exception as e:
                 logging.warning(f"[SPECIES] Cultivated species unavailable: {e}")
 
             others = {}
-            for common, gf in unscored:
-                others[common] = common
+            for common in unscored:
+                label = _build_search_label(
+                    common, common_pt_map.get(common), sci_name_map.get(common)
+                )
+                others[common] = label
 
             if adapted:
                 result[adapted_key] = adapted
@@ -1858,7 +1912,7 @@ def server_app(input,output,session):
             return result
         else:
             # No climate data — fall back to default grouping
-            return get_Plants(FILE_NAME)
+            return _get_plants_default(df)
 
     # This function updates the choices on the sidebar of main species
     @reactive.effect
@@ -1869,7 +1923,6 @@ def server_app(input,output,session):
             "overview_plants",
             choices=choices,
             selected=[],
-            server=True,
         )
 
     # #This function allows to download the species
