@@ -2,7 +2,7 @@
 import os
 import logging
 from contextlib import contextmanager
-from typing import Optional, Generator, List, Dict
+from typing import Optional, Generator, List, Dict, Set
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -123,7 +123,52 @@ def get_tdwg_by_coords(lat: float, lon: float) -> Optional[dict]:
             'level3_name': row[1],
             'continent': row[2]
         }
+    # Fallback: nearest region within ~1km (handles edge/border cases)
+    try:
+        result = db.execute("""
+            SELECT level3_code, level3_name, continent
+            FROM tdwg_level3
+            WHERE ST_DWithin(geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), 0.01)
+            ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326))
+            LIMIT 1
+        """, {'lat': lat, 'lon': lon})
+        if result:
+            row = result[0]
+            return {
+                'level3_code': row[0],
+                'level3_name': row[1],
+                'continent': row[2]
+            }
+    except Exception:
+        pass
     return None
+
+
+def get_native_species_in_region(tdwg_code: str, sci_names: List[str]) -> Set[str]:
+    """Return set of canonical_names that are native in the given TDWG region."""
+    if not sci_names:
+        return set()
+    db = get_db()
+    params = {'tdwg': tdwg_code}
+    placeholders = []
+    for i, name in enumerate(sci_names):
+        key = f"n{i}"
+        placeholders.append(f":{key}")
+        params[key] = name
+    in_clause = ", ".join(placeholders)
+    try:
+        rows = db.execute(f"""
+            SELECT sp.canonical_name
+            FROM species sp
+            JOIN species_regions sr ON sp.id = sr.species_id
+            WHERE sr.tdwg_code = :tdwg
+              AND sr.is_native = TRUE
+              AND sp.canonical_name IN ({in_clause})
+        """, params)
+        return {row[0] for row in rows}
+    except Exception as e:
+        logging.warning(f"[NATIVE] Failed to get native species: {e}")
+        return set()
 
 
 def filter_species_by_distribution(tdwg_code: str, filter_type: str = None):

@@ -1552,21 +1552,50 @@ def server_app(input,output,session):
                 ui.p("Nenhuma espécie encontrada neste setor.", style="color:#888; text-align:center;"),
             )
 
-        # Try to split into native/non-native using climate scores
-        native_names = set()
+        # Cross-reference WCVP native distribution + climate scores
+        native_region_names = set()  # common_en names native in TDWG region
+        adapted_names = set()        # common_en names with climate score >= 0.75
         try:
             lat_lon_str = input.longitude_latitude()
             if lat_lon_str:
                 lat, lon = parse_lat_lon(lat_lon_str)
-                from database.connection import get_climate_match_scores
-                sci_names = df['sci_name'].dropna().unique().tolist()
-                scores = get_climate_match_scores(lat, lon, sci_names, threshold=0.3)
-                # Build sci_name → common_en mapping
+                from database.connection import (
+                    get_climate_match_scores,
+                    get_tdwg_by_coords,
+                    get_native_species_in_region,
+                )
+
+                # Build sci_name <-> common_en mappings from DataFrame
+                common_to_sci = {}
+                sci_to_common = {}
                 for _, row in df.iterrows():
                     sn = row.get('sci_name')
                     cn = row.get('common_en')
-                    if pd.notna(sn) and pd.notna(cn) and sn in scores:
-                        native_names.add(cn)
+                    if pd.notna(sn) and pd.notna(cn):
+                        common_to_sci[cn] = sn
+                        sci_to_common[sn] = cn
+
+                sci_names = list(sci_to_common.keys())
+
+                # 1. Get TDWG region and check native species
+                tdwg = get_tdwg_by_coords(lat, lon)
+                if tdwg:
+                    native_sci = get_native_species_in_region(
+                        tdwg['level3_code'], sci_names
+                    )
+                    for sn in native_sci:
+                        cn = sci_to_common.get(sn)
+                        if cn:
+                            native_region_names.add(cn)
+
+                # 2. Climate match with threshold 0.70
+                scores = get_climate_match_scores(
+                    lat, lon, sci_names, threshold=0.70
+                )
+                for sn, score in scores.items():
+                    cn = sci_to_common.get(sn)
+                    if cn and cn not in native_region_names:
+                        adapted_names.add(cn)
         except Exception:
             pass
 
@@ -1586,22 +1615,36 @@ def server_app(input,output,session):
 
         sections = []
 
-        # Native candidates
-        native_cands = [c for c in candidates if c[0] in native_names]
-        other_cands = [c for c in candidates if c[0] not in native_names]
+        # Filter candidates into categories
+        native_cands = [c for c in candidates if c[0] in native_region_names]
+        adapted_cands = [c for c in candidates if c[0] in adapted_names]
+        # Species in neither set are climatically incompatible — hide them
 
         if native_cands:
-            sections.append(ui.h6("Nativas sugeridas", style="color:#2E7D32; margin-top:8px;"))
+            sections.append(ui.h6(
+                "\U0001f33f Nativas da região",
+                style="color:#2E7D32; margin-top:8px;",
+            ))
             sections.append(ui.div(
                 *[make_add_btn(c[0]) for c in sorted(native_cands, key=lambda x: x[0])],
                 style="display:flex; flex-wrap:wrap;",
             ))
 
-        if other_cands:
-            label = "Não-nativas adaptadas" if native_cands else "Espécies disponíveis"
-            sections.append(ui.h6(label, style="color:#555; margin-top:8px;"))
+        if adapted_cands:
+            sections.append(ui.h6(
+                "Não-nativas adaptadas",
+                style="color:#555; margin-top:8px;",
+            ))
             sections.append(ui.div(
-                *[make_add_btn(c[0]) for c in sorted(other_cands, key=lambda x: x[0])],
+                *[make_add_btn(c[0]) for c in sorted(adapted_cands, key=lambda x: x[0])],
+                style="display:flex; flex-wrap:wrap;",
+            ))
+
+        # Fallback if no location set — show all candidates without classification
+        if not native_cands and not adapted_cands:
+            sections.append(ui.h6("Espécies disponíveis", style="color:#555; margin-top:8px;"))
+            sections.append(ui.div(
+                *[make_add_btn(c[0]) for c in sorted(candidates, key=lambda x: x[0])],
                 style="display:flex; flex-wrap:wrap;",
             ))
 
