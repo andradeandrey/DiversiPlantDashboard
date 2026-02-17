@@ -26,16 +26,16 @@ _GF_SVGS = {
 }
 
 _SYMBOLS = [
-    ("Árvore", "Tree", "#2a43d1", "tree"),
     ("Arbusto", "Shrub", "#0095c6", "shrub"),
     ("Sub-arbusto", "Subshrub", "#612e14", "subshrub"),
-    ("Herbácea", "Forb", "#d77d28", "forb"),
-    ("Gramíneas e afins", "Graminoid", "#633096", "graminoid"),
-    ("Palmeira", "Palm", "#63a355", "palm"),
-    ("Trepadeira lenhosa", "Liana", "#be2843", "liana"),
     ("Trepadeira herbácea", "Vine", "#cc4fb9", "vine"),
-    ("Rasteira", "Scrambler", "#017201", "scrambler"),
+    ("Gramíneas e afins", "Graminoid", "#633096", "graminoid"),
+    ("Árvore", "Tree", "#2a43d1", "tree"),
+    ("Herbácea", "Forb", "#d77d28", "forb"),
+    ("Palmeira", "Palm", "#63a355", "palm"),
     ("Bambu", "Bamboo", "#fd2f6d", "bamboo"),
+    ("Trepadeira lenhosa", "Liana", "#be2843", "liana"),
+    ("Rasteira", "Scrambler", "#017201", "scrambler"),
     ("Outro", "Other", "#171717", "other"),
 ]
 
@@ -152,7 +152,7 @@ main_species = ui.nav_panel(
             # Simplify button
             ui.div(
                 ui.tags.button(
-                    "Simplificar gráfico",
+                    "Simplificar sistema",
                     class_="btn btn-outline-secondary btn-sm species-simplify-btn",
                     **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
                 ),
@@ -195,8 +195,8 @@ main_species = ui.nav_panel(
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title">
-                  <span class="i18n-pt">Simplificar gráfico</span>
-                  <span class="i18n-en">Simplify chart</span>
+                  <span class="i18n-pt">Simplificar sistema</span>
+                  <span class="i18n-en">Simplify system</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
@@ -210,8 +210,13 @@ main_species = ui.nav_panel(
         # Binning controls (hidden; moved into simplify modal via JS)
         ui.div(
             ui.div(
-                ui.p("Nº de categorias de demanda de luz", class_="bold-text"),
-                ui.input_slider("stratum_bins", "", min=2, max=9, value=4, step=1),
+                ui.p("Nº de categorias de Estrato", class_="bold-text"),
+                ui.input_radio_buttons(
+                    "stratum_bins", "",
+                    choices={"2": "2", "3": "3", "4": "4", "5": "5", "9": "9"},
+                    selected="4",
+                    inline=True,
+                ),
                 style="margin-bottom: 24px;",
             ),
             ui.div(

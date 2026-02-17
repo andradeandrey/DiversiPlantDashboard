@@ -874,7 +874,7 @@ def server_app(input,output,session):
                     all_x_values_real.append(plant[2] + plant[3])
 
             if all_x_values_real:
-                min_x_real = round(min(all_x_values_real), 2)
+                min_x_real = 0  # Always start at year 0
                 max_x_real = round(max(all_x_values_real), 2)
             else:
                 min_x_real, max_x_real = 0, 10
@@ -928,7 +928,7 @@ def server_app(input,output,session):
                     ])
 
             # Left margin (missing harvest)
-            left_x0 = round(min_x - (max_x - min_x) * 0.2, 2)
+            left_x0 = round(min_x - (max_x - min_x) * 0.1, 2)
             mark_area_data.append([
                 {'xAxis': left_x0, 'yAxis': 0, 'itemStyle': {'color': 'rgba(255,200,150,0.1)', 'borderColor': 'orange', 'borderWidth': 2, 'borderType': 'dashed'}},
                 {'xAxis': min_x, 'yAxis': 9}
@@ -1044,7 +1044,7 @@ def server_app(input,output,session):
 
                 y_offset = (stratum_counters[y_rounded] % 3 - 1) * 0.3
                 x_offset = (stratum_counters[y_rounded] // 3) * 0.02 * (max_x - min_x)
-                px_val = round(min_x - (max_x - min_x) * 0.1 - x_offset, 4)
+                px_val = round(min_x - (max_x - min_x) * 0.05 - x_offset, 4)
                 py_val = round(y_position + y_offset, 3)
 
                 # Feature 1: check if species has exit time but no entry time
@@ -1170,7 +1170,7 @@ def server_app(input,output,session):
 
                 row = idx // cols
                 col = idx % cols
-                x_pos = round(min_x - (max_x - min_x) * 0.15 + col * 0.03 * (max_x - min_x), 4)
+                x_pos = round(min_x - (max_x - min_x) * 0.07 + col * 0.03 * (max_x - min_x), 4)
                 y_pos = round(-1 - row * 0.4, 3)
 
                 safe_name = name.replace("'", "\\'")
@@ -1201,8 +1201,8 @@ def server_app(input,output,session):
 
             # Build Y-axis label formatter as JS function
             sorted_label_items = sorted(y_labels.items(), key=lambda x: x[0])
-            y_label_map_js = json.dumps({str(pos): label for pos, label in sorted_label_items})
-            js_y_formatter = f"__JS__function(value){{var m={y_label_map_js};return m[String(value)]||'';}}__JSEND__"
+            y_label_map_js = json.dumps({str(pos): label for pos, label in sorted_label_items}, ensure_ascii=False)
+            js_y_formatter = f"__JS__function(value){{var v=Math.round(value*2)/2;var m={y_label_map_js};return m[String(v)]||'';}}__JSEND__"
 
             # Graphic elements for annotations
             graphic_elements = []
@@ -1225,8 +1225,8 @@ def server_app(input,output,session):
             # Growth form legend row at top of chart (emoji + PT name)
             gf_display_pt = {
                 'tree': 'Árvore', 'shrub': 'Arbusto', 'subshrub': 'Sub-arbusto',
-                'forb': 'Herbácea', 'graminoid': 'Gramíneas e afins', 'palm': 'Palmeira',
-                'liana': 'Trepadeira lenhosa', 'vine': 'Trepadeira herbácea', 'scrambler': 'Rasteira',
+                'forb': 'Herbácea', 'graminoid': 'Gram. e afins', 'palm': 'Palmeira',
+                'liana': 'T. lenhosa', 'vine': 'T. herbácea', 'scrambler': 'Rasteira',
                 'bamboo': 'Bambu', 'other': 'Outro',
             }
 
@@ -1245,7 +1245,7 @@ def server_app(input,output,session):
                         'show': True,
                         'position': 'top',
                         'formatter': f'{emoji} {pt_name}',
-                        'fontSize': 12,
+                        'fontSize': 10,
                         'fontFamily': 'Inter, sans-serif',
                         'color': '#333',
                     },
@@ -1329,11 +1329,11 @@ def server_app(input,output,session):
             if missing_b_count:
                 title_parts.append(f"{missing_b_count} sem ambos")
 
-            x_axis_min = round(min_x - (max_x - min_x) * 0.25, 4)
+            x_axis_min = round(min_x - (max_x - min_x) * 0.12, 4)
             x_axis_max = round(max_x + (max_x - min_x) * 0.05, 4)
 
-            # X-axis formatter: convert sqrt-space value → real years
-            js_x_formatter = "__JS__function(v){var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}__JSEND__"
+            # X-axis formatter: convert sqrt-space value → real years (hide labels in unknown margin)
+            js_x_formatter = "__JS__function(v){if(v<0)return '';var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}__JSEND__"
 
             option = {
                 'title': {
@@ -1358,16 +1358,8 @@ def server_app(input,output,session):
                     },
                     'throttleType': 'debounce', 'throttleDelay': 300,
                 },
-                'legend': {
-                    'type': 'scroll',
-                    'orient': 'vertical',
-                    'right': 10,
-                    'top': 60,
-                    'bottom': 20,
-                    'data': legend_names,
-                    'textStyle': {'fontFamily': 'Inter, sans-serif', 'fontSize': 12},
-                },
-                'grid': {'left': 80, 'right': 200, 'top': 60, 'bottom': 80},
+                'legend': {'show': False},
+                'grid': {'left': 80, 'right': 20, 'top': 60, 'bottom': 80},
                 'xAxis': {
                     'type': 'value',
                     'name': 'Período de colheita (anos após plantio)',
@@ -1386,19 +1378,17 @@ def server_app(input,output,session):
                 },
                 'yAxis': {
                     'type': 'value',
-                    'name': 'Demanda de luz / Estrato',
-                    'nameLocation': 'middle',
-                    'nameGap': 50,
-                    'nameTextStyle': {'color': '#555', 'fontSize': 14, 'fontFamily': 'Inter, sans-serif'},
                     'min': -2.5,
                     'max': 11,
+                    'interval': 0.5,
                     'axisLabel': {
                         'formatter': js_y_formatter,
                         'fontFamily': 'Inter, sans-serif',
                         'fontSize': 12,
                         'color': '#171717',
                     },
-                    'splitLine': {'lineStyle': {'color': '#e6e6e6'}},
+                    'axisTick': {'show': False},
+                    'splitLine': {'show': False},
                 },
                 'series': [
                     {
