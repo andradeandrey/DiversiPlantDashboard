@@ -46,7 +46,7 @@ import threading
 threading.Thread(target=_preload_ecoregions, daemon=True).start()
 
 
-COLOR = {'herb' : '#f8827a','climber':"#dbb448",'subshrub' : "#779137",'shrub' :'#45d090','cactus' : '#49d1d5','bamboo' : '#53c5ff','tree' : '#d7a0ff','palm' : '#ff8fda'}
+COLOR = {'herb': '#d77d28', 'forb': '#d77d28', 'climber': '#cc4fb9', 'subshrub': '#612e14', 'shrub': '#0095c6', 'cactus': '#49d1d5', 'bamboo': '#fd2f6d', 'tree': '#2a43d1', 'palm': '#63a355', 'graminoid': '#633096', 'liana': '#be2843', 'vine': '#cc4fb9', 'scrambler': '#017201', 'other': '#171717'}
 
 STRATUM = [0,1,[[0,4,9],{2:"Baixo", 6.5:"Alto"}],
             [[0,3,6,9],{1.5:"Baixo", 4.5:"Médio", 7.5:"Alto"}],
@@ -149,25 +149,25 @@ def _render_results_table(df, columns):
 SPECIES_GIFT_DATAFRAME = pd.DataFrame()
 
 growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshrub', 'tree']
-colors = ['#53c5ff', '#49d1d5', '#dbb448', '#f8827a', '#ff8fda', '#45d090', '#779137', '#d7a0ff']
+colors = ['#fd2f6d', '#49d1d5', '#cc4fb9', '#d77d28', '#63a355', '#0095c6', '#612e14', '#2a43d1']
 color_mapping = dict(zip(growth_forms, colors))
 
-# ECharts emoji mapping per growth form
+# ECharts symbol characters per growth form (geometric, matching Figma icons)
 ECHARTS_EMOJIS = {
-    'tree': '🌲',
-    'shrub': '🌳',
-    'subshrub': '🌿',
-    'forb': '🌼',
-    'herb': '🌼',
-    'graminoid': '🌾',
-    'palm': '🌴',
-    'liana': '🪢',
-    'vine': '🌱',
-    'climber': '🌱',
-    'scrambler': '🪴',
-    'bamboo': '🎋',
-    'cactus': '🌵',
-    'other': '🍃',
+    'tree': '⏐',
+    'shrub': '⬠',
+    'subshrub': '▫',
+    'forb': '△',
+    'herb': '△',
+    'graminoid': '|',
+    'palm': 'ψ',
+    'liana': '∿',
+    'vine': '⌇',
+    'climber': '⌇',
+    'scrambler': '∿∿',
+    'bamboo': '∨',
+    'cactus': '◇',
+    'other': '⊘',
 }
 
 # Keep old symbol dict for backwards compat (used nowhere else now)
@@ -901,7 +901,7 @@ def server_app(input,output,session):
 
             # Growth Form Mappings (legend order matches user spec)
             gf_list = ['tree', 'shrub', 'subshrub', 'forb', 'graminoid', 'palm', 'liana', 'vine', 'scrambler', 'bamboo', 'other']
-            gf_colors = ['#d7a0ff', '#45d090', '#779137', '#f8827a', '#8BC34A', '#ff8fda', '#dbb448', '#66BB6A', '#26A69A', '#53c5ff', '#9E9E9E']
+            gf_colors = ['#2a43d1', '#0095c6', '#612e14', '#d77d28', '#633096', '#63a355', '#be2843', '#cc4fb9', '#017201', '#fd2f6d', '#171717']
             color_map = dict(zip(gf_list, gf_colors))
             # Legacy aliases
             color_map['herb'] = color_map['forb']
@@ -1224,9 +1224,9 @@ def server_app(input,output,session):
 
             # Growth form legend row at top of chart (emoji + PT name)
             gf_display_pt = {
-                'tree': 'Árvore', 'shrub': 'Arbusto', 'subshrub': 'Subarbusto',
-                'forb': 'Erva', 'graminoid': 'Graminóide', 'palm': 'Palmeira',
-                'liana': 'Liana', 'vine': 'Trepadeira', 'scrambler': 'Escandente',
+                'tree': 'Árvore', 'shrub': 'Arbusto', 'subshrub': 'Sub-arbusto',
+                'forb': 'Herbácea', 'graminoid': 'Gramíneas e afins', 'palm': 'Palmeira',
+                'liana': 'Trepadeira lenhosa', 'vine': 'Trepadeira herbácea', 'scrambler': 'Rasteira',
                 'bamboo': 'Bambu', 'other': 'Outro',
             }
 

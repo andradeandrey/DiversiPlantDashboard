@@ -229,8 +229,69 @@ body>.container-fluid:first-child {
     color: #fff;
 }
 
+.tree{
+    color: #2a43d1;
+    text-decoration: none;
+}
+
+.shrub{
+    color: #0095c6;
+    text-decoration: none;
+}
+
+.subshrub{
+    color: #612e14;
+    text-decoration: none;
+}
+
+.forb{
+    color: #d77d28;
+    text-decoration: none;
+}
+
+.graminoid{
+    color: #633096;
+    text-decoration: none;
+}
+
+.palm{
+    color: #63a355;
+    text-decoration: none;
+}
+
+.liana{
+    color: #be2843;
+    text-decoration: none;
+}
+
+.vine{
+    color: #cc4fb9;
+    text-decoration: none;
+}
+
+.scrambler{
+    color: #017201;
+    text-decoration: none;
+}
+
 .bamboo{
-    color: #53c5ff;
+    color: #fd2f6d;
+    text-decoration: none;
+}
+
+.other{
+    color: #171717;
+    text-decoration: none;
+}
+
+/* Legacy aliases */
+.herb{
+    color: #d77d28;
+    text-decoration: none;
+}
+
+.climber{
+    color: #cc4fb9;
     text-decoration: none;
 }
 
@@ -239,33 +300,13 @@ body>.container-fluid:first-child {
     text-decoration: none;
 }
 
-.climber{
-    color: #dbb448;
-    text-decoration: none;
-}
-
-.herb{
-    color: #f8827a;
-    text-decoration: none;
-}
-
-.palm{
-    color: #ff8fda;
-    text-decoration: none;
-}
-
 .shurb{
-    color: #45d090;
+    color: #0095c6;
     text-decoration: none;
 }
 
 .subshurb{
-    color: #779137;
-    text-decoration: none;
-}
-
-.tree{
-    color: #d7a0ff;
+    color: #612e14;
     text-decoration: none;
 }
 

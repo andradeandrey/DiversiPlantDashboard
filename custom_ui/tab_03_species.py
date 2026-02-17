@@ -10,30 +10,45 @@ FILE_NAME = os.path.join(
     Path(__file__).parent.parent, "data", "MgmtTraitData_updated.csv"
 )
 
-# Growth form symbols for the legend modal
+# Growth form symbols for the legend — Figma design colors & icons
+_GF_SVGS = {
+    'tree': '<svg width="10" height="18" viewBox="0 0 10 20"><circle cx="5" cy="5" r="4" fill="none" stroke="white" stroke-width="1.8"/><line x1="5" y1="9" x2="5" y2="20" stroke="white" stroke-width="1.8"/></svg>',
+    'shrub': '<svg width="16" height="16" viewBox="0 0 16 16"><polygon points="8,1.5 14.9,5.5 12.3,13.5 3.7,13.5 1.1,5.5" fill="none" stroke="white" stroke-width="1.8"/></svg>',
+    'subshrub': '<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="white" stroke-width="2" rx="0.8"/></svg>',
+    'forb': '<svg width="16" height="16" viewBox="0 0 20 18"><polygon points="10,1 19,17 1,17" fill="none" stroke="white" stroke-width="2"/></svg>',
+    'graminoid': '<svg width="4" height="16" viewBox="0 0 4 16"><rect x="1" y="0" width="2" height="16" fill="white" rx="1"/></svg>',
+    'palm': '<svg width="14" height="18" viewBox="0 0 14 20"><line x1="7" y1="20" x2="7" y2="7" stroke="white" stroke-width="1.8"/><path d="M7,7 L2,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M7,7 L12,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
+    'bamboo': '<svg width="14" height="16" viewBox="0 0 14 16"><path d="M1,2 L7,14 L13,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'liana': '<svg width="6" height="18" viewBox="0 0 6 20"><path d="M3,0 C0,5 6,10 3,15 C1.5,17.5 3,20 3,20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
+    'vine': '<svg width="10" height="18" viewBox="0 0 10 20"><path d="M2,20 C2,10 8,10 8,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="2" r="2" fill="white"/></svg>',
+    'scrambler': '<svg width="22" height="8" viewBox="0 0 22 8"><path d="M1,4 L5,1 L9,7 L13,1 L17,7 L21,4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'other': '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="white" stroke-width="2"/><line x1="4" y1="12" x2="12" y2="4" stroke="white" stroke-width="2"/></svg>',
+}
+
 _SYMBOLS = [
-    ("Árvore", "Tree", "#d7a0ff", "🌲"),
-    ("Arbusto", "Shrub", "#45d090", "🌳"),
-    ("Subarbusto", "Subshrub", "#779137", "🌿"),
-    ("Erva", "Forb", "#f8827a", "🌼"),
-    ("Graminóide", "Graminoid", "#8BC34A", "🌾"),
-    ("Palmeira", "Palm", "#ff8fda", "🌴"),
-    ("Liana", "Liana", "#dbb448", "🪢"),
-    ("Trepadeira", "Vine", "#66BB6A", "🌱"),
-    ("Escandente", "Scrambler", "#26A69A", "🪴"),
-    ("Bambu", "Bamboo", "#53c5ff", "🎋"),
-    ("Outro", "Other", "#9E9E9E", "🍃"),
+    ("Árvore", "Tree", "#2a43d1", "tree"),
+    ("Arbusto", "Shrub", "#0095c6", "shrub"),
+    ("Sub-arbusto", "Subshrub", "#612e14", "subshrub"),
+    ("Herbácea", "Forb", "#d77d28", "forb"),
+    ("Gramíneas e afins", "Graminoid", "#633096", "graminoid"),
+    ("Palmeira", "Palm", "#63a355", "palm"),
+    ("Trepadeira lenhosa", "Liana", "#be2843", "liana"),
+    ("Trepadeira herbácea", "Vine", "#cc4fb9", "vine"),
+    ("Rasteira", "Scrambler", "#017201", "scrambler"),
+    ("Bambu", "Bamboo", "#fd2f6d", "bamboo"),
+    ("Outro", "Other", "#171717", "other"),
 ]
 
 
-def _symbol_badge(pt, en, color, icon):
+def _symbol_badge(pt, en, color, icon_key):
+    svg = _GF_SVGS.get(icon_key, '')
     return ui.span(
-        ui.span(icon, style=f"margin-right: 4px;"),
+        ui.HTML(f'<span style="margin-right:4px; display:inline-flex; align-items:center; vertical-align:middle;">{svg}</span>'),
         ui.span(pt, class_="i18n-pt"),
         ui.span(en, class_="i18n-en"),
         class_="symbol-badge",
         style=f"background-color: {color}; color: white; padding: 4px 10px; "
-              f"border-radius: 4px; margin: 3px; display: inline-block; font-size: 0.85em; font-weight: 600;",
+              f"border-radius: 4px; margin: 3px; display: inline-flex; align-items: center; font-size: 0.85em; font-weight: 600;",
     )
 
 
