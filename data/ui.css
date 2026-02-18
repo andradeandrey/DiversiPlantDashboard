@@ -1830,7 +1830,7 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 .species-discovery-row {
     padding: 0 24px;
     margin-bottom: 16px;
-    border: 1px solid #e0e0e0;
+    border: 1.5px solid #b0b0b0;
     border-radius: 10px;
     margin-left: 24px;
     margin-right: 24px;
@@ -1932,43 +1932,60 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
     padding: 0 !important;
 }
 
+/* Selectize input: transparent flex container, items flow below input */
 .species-filter-multi .selectize-input {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    padding: 0 !important;
     border: none !important;
-    border-radius: 6px !important;
-    padding: 4px 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* The text input — styled as the visible "box", always on top */
+.species-filter-multi .selectize-input > input {
+    order: -1 !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    height: 32px !important;
     font-family: Inter, sans-serif !important;
     font-size: 13px !important;
     font-weight: 500;
     color: #171717 !important;
     background-color: #D2DED6 !important;
-    min-height: 40px !important;
-    max-height: 70px !important;
-    height: auto !important;
-    overflow-y: auto !important;
-    box-shadow: none !important;
+    border: 1px solid #bbb !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    box-sizing: border-box !important;
 }
 
+.species-filter-multi .selectize-input > input::placeholder {
+    color: #555 !important;
+    font-weight: 500;
+    font-size: 13px !important;
+}
+
+/* Selected items — pills below the input box */
 .species-filter-multi .selectize-input .item {
-    padding: 1px 6px !important;
+    padding: 2px 6px !important;
     font-size: 11px !important;
     border-radius: 4px !important;
     background-color: #4a7c3f !important;
     color: white !important;
-    margin: 1px 2px !important;
+    margin: 0 !important;
+    cursor: default;
 }
 
 .species-filter-multi .selectize-input .item .remove {
     color: white !important;
     border-left: none !important;
     font-size: 11px !important;
-    padding: 0 2px !important;
-}
-
-.species-filter-multi .selectize-input > input {
-    font-size: 13px !important;
-    height: auto !important;
-    min-height: 0 !important;
-    padding: 0 !important;
+    padding: 0 3px !important;
+    cursor: pointer;
 }
 
 .species-filter-multi .selectize-input > input::placeholder {
