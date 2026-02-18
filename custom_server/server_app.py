@@ -778,7 +778,8 @@ def server_app(input,output,session):
 
     @render.ui
     def discovery_results():
-        df = open_csv(FILE_NAME)
+        from database.connection import get_db, get_bioclim_at_coords
+
         search = (input.species_search() or "").strip().lower()
 
         gf = tuple(input.filter_growth_form() or ())
@@ -792,76 +793,192 @@ def server_app(input,output,session):
 
         has_filter = search or gf or use or threat or nfix or decid
 
-        # --- Climate scores (shared by both sections) ---
-        scores = {}
+        # --- Climate data for scoring ---
+        bioclim = None
+        has_climate = False
         try:
             lat_lon_str = input.longitude_latitude()
             if lat_lon_str:
                 lat, lon = parse_lat_lon(lat_lon_str)
-                from database.connection import get_climate_match_scores
-                sci_names = df['sci_name'].dropna().unique().tolist()
-                scores = get_climate_match_scores(lat, lon, sci_names, threshold=0.3)
+                bioclim = get_bioclim_at_coords(lat, lon)
+                has_climate = bioclim is not None
         except Exception:
             pass
 
-        # Build sci_name → score lookup
-        score_by_common = {}
-        if scores:
-            for _, row in df.iterrows():
-                sn = row.get('sci_name')
-                cn = row.get('common_en')
-                if pd.notna(sn) and pd.notna(cn) and sn in scores:
-                    score_by_common[cn] = int(round(scores[sn] * 100))
-
-        # --- Section 1: New species (search/filter results) ---
+        # --- Section 1: New species from DB ---
         new_rows = []
         new_count = 0
         if has_filter:
-            filtered = df.copy()
+            db = get_db()
+            # Build dynamic SQL query
+            conditions = []
+            params = {}
+
             if search:
-                mask = (filtered['common_en'].str.lower().str.contains(search, na=False) |
-                        filtered['common_pt'].str.lower().str.contains(search, na=False) |
-                        filtered['sci_name'].str.lower().str.contains(search, na=False))
-                filtered = filtered[mask]
+                conditions.append(
+                    "(LOWER(cn_en.common_name) LIKE :search "
+                    "OR LOWER(cn_pt.common_name) LIKE :search "
+                    "OR LOWER(s.canonical_name) LIKE :search)"
+                )
+                params['search'] = f'%{search}%'
+
             if gf:
-                filtered = filtered[filtered['growth_form'].isin(gf)]
-            if use:
-                use_mask = pd.Series(False, index=filtered.index)
-                for u in use:
-                    use_mask |= filtered['function'].str.contains(u, case=False, na=False)
-                    if 'function2' in filtered.columns:
-                        use_mask |= filtered['function2'].str.contains(u, case=False, na=False)
-                filtered = filtered[use_mask]
+                gf_placeholders = []
+                for i, g in enumerate(gf):
+                    key = f'gf{i}'
+                    gf_placeholders.append(f':{key}')
+                    params[key] = g
+                conditions.append(f"su.growth_form IN ({', '.join(gf_placeholders)})")
+
             if threat:
-                filtered = filtered[filtered['threat_status'].isin(threat)]
+                th_placeholders = []
+                for i, t in enumerate(threat):
+                    key = f'th{i}'
+                    th_placeholders.append(f':{key}')
+                    params[key] = t
+                conditions.append(f"su.threat_status IN ({', '.join(th_placeholders)})")
+
             if nfix:
                 if "yes" in nfix and "no" not in nfix:
-                    filtered = filtered[filtered['family'] == 'Fabaceae']
+                    conditions.append("(su.nitrogen_fixer = TRUE OR s.family = 'Fabaceae')")
                 elif "no" in nfix and "yes" not in nfix:
-                    filtered = filtered[filtered['family'] != 'Fabaceae']
+                    conditions.append("(su.nitrogen_fixer IS NOT TRUE AND s.family != 'Fabaceae')")
+
             if decid:
-                decid_mask = pd.Series(False, index=filtered.index)
-                for d in decid:
-                    if d == "semi":
-                        decid_mask |= filtered['leaf_phenol'].str.contains('semi', case=False, na=False)
-                    else:
-                        decid_mask |= filtered['leaf_phenol'].str.contains(d, case=False, na=False)
-                filtered = filtered[decid_mask]
+                decid_conds = []
+                for i, d in enumerate(decid):
+                    key = f'dc{i}'
+                    decid_conds.append(f"su.deciduousness ILIKE :{key}")
+                    params[key] = f'%{d}%'
+                conditions.append(f"({' OR '.join(decid_conds)})")
 
-            # Exclude already-selected
-            filtered = filtered[~filtered['common_en'].isin(selected_set)]
-            new_count = len(filtered)
+            # Ecocrop categories for plant_use filter
+            use_join = ""
+            if use:
+                use_join = "LEFT JOIN climate_envelope_ecocrop cee ON s.id = cee.species_id"
+                use_conds = []
+                # Map UI values to ecocrop category keywords
+                use_map = {
+                    'food': ['fruits', 'vegetables', 'roots', 'cereals', 'sugar', 'pulses', 'oil'],
+                    'timber': ['forest', 'wood'],
+                    'medicinal': ['medicinal', 'aromatic'],
+                    'ornamental': ['ornamental', 'turf'],
+                    'fodder': ['forage', 'pasture'],
+                }
+                for u in use:
+                    keywords = use_map.get(u, [u])
+                    for j, kw in enumerate(keywords):
+                        key = f'use_{u}_{j}'
+                        use_conds.append(f"cee.categories::text ILIKE :{key}")
+                        params[key] = f'%{kw}%'
+                conditions.append(f"({' OR '.join(use_conds)})")
 
-            for _, r in filtered.head(50).iterrows():
-                _cn_en = r.get('common_en', '')
-                cn_en = str(_cn_en) if pd.notna(_cn_en) else ''
-                _cn_pt = r.get('common_pt', '')
-                cn_pt = str(_cn_pt) if pd.notna(_cn_pt) else ''
-                _sci = r.get('sci_name', '')
-                sci = str(_sci) if pd.notna(_sci) else ''
-                pct = score_by_common.get(cn_en)
-                safe = cn_en.replace("'", "\\'").replace('"', '\\"')
-                cb_id = f"cb_{cn_en.replace(' ', '_').replace('.', '')}"
+            # Exclude already-selected (by common_en name)
+            if selected_set:
+                sel_placeholders = []
+                for i, name in enumerate(selected_set):
+                    key = f'sel{i}'
+                    sel_placeholders.append(f':{key}')
+                    params[key] = name
+                conditions.append(f"cn_en.common_name NOT IN ({', '.join(sel_placeholders)})")
+
+            # Only clean Latin-script names (skip Korean, corrupted U+FFFD, etc.)
+            conditions.append("cn_en.common_name ~ '^[A-Za-z]'")
+            conditions.append("cn_en.common_name NOT LIKE '%' || chr(65533) || '%'")
+            where_clause = " AND ".join(conditions) if conditions else "TRUE"
+
+            # Climate scoring: if location available, compute score and sort by it
+            if has_climate:
+                params.update({
+                    'bio1': bioclim['bio1'], 'bio5': bioclim['bio5'],
+                    'bio6': bioclim['bio6'], 'bio12': bioclim['bio12'],
+                    'bio15': bioclim['bio15'],
+                })
+                query = f"""
+                    SELECT DISTINCT ON (s.id)
+                           cn_en.common_name AS common_en,
+                           cn_pt.common_name AS common_pt,
+                           s.canonical_name AS sci_name,
+                           COALESCE(
+                               calculate_climate_match(s.id, :bio1, :bio5, :bio6, :bio12, :bio15),
+                               0
+                           ) AS score
+                    FROM species s
+                    JOIN species_unified su ON s.id = su.species_id
+                    JOIN common_names cn_en ON s.id = cn_en.species_id AND cn_en.language = 'en'
+                    LEFT JOIN LATERAL (
+                        SELECT common_name FROM common_names
+                        WHERE species_id = s.id AND language = 'pt' LIMIT 1
+                    ) cn_pt ON TRUE
+                    LEFT JOIN species_climate_envelope sce ON s.id = sce.species_id
+                    {use_join}
+                    WHERE su.growth_form IS NOT NULL
+                      AND {where_clause}
+                    ORDER BY s.id
+                """
+                # Wrap to sort by score and limit
+                query = f"""
+                    SELECT common_en, common_pt, sci_name, score
+                    FROM ({query}) sub
+                    ORDER BY score DESC
+                    LIMIT 100
+                """
+            else:
+                query = f"""
+                    SELECT DISTINCT ON (s.id)
+                           cn_en.common_name AS common_en,
+                           cn_pt.common_name AS common_pt,
+                           s.canonical_name AS sci_name,
+                           NULL::float AS score
+                    FROM species s
+                    JOIN species_unified su ON s.id = su.species_id
+                    JOIN common_names cn_en ON s.id = cn_en.species_id AND cn_en.language = 'en'
+                    LEFT JOIN LATERAL (
+                        SELECT common_name FROM common_names
+                        WHERE species_id = s.id AND language = 'pt' LIMIT 1
+                    ) cn_pt ON TRUE
+                    {use_join}
+                    WHERE su.growth_form IS NOT NULL
+                      AND {where_clause}
+                    ORDER BY s.id
+                """
+                query = f"""
+                    SELECT common_en, common_pt, sci_name, score
+                    FROM ({query}) sub
+                    ORDER BY common_en
+                    LIMIT 100
+                """
+
+            try:
+                rows = db.execute(query, params)
+                new_count = len(rows)
+            except Exception as e:
+                logging.warning(f"[DISCOVERY] DB query failed: {e}")
+                rows = []
+                new_count = 0
+
+            import html as _html
+            import re as _re
+
+            def _js_sq(s):
+                """Escape for JS single-quoted string inside HTML attribute."""
+                return s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+
+            for r in rows:
+                cn_en = r[0] or ''
+                cn_pt = r[1] or ''
+                sci = r[2] or ''
+                score_val = r[3]
+
+                # Skip non-Latin names (Korean, Japanese, etc.)
+                if cn_en and not _re.match(r'^[A-Za-z]', cn_en):
+                    new_count -= 1
+                    continue
+
+                pct = int(round(score_val * 100)) if score_val and score_val > 0 else None
+
+                safe = _js_sq(cn_en)
+                cb_id = "cb_" + _re.sub(r'[^A-Za-z0-9_]', '', cn_en.replace(' ', '_'))
 
                 add_js = (
                     f"var s=$('#overview_plants')[0].selectize;"
@@ -871,12 +988,12 @@ def server_app(input,output,session):
 
                 label_parts = []
                 if cn_en:
-                    label_parts.append(cn_en)
+                    label_parts.append(_html.escape(cn_en))
                 if cn_pt and cn_pt != cn_en:
-                    label_parts.append(cn_pt)
+                    label_parts.append(_html.escape(cn_pt))
                 if sci:
-                    label_parts.append(sci)
-                label_text = " · ".join(label_parts)
+                    label_parts.append(_html.escape(sci))
+                label_text = " &middot; ".join(label_parts)
 
                 score_span = ""
                 if pct is not None:
@@ -893,44 +1010,82 @@ def server_app(input,output,session):
 
         # --- Section 2: Selected species ---
         sel_rows = []
-        for name in selected:
-            row = df[df['common_en'] == name]
-            cn_pt = name
-            sci = ''
-            if len(row):
-                if pd.notna(row.iloc[0].get('common_pt')):
-                    cn_pt = str(row.iloc[0]['common_pt'])
-                if pd.notna(row.iloc[0].get('sci_name')):
-                    sci = str(row.iloc[0]['sci_name'])
-            pct = score_by_common.get(name)
+        if selected:
+            # Look up selected species in both CSV and DB
+            df = open_csv(FILE_NAME)
+            db = get_db()
+            for name in selected:
+                cn_pt = ''
+                sci = ''
+                pct = None
 
-            label_parts = [name]
-            if cn_pt and cn_pt != name:
-                label_parts.append(cn_pt)
-            if sci:
-                label_parts.append(sci)
-            label_text = " · ".join(label_parts)
+                # Try CSV first (has chart data)
+                csv_row = df[df['common_en'] == name]
+                if len(csv_row):
+                    if pd.notna(csv_row.iloc[0].get('common_pt')):
+                        cn_pt = str(csv_row.iloc[0]['common_pt'])
+                    if pd.notna(csv_row.iloc[0].get('sci_name')):
+                        sci = str(csv_row.iloc[0]['sci_name'])
 
-            score_span = ""
-            if pct is not None:
-                score_span = f' <span class="discovery-score">({pct}%)</span>'
+                # If not in CSV, try DB
+                if not sci:
+                    try:
+                        db_rows = db.execute("""
+                            SELECT s.canonical_name,
+                                   (SELECT common_name FROM common_names
+                                    WHERE species_id = s.id AND language = 'pt' LIMIT 1)
+                            FROM species s
+                            JOIN common_names cn ON s.id = cn.species_id
+                                AND cn.language = 'en' AND cn.common_name = :name
+                            LIMIT 1
+                        """, {'name': name})
+                        if db_rows:
+                            sci = db_rows[0][0] or ''
+                            cn_pt = db_rows[0][1] or ''
+                    except Exception:
+                        pass
 
-            safe = name.replace("'", "\\'").replace('"', '\\"')
-            remove_js = (
-                f"var s=$('#overview_plants')[0].selectize;"
-                f"s.removeItem('{safe}');"
-                f"setTimeout(function(){{var i=s.$control_input[0];if(i)i.blur();s.close();}},50);"
-            )
+                # Climate score
+                if has_climate and sci:
+                    try:
+                        score_rows = db.execute("""
+                            SELECT calculate_climate_match(s.id, :bio1, :bio5, :bio6, :bio12, :bio15)
+                            FROM species s WHERE s.canonical_name = :sci LIMIT 1
+                        """, {**{k: bioclim[k] for k in ['bio1','bio5','bio6','bio12','bio15']}, 'sci': sci})
+                        if score_rows and score_rows[0][0]:
+                            pct = int(round(float(score_rows[0][0]) * 100))
+                    except Exception:
+                        pass
 
-            sel_rows.append(
-                ui.HTML(
-                    f'<div class="selected-item">'
-                    f'<span style="color:#4a7c3f;">&#10003;</span>'
-                    f'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{label_text}{score_span}</span>'
-                    f'<span class="remove-btn" onclick="{remove_js}" title="Remove">&times;</span>'
-                    f'</div>'
+                import html as _html
+
+                label_parts = [_html.escape(name)]
+                if cn_pt and cn_pt != name:
+                    label_parts.append(_html.escape(cn_pt))
+                if sci:
+                    label_parts.append(_html.escape(sci))
+                label_text = " &middot; ".join(label_parts)
+
+                score_span = ""
+                if pct is not None:
+                    score_span = f' <span class="discovery-score">({pct}%)</span>'
+
+                safe = name.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n')
+                remove_js = (
+                    f"var s=$('#overview_plants')[0].selectize;"
+                    f"s.removeItem('{safe}');"
+                    f"setTimeout(function(){{var i=s.$control_input[0];if(i)i.blur();s.close();}},50);"
                 )
-            )
+
+                sel_rows.append(
+                    ui.HTML(
+                        f'<div class="selected-item">'
+                        f'<span style="color:#4a7c3f;">&#10003;</span>'
+                        f'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{label_text}{score_span}</span>'
+                        f'<span class="remove-btn" onclick="{remove_js}" title="Remove">&times;</span>'
+                        f'</div>'
+                    )
+                )
 
         # --- Build container ---
         sections = []
@@ -1008,12 +1163,94 @@ def server_app(input,output,session):
             missing_stratum = []
             missing_both = []
 
+            from database.connection import get_db as _get_db
+            _db = _get_db()
+
             for plant in plants:
-                query = df.query("common_en == '%s'" % plant)[
+                query = df[df['common_en'] == plant][
                     ['common_en', 'growth_form', 'yrs_ini_prod', 'longev_prod', 'stratum']
                 ].values.tolist()
 
+                # Also try matching by sci_name (DB may use different common_en)
                 if not query:
+                    sci_match = df[df['sci_name'] == plant]
+                    if sci_match.empty:
+                        # Look up sci_name from DB for this common_en, then find in CSV
+                        try:
+                            sci_rows = _db.execute("""
+                                SELECT s.canonical_name FROM species s
+                                JOIN common_names cn ON s.id = cn.species_id
+                                    AND cn.language = 'en' AND cn.common_name = :name
+                                LIMIT 1
+                            """, {'name': plant})
+                            if sci_rows and sci_rows[0][0]:
+                                sci_match = df[df['sci_name'] == sci_rows[0][0]]
+                        except Exception:
+                            pass
+                    if not sci_match.empty:
+                        query = sci_match[
+                            ['common_en', 'growth_form', 'yrs_ini_prod', 'longev_prod', 'stratum']
+                        ].values.tolist()
+                        # Use original plant name for display
+                        if query:
+                            query[0][0] = plant
+
+                if not query:
+                    # Fallback: look up growth_form, max_height, lifespan from DB
+                    try:
+                        db_rows = _db.execute("""
+                            SELECT su.growth_form, su.max_height_m, su.lifespan_years
+                            FROM species s
+                            JOIN species_unified su ON s.id = su.species_id
+                            JOIN common_names cn ON s.id = cn.species_id
+                                AND cn.language = 'en' AND cn.common_name = :name
+                            LIMIT 1
+                        """, {'name': plant})
+                        if db_rows:
+                            gf = db_rows[0][0] or 'other'
+                            db_height = float(db_rows[0][1]) if db_rows[0][1] else None
+                            db_lifespan = float(db_rows[0][2]) if db_rows[0][2] else None
+                        else:
+                            gf, db_height, db_lifespan = 'other', None, None
+                    except Exception:
+                        gf, db_height, db_lifespan = 'other', None, None
+
+                    # Estimate stratum from max_height_m (0-9 scale)
+                    # 0-0.5m→1, 0.5-2m→2, 2-5m→3, 5-10m→4, 10-15m→5, 15-25m→6, 25-35m→7, >35m→8
+                    db_stratum = None
+                    if db_height is not None:
+                        if db_height <= 0.5:
+                            db_stratum = 1.0
+                        elif db_height <= 2:
+                            db_stratum = 2.0
+                        elif db_height <= 5:
+                            db_stratum = 3.0
+                        elif db_height <= 10:
+                            db_stratum = 4.0
+                        elif db_height <= 15:
+                            db_stratum = 5.0
+                        elif db_height <= 25:
+                            db_stratum = 6.0
+                        elif db_height <= 35:
+                            db_stratum = 7.0
+                        else:
+                            db_stratum = 8.0
+
+                    # Use lifespan as longevity proxy
+                    db_duration = db_lifespan if db_lifespan else None
+
+                    has_s = db_stratum is not None
+                    has_d = db_duration is not None
+
+                    if has_s and has_d:
+                        # Has stratum + duration but no harvest start
+                        missing_harvest.append([plant, gf, None, db_duration, db_stratum])
+                    elif has_s:
+                        missing_harvest.append([plant, gf, None, None, db_stratum])
+                    elif has_d:
+                        missing_stratum.append([plant, gf, 0, db_duration, None])
+                    else:
+                        missing_both.append([plant, gf, None, None, None])
                     continue
 
                 query = query[0]

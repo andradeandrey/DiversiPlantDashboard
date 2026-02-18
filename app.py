@@ -20,6 +20,16 @@ from custom_ui.tab_05_admin import admin
 from custom_ui.tab_06_recommend import recommend
 from custom_ui.i18n import lang_toggle, lang_init_script
 
+# Patch Shiny input handler to ignore unknown types instead of crashing
+from shiny.input_handler import _InputHandlers
+_orig_process = _InputHandlers._process_value
+def _safe_process(self, type, value, name, session):
+    try:
+        return _orig_process(self, type, value, name, session)
+    except ValueError:
+        return value
+_InputHandlers._process_value = _safe_process
+
 from custom_server.server_app import server_app
 from custom_server.server_admin import server_admin
 from custom_server.server_homepage import server_homepage
