@@ -1,4 +1,4 @@
-"""Species / Espécies tab — matches Figma design."""
+"""Species / Espécies tab — discovery-based layout."""
 import os
 from shiny import ui, App
 from pathlib import Path
@@ -55,7 +55,7 @@ def _symbol_badge(pt, en, color, icon_key):
 main_species = ui.nav_panel(
     tab_title(3, "Espécies", "Species"),
     ui.page_fluid(
-        # Search input — centered
+        # Hidden selectize — data store for selected species
         ui.div(
             ui.input_selectize(
                 "overview_plants",
@@ -63,100 +63,164 @@ main_species = ui.nav_panel(
                 choices=get_Plants(FILE_NAME),
                 multiple=True,
                 options={
-                    "placeholder": "Digite aqui as espécies que você gostaria de plantar...",
+                    "placeholder": "",
                     "create": True,
                 },
             ),
-            class_="species-search-bar",
+            class_="hidden-selectize-store",
         ),
 
-        # Selected species tags — wider container below search bar
-        ui.div(id="species-tags-container", class_="species-tags-container"),
+        # Discovery row: Filters+Search (col-6) + Results (col-6), bordered
+        ui.row(
+            # Left: Search + Filters column
+            ui.column(6,
+                ui.div(
+                    # Search inside left column
+                    ui.div(
+                        ui.tags.label(
+                            ui.span("Busca:", class_="i18n-pt"),
+                            ui.span("Search:", class_="i18n-en"),
+                            class_="species-filter-label",
+                        ),
+                        ui.input_text("species_search", "",
+                            placeholder="Buscar espécie por nome... / Search species by name..."),
+                        class_="species-search-inline",
+                    ),
+                    ui.div(
+                        ui.input_selectize(
+                            "filter_growth_form", "",
+                            choices={
+                                "tree": "Árvore / Tree",
+                                "shrub": "Arbusto / Shrub",
+                                "subshrub": "Sub-arbusto / Subshrub",
+                                "forb": "Herbácea / Forb",
+                                "graminoid": "Gramínea / Graminoid",
+                                "palm": "Palmeira / Palm",
+                                "bamboo": "Bambu / Bamboo",
+                                "liana": "Liana",
+                                "vine": "Trepadeira / Vine",
+                                "scrambler": "Rasteira / Scrambler",
+                            },
+                            multiple=True,
+                            options={"plugins": ["remove_button"],
+                                     "placeholder": "Forma de crescimento"},
+                        ),
+                        class_="species-filter-item species-filter-multi",
+                    ),
+                    ui.div(
+                        ui.input_selectize(
+                            "filter_plant_use", "",
+                            choices={
+                                "food": "Alimento / Food",
+                                "timber": "Madeira / Timber",
+                                "medicinal": "Medicinal",
+                                "ornamental": "Ornamental",
+                                "fodder": "Forragem / Fodder",
+                            },
+                            multiple=True,
+                            options={"plugins": ["remove_button"],
+                                     "placeholder": "Uso da planta"},
+                        ),
+                        class_="species-filter-item species-filter-multi",
+                    ),
+                    ui.div(
+                        ui.input_selectize(
+                            "filter_threat", "",
+                            choices={
+                                "LC": "Pouco preocupante (LC)",
+                                "NT": "Quase ameaçada (NT)",
+                                "VU": "Vulnerável (VU)",
+                                "EN": "Em perigo (EN)",
+                                "CR": "Criticamente em perigo (CR)",
+                            },
+                            multiple=True,
+                            options={"plugins": ["remove_button"],
+                                     "placeholder": "Ameaça à conservação"},
+                        ),
+                        class_="species-filter-item species-filter-multi",
+                    ),
+                    ui.div(
+                        ui.input_selectize(
+                            "filter_nfix", "",
+                            choices={
+                                "yes": "Sim / Yes",
+                                "no": "Não / No",
+                            },
+                            multiple=True,
+                            options={"plugins": ["remove_button"],
+                                     "placeholder": "Fixador de N"},
+                        ),
+                        class_="species-filter-item species-filter-multi",
+                    ),
+                    ui.div(
+                        ui.input_selectize(
+                            "filter_deciduousness", "",
+                            choices={
+                                "deciduous": "Decídua / Deciduous",
+                                "evergreen": "Perene / Evergreen",
+                                "semi": "Semi-decídua / Semi-deciduous",
+                            },
+                            multiple=True,
+                            options={"plugins": ["remove_button"],
+                                     "placeholder": "Deciduidade"},
+                        ),
+                        class_="species-filter-item species-filter-multi",
+                    ),
+                    class_="species-filters-col",
+                ),
+            ),
+            # Right: Discovery results (new + selected)
+            ui.column(6,
+                ui.output_ui("discovery_results"),
+            ),
+            class_="species-discovery-row",
+        ),
 
-        # Filter dropdowns row
+        # Simplify modal
+        ui.HTML("""
+        <div class="modal fade" id="simplifyModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <span class="i18n-pt">Simplificar sistema</span>
+                  <span class="i18n-en">Simplify system</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" id="simplify-modal-body"></div>
+            </div>
+          </div>
+        </div>
+        """),
+
+        # Binning controls (hidden; moved into simplify modal via JS)
         ui.div(
             ui.div(
-                ui.input_select(
-                    "filter_growth_form",
-                    "",
-                    choices={
-                        "": "Forma de crescimento",
-                        "tree": "Árvore",
-                        "shrub": "Arbusto",
-                        "subshrub": "Sub-arbusto",
-                        "forb": "Herbácea (forb)",
-                        "graminoid": "Gramínea",
-                        "climber": "Trepadeira",
-                        "palm": "Palmeira",
-                        "bamboo": "Bambu",
-                        "cactus": "Cacto",
-                    },
+                ui.p("Nº de categorias de Estrato", class_="bold-text"),
+                ui.input_radio_buttons(
+                    "stratum_bins", "",
+                    choices={"2": "2", "3": "3", "4": "4", "5": "5", "9": "9"},
+                    selected="4",
+                    inline=True,
                 ),
-                class_="species-filter-item",
+                style="margin-bottom: 24px;",
             ),
             ui.div(
-                ui.input_select(
-                    "filter_plant_use",
-                    "",
-                    choices={
-                        "": "Uso da planta",
-                        "food": "Alimento",
-                        "timber": "Madeira",
-                        "medicinal": "Medicinal",
-                        "ornamental": "Ornamental",
-                        "fodder": "Forragem",
-                    },
-                ),
-                class_="species-filter-item",
+                ui.p("Nº de períodos de colheita feito", class_="bold-text"),
+                ui.input_slider("harvest_bins", "", min=2, max=10, value=4, step=1),
             ),
-            ui.div(
-                ui.input_select(
-                    "filter_threat",
-                    "",
-                    choices={
-                        "": "Ameaça à conservação",
-                        "LC": "Pouco preocupante (LC)",
-                        "NT": "Quase ameaçada (NT)",
-                        "VU": "Vulnerável (VU)",
-                        "EN": "Em perigo (EN)",
-                        "CR": "Criticamente em perigo (CR)",
-                    },
-                ),
-                class_="species-filter-item",
-            ),
-            ui.div(
-                ui.input_select(
-                    "filter_nfix",
-                    "",
-                    choices={
-                        "": "Fixador biológico de N",
-                        "yes": "Sim",
-                        "no": "Não",
-                    },
-                ),
-                class_="species-filter-item",
-            ),
-            ui.div(
-                ui.input_select(
-                    "filter_deciduousness",
-                    "",
-                    choices={
-                        "": "Deciduidade",
-                        "deciduous": "Decídua",
-                        "evergreen": "Perene",
-                        "semi": "Semi-decídua",
-                    },
-                ),
-                class_="species-filter-item",
-            ),
+            id="binning-controls",
+            style="display: none; padding: 8px 0;",
+        ),
+
+        # Chart toolbar (Simplificar + Símbolos) + chart full width
+        ui.div(
             # Simplify button
-            ui.div(
-                ui.tags.button(
-                    "Simplificar sistema",
-                    class_="btn btn-outline-secondary btn-sm species-simplify-btn",
-                    **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
-                ),
-                class_="species-filter-simplify",
+            ui.tags.button(
+                "Simplificar sistema",
+                class_="btn btn-outline-secondary btn-sm species-simplify-btn",
+                **{"data-bs-toggle": "modal", "data-bs-target": "#simplifyModal"},
             ),
             # Symbols button + dropdown panel
             ui.div(
@@ -182,52 +246,10 @@ main_species = ui.nav_panel(
                     id="symbolsDropdown",
                     class_="symbols-dropdown",
                 ),
-                class_="species-filter-simplify",
-                style="position: relative;",
+                style="position: relative; display: inline-block;",
             ),
-            class_="species-filters-row",
+            class_="chart-toolbar",
         ),
-
-        # Simplify modal
-        ui.HTML("""
-        <div class="modal fade" id="simplifyModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">
-                  <span class="i18n-pt">Simplificar sistema</span>
-                  <span class="i18n-en">Simplify system</span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body" id="simplify-modal-body"></div>
-            </div>
-          </div>
-        </div>
-        """),
-
-
-        # Binning controls (hidden; moved into simplify modal via JS)
-        ui.div(
-            ui.div(
-                ui.p("Nº de categorias de Estrato", class_="bold-text"),
-                ui.input_radio_buttons(
-                    "stratum_bins", "",
-                    choices={"2": "2", "3": "3", "4": "4", "5": "5", "9": "9"},
-                    selected="4",
-                    inline=True,
-                ),
-                style="margin-bottom: 24px;",
-            ),
-            ui.div(
-                ui.p("Nº de períodos de colheita feito", class_="bold-text"),
-                ui.input_slider("harvest_bins", "", min=2, max=10, value=4, step=1),
-            ),
-            id="binning-controls",
-            style="display: none; padding: 8px 0;",
-        ),
-
-        # Main grid visualization
         ui.div(
             ui.output_ui("intercrops"),
             class_="species-grid-area",
@@ -250,8 +272,7 @@ main_species = ui.nav_panel(
             ),
         ),
 
-
-        # JS: move binning controls into simplify modal + fix selectize input width + brush toggle
+        # JS: move binning controls into simplify modal
         ui.tags.script("""
             document.addEventListener('DOMContentLoaded', function() {
                 var binning = document.getElementById('binning-controls');
@@ -260,59 +281,6 @@ main_species = ui.nav_panel(
                     simplifyBody.appendChild(binning);
                     binning.style.display = '';
                 }
-
-
-                // Wait for Shiny selectize to initialize, then sync tags
-                function initTagSync() {
-                    var searchBar = document.querySelector('.species-search-bar .selectize-input');
-                    var tagsContainer = document.getElementById('species-tags-container');
-                    if (!searchBar || !tagsContainer) {
-                        setTimeout(initTagSync, 200);
-                        return;
-                    }
-
-                    var syncing = false;
-                    function syncTags() {
-                        if (syncing) return;
-                        syncing = true;
-
-                        // Force input width
-                        var inp = searchBar.querySelector('input');
-                        if (inp) inp.style.setProperty('width', '603px', 'important');
-
-                        // Clone .item elements to external container
-                        var items = searchBar.querySelectorAll('.item');
-                        tagsContainer.innerHTML = '';
-                        items.forEach(function(item) {
-                            var clone = item.cloneNode(true);
-                            clone.style.display = '';
-                            var removeBtn = clone.querySelector('.remove');
-                            if (removeBtn) {
-                                removeBtn.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    var origRemove = item.querySelector('.remove');
-                                    if (origRemove) origRemove.click();
-                                    // Blur selectize to prevent dropdown from opening
-                                    setTimeout(function() {
-                                        var inp = searchBar.querySelector('input');
-                                        if (inp) inp.blur();
-                                        var s = $('#overview_plants')[0];
-                                        if (s && s.selectize) s.selectize.close();
-                                    }, 50);
-                                });
-                            }
-                            tagsContainer.appendChild(clone);
-                            item.style.display = 'none';
-                        });
-
-                        syncing = false;
-                    }
-
-                    var obs = new MutationObserver(syncTags);
-                    obs.observe(searchBar, { childList: true, subtree: true });
-                    syncTags();
-                }
-                initTagSync();
             });
         """),
 

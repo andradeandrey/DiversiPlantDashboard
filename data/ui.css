@@ -661,151 +661,37 @@ background-color: #ff1a1a; /* Darker red on hover */
 /* Species Tab Styles                              */
 /* =============================================== */
 
-.species-search-bar {
-    max-width: 603px;
-    margin: 20px auto 16px;
-    text-align: center;
-}
+/* Old species-search-bar selectize styles removed — now uses input_text */
 
-.species-search-bar .shiny-input-container {
-    width: 100% !important;
-}
+/* Old species-tags-container removed — pills now rendered server-side */
 
-.species-search-bar .selectize-input {
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    min-height: auto !important;
-    height: auto !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-}
-
-/* Input field: first row, full width with underline */
-.species-search-bar .selectize-input > input {
-    order: -1 !important;
-    flex: 0 0 100% !important;
-    width: 603px !important;
-    max-width: 100% !important;
-    min-width: 603px !important;
-    height: 36px !important;
-    font-family: Inter, sans-serif !important;
-    font-size: 24px !important;
-    font-weight: 300 !important;
-    line-height: 1.5 !important;
-    color: #171717 !important;
-    padding: 0 0 8px 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    border-bottom: 1.5px solid #ccc !important;
-    text-align: center;
-}
-
-.species-search-bar .selectize-input > input::placeholder {
-    color: #aaa !important;
-    opacity: 1;
-    font-style: normal;
-    font-weight: 300;
-    text-align: center;
-}
-
-/* Selected species tags (pills) — appear below the input line */
-.species-search-bar .selectize-input .item {
-    order: 1 !important;
-    background-color: #1c5832 !important;
-    color: white !important;
-    border-radius: 999px !important;
-    padding: 8px 16px !important;
-    font-family: Inter, sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 300 !important;
-    line-height: 1.25 !important;
-    border: none !important;
-    margin: 0 !important;
-}
-
-/* Close button on tags */
-.species-search-bar .selectize-input .item .remove {
-    color: white !important;
-    font-size: 12px !important;
-    margin-left: 8px !important;
-    border-left: none !important;
-    padding: 0 !important;
-}
-
-.species-search-bar .selectize-control {
-    height: auto !important;
-    padding: 0 !important;
-}
-
-/* External tags container — full width */
-.species-tags-container {
+/* Filters in vertical column (col-4) */
+.species-filters-col {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin: 12px 0 50px;
-    padding: 0 120px;
-    min-height: 0;
-}
-
-.species-tags-container:empty {
-    display: none;
-}
-
-.species-tags-container .item {
-    background-color: #1c5832 !important;
-    color: white !important;
-    border-radius: 999px !important;
-    padding: 8px 16px !important;
-    font-family: Inter, sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 300 !important;
-    line-height: 1.25 !important;
-    border: none !important;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
 }
 
-.species-tags-container .item .remove {
-    color: white !important;
-    font-size: 12px !important;
-    border-left: none !important;
-    padding: 0 !important;
-    cursor: pointer;
-    text-decoration: none;
+.species-filters-col .species-filter-item {
+    width: 100% !important;
 }
 
-.species-filters-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 24px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+.species-filters-col .species-filter-multi {
+    max-width: 100%;
+    min-width: 0;
 }
 
 .species-filter-item {
     flex: 0 0 auto;
-    width: auto !important;
 }
 
 .species-filter-item .form-group {
     margin-bottom: 0;
-    width: auto !important;
+    width: 100% !important;
 }
 
 .species-filter-item .shiny-input-container {
-    width: auto !important;
+    width: 100% !important;
 }
 
 .species-filter-item .shiny-input-select,
@@ -831,17 +717,13 @@ background-color: #ff1a1a; /* Darker red on hover */
     cursor: pointer;
     white-space: nowrap;
     min-width: 0;
-    width: auto !important;
+    width: 100% !important;
 }
 
 .species-filter-simplify {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     padding-bottom: 0;
-}
-
-.species-filter-item + .species-filter-simplify {
-    margin-left: auto;
 }
 
 .species-simplify-btn {
@@ -912,9 +794,9 @@ background-color: #ff1a1a; /* Darker red on hover */
 .species-grid-area {
     background-color: transparent;
     border-radius: 10px;
-    margin: 0 24px;
-    padding: 16px;
-    min-height: 400px;
+    margin: 0;
+    padding: 16px 24px;
+    min-height: 700px;
 }
 
 /* Brush click overlay on chart */
@@ -1844,4 +1726,231 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 
 .tab-pane[data-value="tab_results"] .nav-buttons .btn-outline-secondary {
     background-color: #fff;
+}
+
+/* =============================================== */
+/* Species Tab — Discovery Layout                  */
+/* =============================================== */
+
+/* Hide the selectize data store */
+.hidden-selectize-store {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+}
+
+/* Search input inline (inside filters column) */
+.species-search-inline {
+    margin-bottom: 10px;
+}
+
+.species-search-inline .shiny-input-container {
+    width: 100% !important;
+}
+
+.species-search-inline input[type="text"] {
+    width: 100% !important;
+    height: 34px !important;
+    font-family: Inter, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #171717 !important;
+    padding: 6px 10px !important;
+    margin: 0 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.species-search-inline input[type="text"]::placeholder {
+    color: #aaa !important;
+    opacity: 1;
+    font-style: normal;
+    font-weight: 300;
+    font-size: 13px;
+}
+
+.species-search-inline label.control-label {
+    display: none !important;
+}
+
+.species-filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* Chart toolbar (Simplificar + Símbolos buttons) — right-aligned */
+.chart-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 24px 0;
+}
+
+/* Discovery row: filters left + results right, thin border */
+.species-discovery-row {
+    padding: 0 24px;
+    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    margin-left: 24px;
+    margin-right: 24px;
+    padding: 16px;
+    background: #fff;
+}
+
+/* Discovery results container */
+.discovery-results-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.discovery-section {
+    max-height: 25vh;
+    overflow-y: auto;
+}
+
+.discovery-section-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    padding: 6px 12px;
+    background: #f8f8f8;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.discovery-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.discovery-checkbox-item:hover {
+    background: #f5f9f5;
+}
+
+.discovery-checkbox-item input[type="checkbox"] {
+    accent-color: #4a7c3f;
+    flex-shrink: 0;
+}
+
+.discovery-checkbox-item label {
+    flex: 1;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.discovery-score {
+    color: #4a7c3f;
+    font-weight: 600;
+}
+
+/* Selected species section */
+.selected-section {
+    border-top: 2px solid #d2ded6;
+    background: #fafcfa;
+}
+
+.selected-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+
+.selected-item .remove-btn {
+    color: #c00;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.selected-item .remove-btn:hover {
+    color: #900;
+}
+
+/* Multi-select filter selectize — compact */
+.species-filter-multi {
+    min-width: 140px;
+    max-width: 220px;
+}
+
+.species-filter-multi .selectize-control {
+    height: auto !important;
+    padding: 0 !important;
+}
+
+.species-filter-multi .selectize-input {
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-family: Inter, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500;
+    color: #171717 !important;
+    background-color: #D2DED6 !important;
+    min-height: 30px !important;
+    height: auto !important;
+    box-shadow: none !important;
+}
+
+.species-filter-multi .selectize-input .item {
+    padding: 1px 6px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    background-color: #4a7c3f !important;
+    color: white !important;
+    margin: 1px 2px !important;
+}
+
+.species-filter-multi .selectize-input .item .remove {
+    color: white !important;
+    border-left: none !important;
+    font-size: 11px !important;
+    padding: 0 2px !important;
+}
+
+.species-filter-multi .selectize-input > input {
+    font-size: 13px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+}
+
+.species-filter-multi .selectize-input > input::placeholder {
+    color: #555 !important;
+    font-weight: 500;
+    font-size: 13px !important;
+}
+
+.species-filter-multi .shiny-input-container {
+    width: 100% !important;
+}
+
+.species-filter-multi label.control-label {
+    display: none !important;
 }

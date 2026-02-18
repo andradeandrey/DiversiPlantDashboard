@@ -774,54 +774,233 @@ def server_app(input,output,session):
         return fig
 
 
-##Main Species
+##Main Species — Discovery & Selection
 
     @render.ui
-    @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins,
-                    input.filter_growth_form, input.filter_plant_use, input.filter_threat,
-                    input.filter_nfix, input.filter_deciduousness)
+    def discovery_results():
+        df = open_csv(FILE_NAME)
+        search = (input.species_search() or "").strip().lower()
+
+        gf = tuple(input.filter_growth_form() or ())
+        use = tuple(input.filter_plant_use() or ())
+        threat = tuple(input.filter_threat() or ())
+        nfix = tuple(input.filter_nfix() or ())
+        decid = tuple(input.filter_deciduousness() or ())
+
+        selected = list(input.overview_plants() or [])
+        selected_set = set(selected)
+
+        has_filter = search or gf or use or threat or nfix or decid
+
+        # --- Climate scores (shared by both sections) ---
+        scores = {}
+        try:
+            lat_lon_str = input.longitude_latitude()
+            if lat_lon_str:
+                lat, lon = parse_lat_lon(lat_lon_str)
+                from database.connection import get_climate_match_scores
+                sci_names = df['sci_name'].dropna().unique().tolist()
+                scores = get_climate_match_scores(lat, lon, sci_names, threshold=0.3)
+        except Exception:
+            pass
+
+        # Build sci_name → score lookup
+        score_by_common = {}
+        if scores:
+            for _, row in df.iterrows():
+                sn = row.get('sci_name')
+                cn = row.get('common_en')
+                if pd.notna(sn) and pd.notna(cn) and sn in scores:
+                    score_by_common[cn] = int(round(scores[sn] * 100))
+
+        # --- Section 1: New species (search/filter results) ---
+        new_rows = []
+        new_count = 0
+        if has_filter:
+            filtered = df.copy()
+            if search:
+                mask = (filtered['common_en'].str.lower().str.contains(search, na=False) |
+                        filtered['common_pt'].str.lower().str.contains(search, na=False) |
+                        filtered['sci_name'].str.lower().str.contains(search, na=False))
+                filtered = filtered[mask]
+            if gf:
+                filtered = filtered[filtered['growth_form'].isin(gf)]
+            if use:
+                use_mask = pd.Series(False, index=filtered.index)
+                for u in use:
+                    use_mask |= filtered['function'].str.contains(u, case=False, na=False)
+                    if 'function2' in filtered.columns:
+                        use_mask |= filtered['function2'].str.contains(u, case=False, na=False)
+                filtered = filtered[use_mask]
+            if threat:
+                filtered = filtered[filtered['threat_status'].isin(threat)]
+            if nfix:
+                if "yes" in nfix and "no" not in nfix:
+                    filtered = filtered[filtered['family'] == 'Fabaceae']
+                elif "no" in nfix and "yes" not in nfix:
+                    filtered = filtered[filtered['family'] != 'Fabaceae']
+            if decid:
+                decid_mask = pd.Series(False, index=filtered.index)
+                for d in decid:
+                    if d == "semi":
+                        decid_mask |= filtered['leaf_phenol'].str.contains('semi', case=False, na=False)
+                    else:
+                        decid_mask |= filtered['leaf_phenol'].str.contains(d, case=False, na=False)
+                filtered = filtered[decid_mask]
+
+            # Exclude already-selected
+            filtered = filtered[~filtered['common_en'].isin(selected_set)]
+            new_count = len(filtered)
+
+            for _, r in filtered.head(50).iterrows():
+                _cn_en = r.get('common_en', '')
+                cn_en = str(_cn_en) if pd.notna(_cn_en) else ''
+                _cn_pt = r.get('common_pt', '')
+                cn_pt = str(_cn_pt) if pd.notna(_cn_pt) else ''
+                _sci = r.get('sci_name', '')
+                sci = str(_sci) if pd.notna(_sci) else ''
+                pct = score_by_common.get(cn_en)
+                safe = cn_en.replace("'", "\\'").replace('"', '\\"')
+                cb_id = f"cb_{cn_en.replace(' ', '_').replace('.', '')}"
+
+                add_js = (
+                    f"var s=$('#overview_plants')[0].selectize;"
+                    f"s.addOption({{value:'{safe}',text:'{safe}'}});"
+                    f"s.addItem('{safe}');"
+                )
+
+                label_parts = []
+                if cn_en:
+                    label_parts.append(cn_en)
+                if cn_pt and cn_pt != cn_en:
+                    label_parts.append(cn_pt)
+                if sci:
+                    label_parts.append(sci)
+                label_text = " · ".join(label_parts)
+
+                score_span = ""
+                if pct is not None:
+                    score_span = f' <span class="discovery-score">({pct}%)</span>'
+
+                new_rows.append(
+                    ui.HTML(
+                        f'<div class="discovery-checkbox-item" onclick="var cb=this.querySelector(\'input\');if(!cb.checked){{cb.checked=true;{add_js}}}">'
+                        f'<input type="checkbox" id="{cb_id}" onchange="if(this.checked){{{add_js}}}">'
+                        f'<label for="{cb_id}">{label_text}{score_span}</label>'
+                        f'</div>'
+                    )
+                )
+
+        # --- Section 2: Selected species ---
+        sel_rows = []
+        for name in selected:
+            row = df[df['common_en'] == name]
+            cn_pt = name
+            sci = ''
+            if len(row):
+                if pd.notna(row.iloc[0].get('common_pt')):
+                    cn_pt = str(row.iloc[0]['common_pt'])
+                if pd.notna(row.iloc[0].get('sci_name')):
+                    sci = str(row.iloc[0]['sci_name'])
+            pct = score_by_common.get(name)
+
+            label_parts = [name]
+            if cn_pt and cn_pt != name:
+                label_parts.append(cn_pt)
+            if sci:
+                label_parts.append(sci)
+            label_text = " · ".join(label_parts)
+
+            score_span = ""
+            if pct is not None:
+                score_span = f' <span class="discovery-score">({pct}%)</span>'
+
+            safe = name.replace("'", "\\'").replace('"', '\\"')
+            remove_js = (
+                f"var s=$('#overview_plants')[0].selectize;"
+                f"s.removeItem('{safe}');"
+                f"setTimeout(function(){{var i=s.$control_input[0];if(i)i.blur();s.close();}},50);"
+            )
+
+            sel_rows.append(
+                ui.HTML(
+                    f'<div class="selected-item">'
+                    f'<span style="color:#4a7c3f;">&#10003;</span>'
+                    f'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{label_text}{score_span}</span>'
+                    f'<span class="remove-btn" onclick="{remove_js}" title="Remove">&times;</span>'
+                    f'</div>'
+                )
+            )
+
+        # --- Build container ---
+        sections = []
+
+        # New species section
+        if has_filter:
+            header_text_pt = f"Novas espécies ({new_count}):" if new_count else "Nenhuma espécie encontrada"
+            header_text_en = f"New species ({new_count}):" if new_count else "No species found"
+            sections.append(ui.HTML(
+                f'<div class="discovery-section-header">'
+                f'<span class="i18n-pt">{header_text_pt}</span>'
+                f'<span class="i18n-en">{header_text_en}</span>'
+                f'</div>'
+            ))
+            sections.append(ui.div(*new_rows, class_="discovery-section") if new_rows else ui.span())
+        else:
+            sections.append(ui.HTML(
+                '<div class="discovery-section" style="display:flex;align-items:center;justify-content:center;min-height:120px;">'
+                '<p style="color:#888;text-align:center;">'
+                '<span class="i18n-pt">Use a busca ou filtros para descobrir espécies</span>'
+                '<span class="i18n-en">Use search or filters to discover species</span>'
+                '</p></div>'
+            ))
+
+        # Selected section
+        if sel_rows:
+            sel_header_pt = f"Selecionadas ({len(selected)}):"
+            sel_header_en = f"Selected ({len(selected)}):"
+            sections.append(ui.HTML(
+                f'<div class="discovery-section-header selected-section">'
+                f'<span class="i18n-pt">{sel_header_pt}</span>'
+                f'<span class="i18n-en">{sel_header_en}</span>'
+                f'</div>'
+            ))
+            sections.append(ui.div(*sel_rows, class_="discovery-section"))
+
+        return ui.div(*sections, class_="discovery-results-container")
+
+    @render.ui
+    @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins)
     def intercrops():
         if input.database_choice() == "try":
             df = open_csv(FILE_NAME)
             plants = list(input.overview_plants())
 
             if not plants:
-                return ui.HTML('<div style="text-align:center;padding:40px;color:#888;">Nenhuma espécie selecionada</div>')
-
-            # Apply filters to selected species
-            f_growth = input.filter_growth_form()
-            f_use = input.filter_plant_use()
-            f_threat = input.filter_threat()
-            f_nfix = input.filter_nfix()
-            f_decid = input.filter_deciduousness()
-
-            if f_growth or f_use or f_threat or f_nfix or f_decid:
-                filtered = df[df['common_en'].isin(plants)]
-                if f_growth:
-                    filtered = filtered[filtered['growth_form'] == f_growth]
-                if f_use:
-                    filtered = filtered[
-                        filtered['function'].str.contains(f_use, case=False, na=False) |
-                        filtered['function2'].str.contains(f_use, case=False, na=False)
-                    ] if 'function2' in filtered.columns else filtered[
-                        filtered['function'].str.contains(f_use, case=False, na=False)
-                    ]
-                if f_threat:
-                    filtered = filtered[filtered['threat_status'] == f_threat]
-                if f_nfix:
-                    if f_nfix == "yes":
-                        filtered = filtered[filtered['family'] == 'Fabaceae']
-                    else:
-                        filtered = filtered[filtered['family'] != 'Fabaceae']
-                if f_decid:
-                    if f_decid == "semi":
-                        filtered = filtered[filtered['leaf_phenol'].str.contains('semi', case=False, na=False)]
-                    else:
-                        filtered = filtered[filtered['leaf_phenol'].str.contains(f_decid, case=False, na=False)]
-                plants = filtered['common_en'].tolist()
-
-                if not plants:
-                    return ui.HTML('<div style="text-align:center;padding:40px;color:#888;">Nenhuma espécie corresponde aos filtros</div>')
+                empty_option = {
+                    'title': {
+                        'text': 'Período de colheita × Estrato',
+                        'left': 'center', 'top': 25,
+                        'textStyle': {'fontSize': 13, 'fontFamily': 'Inter, sans-serif', 'color': '#bbb'},
+                    },
+                    'grid': {'left': 140, 'right': 20, 'top': 60, 'bottom': 80},
+                    'xAxis': {
+                        'type': 'value', 'name': 'Período de colheita (anos após plantio)',
+                        'nameLocation': 'middle', 'nameGap': 35,
+                        'nameTextStyle': {'color': '#ccc', 'fontSize': 14, 'fontFamily': 'Inter, sans-serif'},
+                        'min': 0, 'max': 6,
+                        'splitLine': {'show': False},
+                        'axisLabel': {'color': '#ccc', 'fontFamily': 'Inter, sans-serif'},
+                    },
+                    'yAxis': {
+                        'type': 'value', 'min': 0, 'max': 9,
+                        'splitLine': {'show': False},
+                        'axisLabel': {'color': '#ccc', 'fontFamily': 'Inter, sans-serif'},
+                    },
+                    'series': [],
+                    'backgroundColor': 'transparent',
+                }
+                return ui.HTML(echarts_html(empty_option, 'echart_intercrops', height=700))
 
             # Categorize species by available data
             complete_data = []
@@ -1230,30 +1409,27 @@ def server_app(input,output,session):
                 'bamboo': 'Bambu', 'other': 'Outro',
             }
 
-            # Fixed legend series (growth forms at top)
-            fixed_legend_x_vals = np.linspace(min_x, max_x, len(gf_list)).tolist()
+            # Fixed legend as graphic elements above the grid (not inside chart area)
+            n_gf = len(gf_list)
             for i, gf in enumerate(gf_list):
                 emoji = ECHARTS_EMOJIS.get(gf, '🍃')
                 pt_name = gf_display_pt.get(gf, gf)
-                species_series.append({
-                    'type': 'scatter',
-                    'data': [[round(fixed_legend_x_vals[i], 4), 10.5]],
-                    'symbol': 'circle',
-                    'symbolSize': 14,
-                    'itemStyle': {'color': 'transparent'},
-                    'label': {
-                        'show': True,
-                        'position': 'top',
-                        'formatter': f'{emoji} {pt_name}',
+                color = COLOR.get(gf, '#333')
+                # Distribute evenly across grid width (140px left to ~right edge)
+                pct = (i + 0.5) / n_gf * 100
+                graphic_elements.append({
+                    'type': 'text',
+                    'left': f'{pct}%',
+                    'top': 70,
+                    'style': {
+                        'text': f'{emoji} {pt_name}',
                         'fontSize': 10,
                         'fontFamily': 'Inter, sans-serif',
-                        'color': '#333',
+                        'fill': color,
+                        'fontWeight': 600,
+                        'textAlign': 'center',
                     },
-                    'silent': True,
                     'z': 100,
-                    'tooltip': {'show': False},
-                    'showInLegend': False,
-                    'legendHoverLink': False,
                 })
 
             # Annotation labels for margin areas
@@ -1359,7 +1535,7 @@ def server_app(input,output,session):
                     'throttleType': 'debounce', 'throttleDelay': 300,
                 },
                 'legend': {'show': False},
-                'grid': {'left': 80, 'right': 20, 'top': 60, 'bottom': 80},
+                'grid': {'left': 140, 'right': 20, 'top': 110, 'bottom': 100},
                 'xAxis': {
                     'type': 'value',
                     'name': 'Período de colheita (anos após plantio)',
