@@ -28,22 +28,9 @@ from collections import Counter
 FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","MgmtTraitData_updated.csv")
 # FILE_NAME = os.path.join(Path(__file__).parent.parent,"data","practitioners.csv")
 
-# Preload ecoregion shapefile in background thread at module import
+# Ecoregion shapefile path — loaded on demand only as DB fallback (saves ~500MB RAM)
 _ECOREGION_SHP_PATH = os.path.join(Path(__file__).parent.parent, "data", "ecoregions_raster", "Ecoregions2017.shp")
 _ECOREGION_GDF_CACHE = {"gdf": None}
-
-def _preload_ecoregions():
-    try:
-        logging.info("[PRELOAD] Loading Ecoregions2017.shp into memory...")
-        gdf = gpd.read_file(_ECOREGION_SHP_PATH)
-        _ = gdf.sindex  # build spatial index
-        _ECOREGION_GDF_CACHE["gdf"] = gdf
-        logging.info(f"[PRELOAD] Ecoregions loaded: {len(gdf)} features, sindex ready")
-    except Exception as e:
-        logging.warning(f"[PRELOAD] Failed to load ecoregions: {e}")
-
-import threading
-threading.Thread(target=_preload_ecoregions, daemon=True).start()
 
 
 COLOR = {'herb': '#d77d28', 'forb': '#d77d28', 'climber': '#cc4fb9', 'subshrub': '#612e14', 'shrub': '#0095c6', 'cactus': '#49d1d5', 'bamboo': '#fd2f6d', 'tree': '#2a43d1', 'palm': '#63a355', 'graminoid': '#633096', 'liana': '#be2843', 'vine': '#cc4fb9', 'scrambler': '#017201', 'other': '#171717'}
@@ -337,6 +324,9 @@ def server_app(input,output,session):
                 }
                 if (parentShiny) {
                     parentShiny.setInputValue('longitude_latitude', coords);
+                    setTimeout(function(){
+                        parentShiny.setInputValue('update_map', Math.random(), {priority:'event'});
+                    }, 200);
                 }
             });
         })();
@@ -487,16 +477,38 @@ def server_app(input,output,session):
         m = folium.Map(location=center, zoom_start=zoom, width="100%", height="1050px")
         folium.TileLayer("OpenStreetMap").add_to(m)
 
-        # Add ecoregion overlay — only the ecoregion at the user's point
+        # Add ecoregion overlay + marker from PostGIS (no shapefile needed)
         if lat is not None and lon is not None:
             try:
-                eco_gdf = _find_ecoregion_at_point(lat, lon)
-                if eco_gdf is not None:
-                    # Simplify only this single polygon for fast rendering
-                    display = eco_gdf[["geometry", "ECO_NAME", "BIOME_NAME", "BIOME_NUM", "REALM"]].copy()
-                    display["geometry"] = display["geometry"].simplify(tolerance=0.01, preserve_topology=True)
+                from database.connection import get_db
+                _db = get_db()
+                eco_rows = _db.execute("""
+                    SELECT eco_name, biome_name, biome_num, realm,
+                           ST_AsGeoJSON(ST_Simplify(geom, 0.01)) as geojson
+                    FROM ecoregions
+                    WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326))
+                    LIMIT 1
+                """, {'lat': lat, 'lon': lon})
+                if eco_rows:
+                    row = eco_rows[0]
+                    eco_name, biome_name, biome_num, realm, geojson_str = row
+                    import json
+                    geojson_geom = json.loads(geojson_str)
+                    feature = {
+                        "type": "FeatureCollection",
+                        "features": [{
+                            "type": "Feature",
+                            "properties": {
+                                "ECO_NAME": eco_name,
+                                "BIOME_NAME": biome_name,
+                                "BIOME_NUM": biome_num,
+                                "REALM": realm,
+                            },
+                            "geometry": geojson_geom,
+                        }]
+                    }
                     folium.GeoJson(
-                        display.to_json(),
+                        feature,
                         name="Ecorregião",
                         style_function=_biome_style,
                         tooltip=folium.GeoJsonTooltip(
@@ -505,20 +517,13 @@ def server_app(input,output,session):
                             style="font-size: 12px;",
                         ),
                     ).add_to(m)
-            except Exception:
-                pass
-
-        # Add marker
-        if lat is not None and lon is not None:
-            try:
-                eco = _query_ecoregion(lat, lon)
-                popup_text = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
-                if eco:
                     popup_text = (
-                        f"<b>{eco['eco_name']}</b><br>"
-                        f"Biome: {eco['biome_name']}<br>"
-                        f"Realm: {eco['realm']}"
+                        f"<b>{eco_name}</b><br>"
+                        f"Biome: {biome_name}<br>"
+                        f"Realm: {realm}"
                     )
+                else:
+                    popup_text = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
                 folium.Marker(
                     location=[lat, lon],
                     popup=folium.Popup(popup_text, max_width=280),
@@ -1416,23 +1421,24 @@ def server_app(input,output,session):
                 species_series.append({
                     'type': 'scatter',
                     'name': name,
-                    'data': [[round(x_final, 4), round(y_final, 3)]],
+                    'data': [[x_line_end, round(y_final, 3)]],
                     'symbol': 'circle',
-                    'symbolSize': 24,
-                    'itemStyle': {'color': 'transparent'},
+                    'symbolSize': 6,
+                    'itemStyle': {'color': gf_color},
                     'label': {
                         'show': True,
                         'formatter': f'{gf_emoji} {name}',
                         'fontSize': 11,
-                        'offset': [0, 0],
+                        'position': 'right',
+                        'distance': 4,
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
                     'markLine': {
                         'silent': True,
-                        'symbol': ['circle', 'arrow'],
-                        'symbolSize': [4, 6],
+                        'symbol': ['circle', 'none'],
+                        'symbolSize': [4, 0],
                         'label': {'show': False},
                         'lineStyle': {'color': gf_color, 'width': 2.5, 'type': 'solid'},
                         'data': [[
@@ -1549,23 +1555,24 @@ def server_app(input,output,session):
                 species_series.append({
                     'type': 'scatter',
                     'name': name,
-                    'data': [[round(x_center + x_off, 4), y_pt]],
+                    'data': [[x_line_end, y_pt]],
                     'symbol': 'circle',
-                    'symbolSize': 24,
-                    'itemStyle': {'color': 'transparent'},
+                    'symbolSize': 6,
+                    'itemStyle': {'color': gf_color},
                     'label': {
                         'show': True,
                         'formatter': f'{gf_emoji} {name}',
                         'fontSize': 11,
-                        'offset': [0, 0],
+                        'position': 'right',
+                        'distance': 4,
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
                     'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
                     'markLine': {
                         'silent': True,
-                        'symbol': ['circle', 'arrow'],
-                        'symbolSize': [4, 6],
+                        'symbol': ['circle', 'none'],
+                        'symbolSize': [4, 0],
                         'label': {'show': False},
                         'lineStyle': {'color': gf_color, 'width': 2.5, 'type': 'solid'},
                         'data': [[
@@ -1772,7 +1779,7 @@ def server_app(input,output,session):
                     'throttleType': 'debounce', 'throttleDelay': 300,
                 },
                 'legend': {'show': False},
-                'grid': {'left': 140, 'right': 20, 'top': 110, 'bottom': 100},
+                'grid': {'left': 140, 'right': 180, 'top': 110, 'bottom': 100},
                 'xAxis': {
                     'type': 'value',
                     'name': 'Período de colheita (anos após plantio)',
@@ -2076,13 +2083,19 @@ def server_app(input,output,session):
             print(plants)
             for i in range(len(plants)-1):
                 plant=plants[i]
-                query=df.query("common_en == '%s'" % plant)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                _match = df[df['common_en'] == plant][['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()
+                if not _match:
+                    continue
+                query = _match[0]
                 if str(query[1])=='nan' or str(query[2])=='nan' or str(query[3])=='nan':
                     continue
                 else:
                     for j in range(i+1,len(plants)):
                         other_plt=plants[j]
-                        opposite=df.query("common_en == '%s'" % other_plt)[['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+                        _omatch = df[df['common_en'] == other_plt][['common_en','yrs_ini_prod','longev_prod','stratum']].values.tolist()
+                        if not _omatch:
+                            continue
+                        opposite = _omatch[0]
                         if str(opposite[1])=='nan' or str(opposite[2])=='nan' or str(opposite[3])=='nan':
                             continue
                         else:
@@ -2110,7 +2123,10 @@ def server_app(input,output,session):
         plants=input.overview_plants()
         good,bad_year,bad_stratum=[],[],[]
         for plant in plants:
-            query=df.query("common_en == '%s'" % plant)[['common_en','growth_form','yrs_ini_prod','longev_prod','stratum']].values.tolist()[0]
+            _tmatch = df[df['common_en'] == plant][['common_en','growth_form','yrs_ini_prod','longev_prod','stratum']].values.tolist()
+            if not _tmatch:
+                continue
+            query = _tmatch[0]
             if str(query[2])!='nan' and str(query[3])!='nan' and str(query[4])!='nan': 
                 good.append(query)
             elif str(query[4])=='nan':
@@ -2475,7 +2491,7 @@ def server_app(input,output,session):
             color_change = set()
 
             for plant in plants:
-                query = df.query("common_en == '%s'" % plant)[
+                query = df[df['common_en'] == plant][
                     [
                         'common_en', 'growth_form', 'plant_max_height',
                         'family', 'function', 'yrs_ini_prod',
