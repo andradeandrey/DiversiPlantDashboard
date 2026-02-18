@@ -682,12 +682,41 @@ background-color: #ff1a1a; /* Darker red on hover */
 }
 
 .species-filter-item {
-    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.species-filter-item > .shiny-input-container,
+.species-filter-item > .form-group {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+    width: auto !important;
+}
+
+.btn-select-all {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f0f0f0;
+    color: #555;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.btn-select-all:hover {
+    background: #e0e0e0;
+    color: #333;
 }
 
 .species-filter-item .form-group {
     margin-bottom: 0;
-    width: 100% !important;
 }
 
 .species-filter-item .shiny-input-container {
@@ -1895,8 +1924,7 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 
 /* Multi-select filter selectize — compact */
 .species-filter-multi {
-    min-width: 140px;
-    max-width: 220px;
+    min-width: 0;
 }
 
 .species-filter-multi .selectize-control {
@@ -1913,8 +1941,10 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
     font-weight: 500;
     color: #171717 !important;
     background-color: #D2DED6 !important;
-    min-height: 30px !important;
+    min-height: 40px !important;
+    max-height: 70px !important;
     height: auto !important;
+    overflow-y: auto !important;
     box-shadow: none !important;
 }
 
