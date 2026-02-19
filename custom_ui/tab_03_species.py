@@ -17,12 +17,12 @@ _GF_SVGS = {
     'subshrub': '<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="white" stroke-width="2" rx="0.8"/></svg>',
     'forb': '<svg width="16" height="16" viewBox="0 0 20 18"><polygon points="10,1 19,17 1,17" fill="none" stroke="white" stroke-width="2"/></svg>',
     'graminoid': '<svg width="4" height="16" viewBox="0 0 4 16"><rect x="1" y="0" width="2" height="16" fill="white" rx="1"/></svg>',
-    'palm': '<svg width="14" height="18" viewBox="0 0 14 20"><line x1="7" y1="20" x2="7" y2="7" stroke="white" stroke-width="1.8"/><path d="M7,7 L2,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M7,7 L12,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
+    'palm': '<svg width="14" height="18" viewBox="0 0 14 20"><line x1="7" y1="20" x2="7" y2="12" stroke="white" stroke-width="1.8"/><path d="M7,12 L2,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M7,12 L7,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M7,12 L12,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
     'bamboo': '<svg width="14" height="16" viewBox="0 0 14 16"><path d="M1,2 L7,14 L13,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    'liana': '<svg width="6" height="18" viewBox="0 0 6 20"><path d="M3,0 C0,5 6,10 3,15 C1.5,17.5 3,20 3,20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
+    'liana': '<svg width="8" height="18" viewBox="0 0 6 20"><path d="M1,0 C1,1.3 5,1.8 5,3.3 C5,4.8 1,5.3 1,6.7 C1,8.1 5,8.6 5,10.1 C5,11.6 1,12.1 1,13.5 C1,14.9 5,15.4 5,16.9 C5,18.4 1,18.9 1,20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
     'vine': '<svg width="10" height="18" viewBox="0 0 10 20"><path d="M2,20 C2,10 8,10 8,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="2" r="2" fill="white"/></svg>',
     'scrambler': '<svg width="24" height="8" viewBox="0 0 24 8"><path d="M0,7 C1.3,7 1.8,2.5 3.3,2.5 C4.8,2.5 5.3,7 6.7,7 C8.1,7 8.6,2.5 10.1,2.5 C11.6,2.5 12.1,7 13.5,7 C14.9,7 15.4,2.5 16.9,2.5 C18.4,2.5 18.9,7 20.3,7 L22,7" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
-    'other': '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="white" stroke-width="2"/><line x1="4" y1="12" x2="12" y2="4" stroke="white" stroke-width="2"/></svg>',
+    'other': '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="white" stroke-width="2"/><line x1="4" y1="4" x2="12" y2="12" stroke="white" stroke-width="2"/></svg>',
 }
 
 _SYMBOLS = [
