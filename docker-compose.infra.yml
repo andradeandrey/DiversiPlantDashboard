@@ -1,0 +1,39 @@
+##############################################################
+# DiversiPlant Dashboard — Docker Compose para infraestrutura
+#
+# Requisitos externos (providos pela equipe de infra):
+#   - PostgreSQL 16+ com PostGIS 3.4+
+#   - Proxy reverso com SSL (nginx, traefik, etc.)
+#
+# Uso:
+#   1. Copie .env.infra.example para .env
+#   2. Preencha as variáveis de conexão com o banco externo
+#   3. docker compose -f docker-compose.infra.yml up -d
+#
+# O dashboard escuta na porta 8001 (HTTP).
+# O proxy reverso deve encaminhar HTTPS → http://dashboard:8001
+# WebSocket deve ser habilitado no proxy (path: /diversiplant/websocket/)
+##############################################################
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8001}:8001"
+    environment:
+      DB_HOST: ${DB_HOST:?Defina DB_HOST no .env}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:?Defina DB_USER no .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env}
+      DB_NAME: ${DB_NAME:-diversiplant}
+    volumes:
+      - ${ECOREGIONS_PATH:-./data/ecoregions_raster}:/app/data/ecoregions_raster:ro
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/diversiplant/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

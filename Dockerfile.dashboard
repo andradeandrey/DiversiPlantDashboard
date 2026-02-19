@@ -33,4 +33,4 @@ COPY data/img/ data/img/
 
 EXPOSE 8001
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "4", "--ws-ping-interval", "48000", "--ws-ping-timeout", "0"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2", "--ws-ping-interval", "48000", "--ws-ping-timeout", "0"]

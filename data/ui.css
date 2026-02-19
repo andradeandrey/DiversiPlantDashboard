@@ -1213,6 +1213,8 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     border: none !important;
     display: flex;
     align-items: center;
+    position: relative;
+    top: -5px;
 }
 
 .navbar .nav-link:hover {
@@ -1233,14 +1235,31 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     background-color: #333;
 }
 
-/* Chevron separators between visible tab items */
+/* Chevron separators — remove old ::before approach */
 .navbar .navbar-nav > .nav-item + .nav-item > .nav-link::before {
-    content: "›";
-    color: #777;
-    font-size: 1.2rem;
-    font-weight: 400;
-    margin-right: 6px;
-    vertical-align: middle;
+    display: none !important;
+}
+
+/* 4 chevrons as ::after on each nav-item, absolutely positioned */
+.navbar .nav-item {
+    position: relative;
+}
+
+.navbar .nav-item:has(a[data-value="tab_start"])::after,
+.navbar .nav-item:has(a[data-value="tab_location"])::after,
+.navbar .nav-item:has(a[data-value="tab_climate"])::after,
+.navbar .nav-item:has(a[data-value="tab_species"])::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -12px;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid #999;
+    border-top: 1.5px solid #999;
+    transform: translateY(-50%) rotate(45deg);
+    pointer-events: none;
+    z-index: 5;
 }
 
 /* Spacer + controls after capsule */
