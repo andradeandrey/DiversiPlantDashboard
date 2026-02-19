@@ -21,7 +21,7 @@ _GF_SVGS = {
     'bamboo': '<svg width="14" height="16" viewBox="0 0 14 16"><path d="M1,2 L7,14 L13,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     'liana': '<svg width="6" height="18" viewBox="0 0 6 20"><path d="M3,0 C0,5 6,10 3,15 C1.5,17.5 3,20 3,20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
     'vine': '<svg width="10" height="18" viewBox="0 0 10 20"><path d="M2,20 C2,10 8,10 8,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="2" r="2" fill="white"/></svg>',
-    'scrambler': '<svg width="22" height="8" viewBox="0 0 22 8"><path d="M1,4 L5,1 L9,7 L13,1 L17,7 L21,4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'scrambler': '<svg width="24" height="8" viewBox="0 0 24 8"><path d="M0,7 C1.3,7 1.8,2.5 3.3,2.5 C4.8,2.5 5.3,7 6.7,7 C8.1,7 8.6,2.5 10.1,2.5 C11.6,2.5 12.1,7 13.5,7 C14.9,7 15.4,2.5 16.9,2.5 C18.4,2.5 18.9,7 20.3,7 L22,7" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
     'other': '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="white" stroke-width="2"/><line x1="4" y1="12" x2="12" y2="4" stroke="white" stroke-width="2"/></svg>',
 }
 
