@@ -1309,7 +1309,7 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 1100;
     border-top: none;
     padding: 16px 50px;
     margin: 0;

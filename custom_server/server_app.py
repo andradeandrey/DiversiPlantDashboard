@@ -139,26 +139,32 @@ growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshru
 colors = ['#fd2f6d', '#49d1d5', '#cc4fb9', '#d77d28', '#63a355', '#0095c6', '#612e14', '#2a43d1']
 color_mapping = dict(zip(growth_forms, colors))
 
-# ECharts symbol characters per growth form (geometric, matching Figma icons)
-ECHARTS_EMOJIS = {
-    'tree': '⏐',
-    'shrub': '⬠',
-    'subshrub': '▫',
-    'forb': '△',
-    'herb': '△',
-    'graminoid': '|',
-    'palm': 'ψ',
-    'liana': '∿',
-    'vine': '⌇',
-    'climber': '⌇',
-    'scrambler': '∿∿',
-    'bamboo': '∨',
-    'cactus': '◇',
-    'other': '⊘',
+# ECharts path:// symbols per growth form (matching Figma badge shapes)
+ECHARTS_PATHS = {
+    'tree': 'path://M1,5.5 A4,5 0 1,0 9,5.5 A4,5 0 1,0 1,5.5 M4.2,10.5 L5.8,10.5 L5.8,20 L4.2,20 Z',
+    'shrub': 'path://M8.688 3.575L7.153 8.302L2.182 8.302L0.646 3.575L4.668 0.653L8.688 3.575Z',
+    'subshrub': 'path://M2,2 L14,2 L14,14 L2,14 Z',
+    'forb': 'path://M6.929 0.65L13.122 10.725L13.122 11.375L12.558 11.7L1.3 11.7L0.737 11.375L0.737 10.725L6.367 0.975Z',
+    'herb': 'path://M6.929 0.65L13.122 10.725L13.122 11.375L12.558 11.7L1.3 11.7L0.737 11.375L0.737 10.725L6.367 0.975Z',
+    'graminoid': 'path://M1,0 L3,0 L3,16 L1,16 Z',
+    'palm': 'path://M6.867,1 L6.867,21 M1,1 L6.867,12 M12.734,1 L6.867,12',
+    'bamboo': 'path://M1,2 L7,14 L13,2',
+    'liana': 'path://M1,0 C1,3 5,3 5,6 C5,9 1,9 1,12 C1,15 5,15 5,18',
+    'vine': 'path://M3,0 C3,2 1,3 1,5 C1,7 3,8 3,10 C3,12 1,13 1,15',
+    'climber': 'path://M3,0 C3,2 1,3 1,5 C1,7 3,8 3,10 C3,12 1,13 1,15',
+    'scrambler': 'path://M0,4 C2,4 2,0 4,0 C6,0 6,4 8,4 C10,4 10,0 12,0 C14,0 14,4 16,4 C18,4 18,0 20,0',
+    'cactus': 'path://M2,1 L14,1 L14,15 L2,15 Z',
+    'other': 'path://M2,8 A6,6 0 1,0 14,8 A6,6 0 1,0 2,8 M4,4 L12,12',
 }
 
-# Keep old symbol dict for backwards compat (used nowhere else now)
-ECHARTS_SYMBOLS = {k: 'circle' for k in ECHARTS_EMOJIS}
+# Raw path data (without path:// prefix) for ECharts graphic elements
+ECHARTS_PATH_DATA = {k: v.replace('path://', '') for k, v in ECHARTS_PATHS.items()}
+
+# Per-growth-form symbol sizes [width, height] — tree narrower to keep aspect ratio
+ECHARTS_SYMBOL_SIZE = {
+    'tree': [7, 14],
+}
+_DEFAULT_SYMBOL_SIZE = 14
 
 
 def sqrt_transform(x):
@@ -1411,7 +1417,7 @@ def server_app(input,output,session):
                                 f"Duração: {round(duration, 2)} anos<br/>"
                                 f"Estrato: {round(y_position, 2)}")
 
-                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                gf_symbol = ECHARTS_PATHS.get(growth_type, 'circle')
                 gf_color = color_map.get(growth_type, '#999')
 
                 # Harvest period line endpoints (in sqrt-space)
@@ -1422,12 +1428,13 @@ def server_app(input,output,session):
                     'type': 'scatter',
                     'name': name,
                     'data': [[x_line_end, round(y_final, 3)]],
-                    'symbol': 'circle',
-                    'symbolSize': 6,
+                    'symbol': gf_symbol,
+                    'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
+                    'symbolOffset': [10, 0],
                     'itemStyle': {'color': gf_color},
                     'label': {
                         'show': True,
-                        'formatter': f'{gf_emoji} {name}',
+                        'formatter': f'{name}',
                         'fontSize': 11,
                         'position': 'right',
                         'distance': 4,
@@ -1484,20 +1491,20 @@ def server_app(input,output,session):
                                     f"⚠️ Colheita: Desconhecida<br/>"
                                     f"Estrato: {round(y_position, 2)}")
 
-                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
-                # Combine emoji + ℹ️ when exit time is known
-                label_text = f'{gf_emoji} ℹ️' if has_exit_time else gf_emoji
+                gf_symbol = ECHARTS_PATHS.get(growth_type, 'circle')
+                gf_color_margin = color_map.get(growth_type, '#999')
+                label_text = f'ℹ️ {name}' if has_exit_time else name
 
                 series_entry = {
                     'type': 'scatter',
                     'name': name,
                     'data': [[px_val, py_val]],
-                    'symbol': 'circle',
-                    'symbolSize': 24,
-                    'itemStyle': {'color': 'transparent'},
+                    'symbol': gf_symbol,
+                    'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
+                    'itemStyle': {'color': gf_color_margin},
                     'label': {
                         'show': True,
-                        'formatter': f'{label_text} {name}',
+                        'formatter': f'{label_text}',
                         'fontSize': 11,
                         'offset': [0, 0],
                         'color': '#333',
@@ -1544,7 +1551,7 @@ def server_app(input,output,session):
                                 f"Duração: {round(duration, 2)} anos<br/>"
                                 f"⚠️ Estrato: Desconhecido")
 
-                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                gf_symbol = ECHARTS_PATHS.get(growth_type, 'circle')
                 gf_color = color_map.get(growth_type, '#999')
 
                 # Harvest period line (in sqrt-space)
@@ -1556,12 +1563,13 @@ def server_app(input,output,session):
                     'type': 'scatter',
                     'name': name,
                     'data': [[x_line_end, y_pt]],
-                    'symbol': 'circle',
-                    'symbolSize': 6,
+                    'symbol': gf_symbol,
+                    'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
+                    'symbolOffset': [10, 0],
                     'itemStyle': {'color': gf_color},
                     'label': {
                         'show': True,
-                        'formatter': f'{gf_emoji} {name}',
+                        'formatter': f'{name}',
                         'fontSize': 11,
                         'position': 'right',
                         'distance': 4,
@@ -1601,17 +1609,18 @@ def server_app(input,output,session):
                                 f"⚠️ Colheita: Desconhecida<br/>"
                                 f"⚠️ Estrato: Desconhecido")
 
-                gf_emoji = ECHARTS_EMOJIS.get(growth_type, '🍃')
+                gf_symbol = ECHARTS_PATHS.get(growth_type, 'circle')
+                gf_color_corner = color_map.get(growth_type, '#999')
                 species_series.append({
                     'type': 'scatter',
                     'name': name,
                     'data': [[x_pos, y_pos]],
-                    'symbol': 'circle',
-                    'symbolSize': 24,
-                    'itemStyle': {'color': 'transparent'},
+                    'symbol': gf_symbol,
+                    'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
+                    'itemStyle': {'color': gf_color_corner},
                     'label': {
                         'show': True,
-                        'formatter': f'{gf_emoji} {name}',
+                        'formatter': f'{name}',
                         'fontSize': 11,
                         'offset': [0, 0],
                         'color': '#333',
@@ -1653,20 +1662,19 @@ def server_app(input,output,session):
                 'bamboo': 'Bambu', 'other': 'Outro',
             }
 
-            # Fixed legend as graphic elements above the grid (not inside chart area)
+            # Fixed legend as graphic elements above the grid (● dot + PT name)
             n_gf = len(gf_list)
             for i, gf in enumerate(gf_list):
-                emoji = ECHARTS_EMOJIS.get(gf, '🍃')
                 pt_name = gf_display_pt.get(gf, gf)
                 color = COLOR.get(gf, '#333')
-                # Distribute evenly across grid width (140px left to ~right edge)
+                # Distribute evenly across grid width
                 pct = (i + 0.5) / n_gf * 100
                 graphic_elements.append({
                     'type': 'text',
                     'left': f'{pct}%',
                     'top': 70,
                     'style': {
-                        'text': f'{emoji} {pt_name}',
+                        'text': f'● {pt_name}',
                         'fontSize': 10,
                         'fontFamily': 'Inter, sans-serif',
                         'fill': color,
