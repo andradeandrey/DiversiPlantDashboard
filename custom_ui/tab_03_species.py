@@ -12,7 +12,7 @@ FILE_NAME = os.path.join(
 
 # Growth form symbols for the legend — Figma design colors & icons
 _GF_SVGS = {
-    'tree': '<svg width="10" height="18" viewBox="0 0 10 20"><circle cx="5" cy="5" r="4" fill="none" stroke="white" stroke-width="1.8"/><line x1="5" y1="9" x2="5" y2="20" stroke="white" stroke-width="1.8"/></svg>',
+    'tree': '<svg width="10" height="18" viewBox="0 0 10 20"><ellipse cx="5" cy="5.5" rx="4" ry="5" fill="none" stroke="white" stroke-width="1.8"/><line x1="5" y1="10.5" x2="5" y2="20" stroke="white" stroke-width="1.8"/></svg>',
     'shrub': '<svg width="16" height="16" viewBox="0 0 16 16"><polygon points="8,1.5 14.9,5.5 12.3,13.5 3.7,13.5 1.1,5.5" fill="none" stroke="white" stroke-width="1.8"/></svg>',
     'subshrub': '<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="white" stroke-width="2" rx="0.8"/></svg>',
     'forb': '<svg width="16" height="16" viewBox="0 0 20 18"><polygon points="10,1 19,17 1,17" fill="none" stroke="white" stroke-width="2"/></svg>',
@@ -20,7 +20,7 @@ _GF_SVGS = {
     'palm': '<svg width="14" height="18" viewBox="0 0 14 20"><line x1="7" y1="20" x2="7" y2="12" stroke="white" stroke-width="1.8"/><path d="M7,12 L2,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M7,12 L7,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M7,12 L12,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
     'bamboo': '<svg width="14" height="16" viewBox="0 0 14 16"><path d="M1,2 L7,14 L13,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     'liana': '<svg width="8" height="18" viewBox="0 0 6 20"><path d="M1,0 C1,1.3 5,1.8 5,3.3 C5,4.8 1,5.3 1,6.7 C1,8.1 5,8.6 5,10.1 C5,11.6 1,12.1 1,13.5 C1,14.9 5,15.4 5,16.9 C5,18.4 1,18.9 1,20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
-    'vine': '<svg width="10" height="18" viewBox="0 0 10 20"><path d="M2,20 C2,10 8,10 8,2" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="2" r="2" fill="white"/></svg>',
+    'vine': '<svg width="8" height="18" viewBox="-0.2 0 4.8 11"><path d="M0.786 0.5C1.714 0.491 3.057 0.695 3.528 1.72C3.817 2.347 3.784 3.071 3.581 3.722L3.557 3.753V3.735C3.275 2.944 2.75 2.573 2.319 2.4C1.777 2.181 1.031 2.32 0.661 2.839C0.514 3.045 0.476 3.306 0.514 3.562C0.637 4.378 1.198 4.649 1.198 4.649C1.198 4.649 2.105 5.193 2.84 4.649C3.221 4.367 3.437 4.012 3.556 3.735L3.55 3.716C4.016 4.782 4.127 6.316 3.67 7.313L3.556 7.375C3.436 7.652 3.278 7.961 2.897 8.244C2.162 8.787 1.255 8.244 1.255 8.244C1.255 8.244 0.694 7.972 0.571 7.156C0.533 6.9 0.571 6.639 0.718 6.433C1.088 5.914 1.834 5.776 2.377 5.994C2.807 6.167 3.332 6.539 3.614 7.329L3.67 7.438C3.872 8.089 3.874 8.653 3.586 9.28C3.114 10.305 1.772 10.509 0.843 10.5" fill="none" stroke="white" stroke-width="0.7" stroke-linecap="round"/></svg>',
     'scrambler': '<svg width="24" height="8" viewBox="0 0 24 8"><path d="M0,7 C1.3,7 1.8,2.5 3.3,2.5 C4.8,2.5 5.3,7 6.7,7 C8.1,7 8.6,2.5 10.1,2.5 C11.6,2.5 12.1,7 13.5,7 C14.9,7 15.4,2.5 16.9,2.5 C18.4,2.5 18.9,7 20.3,7 L22,7" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
     'other': '<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="white" stroke-width="2"/><line x1="4" y1="4" x2="12" y2="12" stroke="white" stroke-width="2"/></svg>',
 }
