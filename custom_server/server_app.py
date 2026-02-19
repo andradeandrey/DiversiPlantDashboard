@@ -139,30 +139,54 @@ growth_forms = ['bamboo', 'cactus', 'climber', 'herb', 'palm', 'shrub', 'subshru
 colors = ['#fd2f6d', '#49d1d5', '#cc4fb9', '#d77d28', '#63a355', '#0095c6', '#612e14', '#2a43d1']
 color_mapping = dict(zip(growth_forms, colors))
 
-# ECharts path:// symbols per growth form (matching Figma badge shapes)
+# ECharts path:// symbols — same paths as badge SVGs (_GF_SVGS in tab_03_species.py)
+# Elements converted: ellipse→arc, rect→L, line→rect, H→L, V→L
 ECHARTS_PATHS = {
-    'tree': 'path://M1,5.5 A4,5 0 1,0 9,5.5 A4,5 0 1,0 1,5.5 M4.2,10.5 L5.8,10.5 L5.8,20 L4.2,20 Z',
-    'shrub': 'path://M8.688 3.575L7.153 8.302L2.182 8.302L0.646 3.575L4.668 0.653L8.688 3.575Z',
-    'subshrub': 'path://M2,2 L14,2 L14,14 L2,14 Z',
-    'forb': 'path://M6.929 0.65L13.122 10.725L13.122 11.375L12.558 11.7L1.3 11.7L0.737 11.375L0.737 10.725L6.367 0.975Z',
-    'herb': 'path://M6.929 0.65L13.122 10.725L13.122 11.375L12.558 11.7L1.3 11.7L0.737 11.375L0.737 10.725L6.367 0.975Z',
+    # viewBox 0 0 10 20: ellipse(arc) + trunk(rect)
+    'tree':      'path://M1,5.5 A4,5 0 1,0 9,5.5 A4,5 0 1,0 1,5.5 Z M4.2,10.5 L5.8,10.5 L5.8,20 L4.2,20 Z',
+    # viewBox 0 0 9.5 9: pentagon (H→L)
+    'shrub':     'path://M8.688 3.575L7.153 8.302L2.182 8.302L0.646 3.575L4.668 0.653L8.688 3.575Z',
+    # viewBox 0 0 16 16: square (rect→L)
+    'subshrub':  'path://M2,2 L14,2 L14,14 L2,14 Z',
+    # viewBox 0 0 13.9 12.4: rounded triangle (H→L)
+    'forb':      'path://M6.929 0.65C7.161 0.65 7.376 0.774 7.492 0.975L13.122 10.725C13.238 10.926 13.238 11.174 13.122 11.375C13.005 11.576 12.79 11.7 12.558 11.7L1.3 11.7C1.068 11.7 0.853 11.576 0.737 11.375C0.621 11.174 0.621 10.926 0.737 10.725L6.367 0.975L6.415 0.904C6.537 0.745 6.726 0.65 6.929 0.65Z',
+    'herb':      'path://M6.929 0.65C7.161 0.65 7.376 0.774 7.492 0.975L13.122 10.725C13.238 10.926 13.238 11.174 13.122 11.375C13.005 11.576 12.79 11.7 12.558 11.7L1.3 11.7C1.068 11.7 0.853 11.576 0.737 11.375C0.621 11.174 0.621 10.926 0.737 10.725L6.367 0.975L6.415 0.904C6.537 0.745 6.726 0.65 6.929 0.65Z',
+    # viewBox 0 0 4 16: thin bar (rect→L)
     'graminoid': 'path://M1,0 L3,0 L3,16 L1,16 Z',
-    'palm': 'path://M6.867,1 L6.867,21 M1,1 L6.867,12 M12.734,1 L6.867,12',
-    'bamboo': 'path://M1,2 L7,14 L13,2',
-    'liana': 'path://M1,0 C1,3 5,3 5,6 C5,9 1,9 1,12 C1,15 5,15 5,18',
-    'vine': 'path://M3,0 C3,2 1,3 1,5 C1,7 3,8 3,10 C3,12 1,13 1,15',
-    'climber': 'path://M3,0 C3,2 1,3 1,5 C1,7 3,8 3,10 C3,12 1,13 1,15',
-    'scrambler': 'path://M0,4 C2,4 2,0 4,0 C6,0 6,4 8,4 C10,4 10,0 12,0 C14,0 14,4 16,4 C18,4 18,0 20,0',
-    'cactus': 'path://M2,1 L14,1 L14,15 L2,15 Z',
-    'other': 'path://M2,8 A6,6 0 1,0 14,8 A6,6 0 1,0 2,8 M4,4 L12,12',
+    # viewBox 0 0 13.74 22: trident (3 open strokes — rendered via borderColor)
+    'palm':      'path://M6.867,1 L6.867,21 M1,1 L6.867,12 M12.734,1 L6.867,12',
+    # viewBox 0 0 14 16: V chevron (open stroke)
+    'bamboo':    'path://M1,2 L7,14 L13,2',
+    # viewBox 0 0 5.18 22: vertical wave (Figma path)
+    'liana':     'path://M1.1 1C1.075 1.32 0.993 1.523 1.233 1.728C1.388 1.86 1.56 1.975 1.735 2.083C2.1 2.308 2.485 2.498 2.84 2.74C4.395 3.803 4.325 4.81 2.835 5.85C2.573 6.173 2.183 6.43 1.735 6.758C1.295 7.083 1.153 7.423 1.368 7.898C1.695 8.63 2.335 8.945 3.055 9.44C4.203 10.228 4.275 11.455 3.043 12.198C2.508 12.52 1.933 12.823 1.428 13.16C0.593 13.718 0.598 14.385 1.428 14.95C1.835 15.228 2.33 15.458 2.735 15.735C4.285 16.795 4.483 17.973 2.64 19.028C2.228 19.263 1.803 19.493 1.428 19.748C0.853 20.138 0.675 20.578 0.9 21',
+    # viewBox -0.2 0 4.8 11: coil/tendril (Figma path, V→L)
+    'vine':      'path://M0.786 0.5C1.714 0.491 3.057 0.695 3.528 1.72C3.817 2.347 3.784 3.071 3.581 3.722L3.557 3.753L3.557 3.735C3.275 2.944 2.75 2.573 2.319 2.4C1.777 2.181 1.031 2.32 0.661 2.839C0.514 3.045 0.476 3.306 0.514 3.562C0.637 4.378 1.198 4.649 1.198 4.649C1.198 4.649 2.105 5.193 2.84 4.649C3.221 4.367 3.437 4.012 3.556 3.735L3.55 3.716C4.016 4.782 4.127 6.316 3.67 7.313L3.556 7.375C3.436 7.652 3.278 7.961 2.897 8.244C2.162 8.787 1.255 8.244 1.255 8.244C1.255 8.244 0.694 7.972 0.571 7.156C0.533 6.9 0.571 6.639 0.718 6.433C1.088 5.914 1.834 5.776 2.377 5.994C2.807 6.167 3.332 6.539 3.614 7.329L3.67 7.438C3.872 8.089 3.874 8.653 3.586 9.28C3.114 10.305 1.772 10.509 0.843 10.5',
+    'climber':   'path://M0.786 0.5C1.714 0.491 3.057 0.695 3.528 1.72C3.817 2.347 3.784 3.071 3.581 3.722L3.557 3.753L3.557 3.735C3.275 2.944 2.75 2.573 2.319 2.4C1.777 2.181 1.031 2.32 0.661 2.839C0.514 3.045 0.476 3.306 0.514 3.562C0.637 4.378 1.198 4.649 1.198 4.649C1.198 4.649 2.105 5.193 2.84 4.649C3.221 4.367 3.437 4.012 3.556 3.735L3.55 3.716C4.016 4.782 4.127 6.316 3.67 7.313L3.556 7.375C3.436 7.652 3.278 7.961 2.897 8.244C2.162 8.787 1.255 8.244 1.255 8.244C1.255 8.244 0.694 7.972 0.571 7.156C0.533 6.9 0.571 6.639 0.718 6.433C1.088 5.914 1.834 5.776 2.377 5.994C2.807 6.167 3.332 6.539 3.614 7.329L3.67 7.438C3.872 8.089 3.874 8.653 3.586 9.28C3.114 10.305 1.772 10.509 0.843 10.5',
+    # viewBox 0 0 22 5.18: horizontal wave (Figma path)
+    'scrambler': 'path://M21 4.08C20.578 4.305 20.138 4.127 19.748 3.552C19.493 3.177 19.263 2.752 19.028 2.34C17.973 0.497 16.795 0.695 15.735 2.245C15.458 2.65 15.228 3.145 14.95 3.552C14.385 4.382 13.718 4.387 13.16 3.552C12.823 3.047 12.52 2.472 12.198 1.937C11.455 0.705 10.228 0.777 9.44 1.925C8.945 2.645 8.63 3.685 7.898 4.012C7.423 4.227 7.083 4.085 6.758 3.645C6.43 3.197 6.173 2.607 5.85 2.145C4.81 0.655 3.803 0.585 2.74 2.14C2.498 2.495 2.308 2.88 2.083 3.245C1.975 3.42 1.86 3.592 1.728 3.747C1.523 3.987 1.32 4.132 1 4.157',
+    # viewBox 0 0 16 16: circle(arc) + diagonal
+    'cactus':    'path://M2,1 L14,1 L14,15 L2,15 Z',
+    'other':     'path://M2,8 A6,6 0 1,0 14,8 A6,6 0 1,0 2,8 Z M4,4 L12,12',
 }
 
 # Raw path data (without path:// prefix) for ECharts graphic elements
 ECHARTS_PATH_DATA = {k: v.replace('path://', '') for k, v in ECHARTS_PATHS.items()}
 
-# Per-growth-form symbol sizes [width, height] — tree narrower to keep aspect ratio
+# Per-growth-form [width, height] matching each SVG's viewBox aspect ratio
 ECHARTS_SYMBOL_SIZE = {
-    'tree': [7, 14],
+    'tree':      [7, 14],
+    'shrub':     [13, 12],
+    'subshrub':  [12, 12],
+    'forb':      [14, 12],
+    'herb':      [14, 12],
+    'graminoid': [4, 16],
+    'palm':      [9, 14],
+    'bamboo':    [13, 10],
+    'liana':     [5, 18],
+    'vine':      [8, 18],
+    'climber':   [8, 18],
+    'scrambler': [22, 7],
+    'other':     [12, 12],
 }
 _DEFAULT_SYMBOL_SIZE = 14
 
@@ -1411,7 +1435,7 @@ def server_app(input,output,session):
                 y_final = y_center + offset_y * y_bin_height * 0.3
 
                 # Tooltip shows real years (not sqrt)
-                safe_name = name.replace("'", "\\'")
+                safe_name = name
                 tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
                                 f"Início colheita: {round(x_start, 2)} anos<br/>"
                                 f"Duração: {round(duration, 2)} anos<br/>"
@@ -1431,7 +1455,7 @@ def server_app(input,output,session):
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
                     'symbolOffset': [10, 0],
-                    'itemStyle': {'color': gf_color},
+                    'itemStyle': {'color': gf_color, 'borderColor': gf_color, 'borderWidth': 1.5},
                     'label': {
                         'show': True,
                         'formatter': f'{name}',
@@ -1441,7 +1465,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
                     'markLine': {
                         'silent': True,
                         'symbol': ['circle', 'none'],
@@ -1480,7 +1504,7 @@ def server_app(input,output,session):
                 has_exit_time = exit_duration is not None and str(exit_duration) != 'nan'
                 exit_years = round(exit_duration, 1) if has_exit_time else None
 
-                safe_name = name.replace("'", "\\'")
+                safe_name = name
                 if has_exit_time:
                     tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
                                     f"ℹ️ Tempo de saída: {exit_years} anos, entrada desconhecida<br/>"
@@ -1501,7 +1525,7 @@ def server_app(input,output,session):
                     'data': [[px_val, py_val]],
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
-                    'itemStyle': {'color': gf_color_margin},
+                    'itemStyle': {'color': gf_color_margin, 'borderColor': gf_color_margin, 'borderWidth': 1.5},
                     'label': {
                         'show': True,
                         'formatter': f'{label_text}',
@@ -1510,7 +1534,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
                 }
 
                 species_series.append(series_entry)
@@ -1545,7 +1569,7 @@ def server_app(input,output,session):
                 y_off = -(x_position_counters[x_bin_index] // 3) * 0.3
 
                 # Tooltip shows real years
-                safe_name = name.replace("'", "\\'")
+                safe_name = name
                 tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
                                 f"Início colheita: {round(x_start, 2)} anos<br/>"
                                 f"Duração: {round(duration, 2)} anos<br/>"
@@ -1566,7 +1590,7 @@ def server_app(input,output,session):
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
                     'symbolOffset': [10, 0],
-                    'itemStyle': {'color': gf_color},
+                    'itemStyle': {'color': gf_color, 'borderColor': gf_color, 'borderWidth': 1.5},
                     'label': {
                         'show': True,
                         'formatter': f'{name}',
@@ -1576,7 +1600,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
                     'markLine': {
                         'silent': True,
                         'symbol': ['circle', 'none'],
@@ -1604,7 +1628,7 @@ def server_app(input,output,session):
                 x_pos = round(min_x - (max_x - min_x) * 0.07 + col * 0.03 * (max_x - min_x), 4)
                 y_pos = round(-1 - row * 0.4, 3)
 
-                safe_name = name.replace("'", "\\'")
+                safe_name = name
                 tooltip_text = (f"<b>{safe_name}</b><br/>Forma: {growth_type}<br/>"
                                 f"⚠️ Colheita: Desconhecida<br/>"
                                 f"⚠️ Estrato: Desconhecido")
@@ -1617,7 +1641,7 @@ def server_app(input,output,session):
                     'data': [[x_pos, y_pos]],
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
-                    'itemStyle': {'color': gf_color_corner},
+                    'itemStyle': {'color': gf_color_corner, 'borderColor': gf_color_corner, 'borderWidth': 1.5},
                     'label': {
                         'show': True,
                         'formatter': f'{name}',
@@ -1626,7 +1650,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return \'{tooltip_text}\';}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
                 })
                 legend_names.append(name)
                 added_species.add(name)
