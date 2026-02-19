@@ -190,6 +190,14 @@ ECHARTS_SYMBOL_SIZE = {
 }
 _DEFAULT_SYMBOL_SIZE = 14
 
+# Shapes rendered as stroke-only (open paths or outlines): color=none, borderColor=gf_color
+# Closed filled shapes (pentagon, triangle, square, bar): color=gf_color
+_GF_STROKE_ONLY = {'tree', 'palm', 'bamboo', 'liana', 'vine', 'climber', 'scrambler', 'other'}
+
+
+def _gf_item_style(growth_type: str, color: str) -> dict:
+    return {'color': 'none', 'borderColor': color, 'borderWidth': 2}
+
 
 def sqrt_transform(x):
     """Real years → sqrt-space for plotting."""
@@ -1455,7 +1463,7 @@ def server_app(input,output,session):
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
                     'symbolOffset': [10, 0],
-                    'itemStyle': {'color': gf_color, 'borderColor': gf_color, 'borderWidth': 1.5},
+                    'itemStyle': _gf_item_style(growth_type, gf_color),
                     'label': {
                         'show': True,
                         'formatter': f'{name}',
@@ -1525,7 +1533,7 @@ def server_app(input,output,session):
                     'data': [[px_val, py_val]],
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
-                    'itemStyle': {'color': gf_color_margin, 'borderColor': gf_color_margin, 'borderWidth': 1.5},
+                    'itemStyle': _gf_item_style(growth_type, gf_color_margin),
                     'label': {
                         'show': True,
                         'formatter': f'{label_text}',
@@ -1590,7 +1598,7 @@ def server_app(input,output,session):
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
                     'symbolOffset': [10, 0],
-                    'itemStyle': {'color': gf_color, 'borderColor': gf_color, 'borderWidth': 1.5},
+                    'itemStyle': _gf_item_style(growth_type, gf_color),
                     'label': {
                         'show': True,
                         'formatter': f'{name}',
@@ -1641,7 +1649,7 @@ def server_app(input,output,session):
                     'data': [[x_pos, y_pos]],
                     'symbol': gf_symbol,
                     'symbolSize': ECHARTS_SYMBOL_SIZE.get(growth_type, _DEFAULT_SYMBOL_SIZE),
-                    'itemStyle': {'color': gf_color_corner, 'borderColor': gf_color_corner, 'borderWidth': 1.5},
+                    'itemStyle': _gf_item_style(growth_type, gf_color_corner),
                     'label': {
                         'show': True,
                         'formatter': f'{name}',
