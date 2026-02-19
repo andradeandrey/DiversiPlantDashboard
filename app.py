@@ -10,6 +10,8 @@ from starlette.responses import RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 sys.dont_write_bytecode = True
 
+from admin_app import admin_app
+
 # from custom_ui.details_tabs import details
 from custom_ui.tab_00_start import start
 from custom_ui.tab_04_results import results
@@ -132,7 +134,8 @@ async def run_crawler_handler(request):
 routes = [
     Route("/", endpoint=redirect_handler),
     Route("/api/admin/run-crawler", endpoint=run_crawler_handler, methods=["POST"]),
-    Mount("/diversiplant", app=shiny_app)
+    Mount("/admin", app=admin_app),
+    Mount("/diversiplant", app=shiny_app),
 ]
 
 # Create the Starlette app
