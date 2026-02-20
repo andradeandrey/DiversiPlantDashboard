@@ -216,7 +216,7 @@ start = ui.nav_panel(
                     ),
                     class_="sponsor-logos",
                 ),
-                style="padding: max(60px, 8vh) 50px 0; font-size: 15px; display: flex; flex-direction: column; height: 100vh;",
+                style="padding: 100px 50px 0; font-size: 15px; display: flex; flex-direction: column; height: 100vh;",
             ),
             # ── Right column: hero image (always visible) ───
             ui.column(
