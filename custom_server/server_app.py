@@ -7,6 +7,7 @@ from shinywidgets import render_widget
 from shiny import render, ui, reactive
 import plotly.graph_objects as go
 from custom_server.agroforestry_server import open_csv, get_Plants
+from custom_ui.i18n import t
 import logging
 import geopandas as gpd
 import folium
@@ -619,6 +620,74 @@ def server_app(input,output,session):
             style="margin-bottom: 8px;",
         )
 
+    @render.ui
+    @reactive.event(input.update_map, input.main_nav)
+    def climate_context_info():
+        """Dynamic header: ecoregion + biome context for user's location."""
+        coords = input.longitude_latitude()
+        if not coords or not coords.strip():
+            return ui.div(
+                ui.span(
+                    t(
+                        "Selecione uma localização na aba anterior para detectar seu bioma.",
+                        "Select a location in the previous tab to detect your biome.",
+                    ),
+                    class_="climate-title",
+                ),
+                class_="climate-header",
+            )
+        try:
+            lat, lon = parse_lat_lon(coords)
+        except Exception:
+            return ui.div(
+                ui.span(
+                    t(
+                        "Coordenadas inválidas. Volte à aba Localização.",
+                        "Invalid coordinates. Go back to the Location tab.",
+                    ),
+                    class_="climate-title",
+                ),
+                class_="climate-header",
+            )
+
+        eco = _query_ecoregion(lat, lon)
+        if not eco:
+            return ui.div(
+                ui.span(
+                    t(
+                        "Ecorregião não detectada para estas coordenadas.",
+                        "Ecoregion not detected for these coordinates.",
+                    ),
+                    class_="climate-title",
+                ),
+                class_="climate-header",
+            )
+
+        eco_name = eco.get("eco_name", "")
+        biome_name = eco.get("biome_name", "")
+
+        pt_text = (
+            f"Seu projeto está localizado na ecorregião {eco_name}. "
+            f"Esta ecorregião faz parte do bioma global {biome_name}, "
+            f"que ajudará a filtrar as espécies adaptadas ao seu clima regional. "
+            f"Se você concorda, pule para a próxima aba (Espécies)."
+        )
+        en_text = (
+            f"Your project is located within the ecoregion {eco_name}. "
+            f"This ecoregion is part of the global biome {biome_name}, "
+            f"which will help filter the species adapted to your regional climate. "
+            f"If you agree, skip to next tab (Species)."
+        )
+
+        return ui.div(
+            ui.span(
+                t(pt_text, en_text),
+                class_="climate-title",
+                style="font-size: 14px; line-height: 1.5;",
+            ),
+            class_="climate-header",
+        )
+
     @reactive.effect
     @reactive.event(input.update_map, input.main_nav)
     def _auto_select_biome():
@@ -683,16 +752,10 @@ def server_app(input,output,session):
     # Whittaker Biomes Diagram - Interactive Plotly visualization using real data
     @render_widget
     def whittaker_diagram():
-        # Get selected climate and biome types
-        selected_climates = input.climate_types() or []
         selected_biomes = input.biome_types() or []
 
         # Determine which Whittaker biomes should be highlighted
         highlighted_biomes = set()
-
-        for climate in selected_climates:
-            if climate in CLIMATE_TO_BIOMES:
-                highlighted_biomes.update(CLIMATE_TO_BIOMES[climate])
 
         for biome in selected_biomes:
             if biome in BIOME_TYPE_TO_WHITTAKER:

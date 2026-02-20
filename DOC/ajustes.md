@@ -62,3 +62,25 @@ O mapa na aba de localização usava Google Satellite (`lyrs=s`) sem rótulos de
 - OpenStreetMap mantido como opção alternativa
 
 ### Status: APLICADO (2026-02-20)
+
+---
+
+## Reestruturação da Aba Clima
+
+### Problema
+
+A aba Clima exibia informações genéricas no título, incluía uma seção desnecessária de "Climate Types" (Continental, Polar, Temperate, Dry, Highland, Tropical Rainy) e o diagrama de Whittaker aparecia no topo, tirando foco da seleção de bioma.
+
+### Correções Aplicadas
+
+**`custom_ui/tab_02_climate.py`:**
+- Título estático substituído por `output_ui("climate_context_info")` — mensagem dinâmica com nome da ecorregião e bioma detectados na localização do usuário
+- Removida seção inteira de **Climate Types** (dict `CLIMATE_TYPES` + checkbox group `climate_types`)
+- Adicionado texto orientativo (PT/EN) antes dos checkboxes de bioma, explicando como corrigir bioma incorreto ou selecionar biomas adicionais em zonas de transição
+- **Whittaker diagram + legenda movidos para o fundo** da tela, abaixo dos biomas, com título "OPCIONAL" e separador visual
+
+**`custom_server/server_app.py`:**
+- Adicionado render `climate_context_info()` — exibe dinamicamente: "Seu projeto está localizado na ecorregião {eco_name}. Esta ecorregião faz parte do bioma global {biome_name}..." com fallbacks para coordenadas ausentes/inválidas
+- Removida dependência de `input.climate_types()` do diagrama de Whittaker (checkboxes de clima não existem mais)
+
+### Status: APLICADO (2026-02-20)
