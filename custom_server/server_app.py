@@ -277,15 +277,23 @@ def server_app(input,output,session):
             location=default_center,
             zoom_start=2  # Set an appropriate zoom level
         )
-        # Add OpenStreetMap layer (default)
+        # Add Google Maps layer with labels (default — best for navigation)
+        folium.TileLayer(
+            tiles="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+            attr="Map data &copy; Google",
+            name="Google Maps",
+            subdomains=["mt0", "mt1", "mt2", "mt3"],
+        ).add_to(world_map)
+
+        # Add OpenStreetMap layer
         folium.TileLayer("OpenStreetMap").add_to(world_map)
 
-        # Add Satellite layer
+        # Add Satellite + Labels (hybrid) layer
         folium.TileLayer(
-            tiles="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-            attr="Map data © Google",
+            tiles="https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+            attr="Map data &copy; Google",
             name="Satellite",
-            subdomains=["mt0", "mt1", "mt2", "mt3"]
+            subdomains=["mt0", "mt1", "mt2", "mt3"],
         ).add_to(world_map)
         # If the user provides latitude and longitude input
         if input.longitude_latitude() != "":
@@ -306,7 +314,8 @@ def server_app(input,output,session):
             except ValueError as e:
                 print(f"Error parsing coordinates: {e}")
 
-        # Add a scale bar and a fullscreen button for better usability
+        # Add layer control, scale bar, fullscreen and locate buttons
+        folium.LayerControl(collapsed=True).add_to(world_map)
         folium.plugins.Fullscreen().add_to(world_map)
         folium.plugins.LocateControl(auto_start=False).add_to(world_map)
 

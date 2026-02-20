@@ -1429,14 +1429,14 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
 .welcome-bullets-container {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
 }
 
 .welcome-bullet {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.5;
     color: #444;
 }
@@ -1456,7 +1456,7 @@ body:not(.lang-en):not(.lang-pt) .i18n-en { display: none !important; }
 .btn-comecar {
     font-size: 16px;
     font-weight: 600;
-    padding: 12px 32px;
+    padding: 10px 28px;
     border-radius: 8px;
     border: 2px solid #4a7c59;
     background-color: #4a7c59;
@@ -1527,7 +1527,7 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 
 .sponsor-logos {
     margin-top: auto;
-    padding-bottom: 30px;
+    padding-bottom: 20px;
 }
 
 /* ── Step cards on hero image ── */

@@ -50,7 +50,7 @@ start = ui.nav_panel(
                                 "Find practical information about plants that are likely to thrive "
                                 "together in your agricultural, forestry or restoration plot.",
                             ),
-                            style="letter-spacing: 0.3px; font-size: 15px; color: #555; margin-bottom: 24px;",
+                            style="letter-spacing: 0.3px; font-size: 15px; color: #555; margin-bottom: 16px;",
                         ),
                         # Bullet points
                         ui.div(
@@ -114,7 +114,7 @@ start = ui.nav_panel(
                                     "Shiny.setInputValue('_nav_to', 'tab_location', {priority: 'event'});"
                                 ),
                             ),
-                            style="margin-top: 32px;",
+                            style="margin-top: 20px;",
                         ),
                     ),
                     id="left-step-1",
@@ -216,7 +216,7 @@ start = ui.nav_panel(
                     ),
                     class_="sponsor-logos",
                 ),
-                style="padding: 150px 50px 0; font-size: 15px; display: flex; flex-direction: column; height: 100vh;",
+                style="padding: max(60px, 8vh) 50px 0; font-size: 15px; display: flex; flex-direction: column; height: 100vh;",
             ),
             # ── Right column: hero image (always visible) ───
             ui.column(
