@@ -1095,23 +1095,28 @@ def server_app(input,output,session):
                 rows = []
                 new_count = 0
 
-            # Deduplicate by scientific name, preferring CSV common names
+            # Deduplicate by scientific name; map sci_name → CSV common_en
             csv_df = open_csv(FILE_NAME)
-            csv_names = set(csv_df['common_en'].dropna().str.strip())
+            csv_sci_to_en = {}
+            for _, cr in csv_df.iterrows():
+                sn = cr.get('sci_name')
+                cn = cr.get('common_en')
+                if pd.notna(sn) and pd.notna(cn):
+                    csv_sci_to_en[str(sn).strip().lower()] = str(cn).strip()
+
             seen_sci = {}
             deduped = []
             for r in rows:
                 cn_en, cn_pt, sci, score_val = r[0] or '', r[1] or '', r[2] or '', r[3]
                 key = sci.lower().strip() if sci else cn_en.lower().strip()
-                prev = seen_sci.get(key)
-                if prev is None:
-                    seen_sci[key] = len(deduped)
-                    deduped.append(r)
-                else:
-                    # Replace if current cn_en is in CSV but previous wasn't
-                    prev_en = deduped[prev][0] or ''
-                    if cn_en in csv_names and prev_en not in csv_names:
-                        deduped[prev] = r
+                if key in seen_sci:
+                    continue
+                # If CSV has a curated common_en for this sci name, use it
+                csv_en = csv_sci_to_en.get(key)
+                if csv_en and csv_en != cn_en:
+                    r = (csv_en, cn_pt, sci, score_val)
+                seen_sci[key] = True
+                deduped.append(r)
             rows = deduped
             new_count = len(rows)
 
