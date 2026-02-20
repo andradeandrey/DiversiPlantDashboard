@@ -217,9 +217,12 @@ main_species = ui.nav_panel(
         # Binning controls (hidden; moved into simplify modal via JS)
         ui.div(
             ui.div(
-                ui.p("Nº de categorias de Estrato", class_="bold-text"),
+                ui.p(
+                    t("Nº de categorias de Estrato", "Number of stratum categories"),
+                    class_="bold-text",
+                ),
                 ui.input_radio_buttons(
-                    "stratum_bins", "",
+                    "stratum_bins", None,
                     choices={"2": "2", "3": "3", "4": "4", "5": "5", "9": "9"},
                     selected="4",
                     inline=True,
@@ -287,7 +290,7 @@ main_species = ui.nav_panel(
             ),
         ),
 
-        # JS: move binning controls into simplify modal
+        # JS: move binning controls into simplify modal + fix label-for warnings
         ui.tags.script("""
             document.addEventListener('DOMContentLoaded', function() {
                 var binning = document.getElementById('binning-controls');
@@ -296,6 +299,13 @@ main_species = ui.nav_panel(
                     simplifyBody.appendChild(binning);
                     binning.style.display = '';
                 }
+                // Remove orphan for= attributes on labels pointing to non-input elements
+                document.querySelectorAll('label.control-label[for]').forEach(function(lbl) {
+                    var target = document.getElementById(lbl.getAttribute('for'));
+                    if (target && !target.matches('input,select,textarea')) {
+                        lbl.removeAttribute('for');
+                    }
+                });
             });
         """),
 

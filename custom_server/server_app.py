@@ -47,19 +47,19 @@ STRATUM = [0,1,[[0,4,9],{2:"Baixo", 6.5:"Alto"}],
 
 FLORISTIC_GROUP = {"Native": 'native', "Endemic":'endemic_list', "Naturalized":'naturalized',  "All Species":'all'}
 
-# PT-BR display names for results table columns (Figma match)
+# Bilingual display names for results table columns (PT-BR / EN)
 COLUMN_DISPLAY_NAMES = {
-    'common_en': 'Nome científico',
-    'growth_form': 'Forma de crescimento',
-    'plant_max_height': 'Altura máxima (m)',
-    'stratum': 'Estrato (demanda de luz)',
-    'family': 'Família',
-    'function': 'Função',
-    'yrs_ini_prod': 'Prod. inicial (anos)',
-    'life_hist': 'História de vida',
-    'longev_prod': 'Long. produtiva (anos)',
-    'threat_status': 'Ameaça à conservação',
-    'ref': 'Referência',
+    'common_en': ('Nome científico', 'Scientific name'),
+    'growth_form': ('Forma de crescimento', 'Growth form'),
+    'plant_max_height': ('Altura máxima (m)', 'Max height (m)'),
+    'stratum': ('Estrato (demanda de luz)', 'Stratum (light demand)'),
+    'family': ('Família', 'Family'),
+    'function': ('Função', 'Function'),
+    'yrs_ini_prod': ('Prod. inicial (anos)', 'Yrs to production'),
+    'life_hist': ('História de vida', 'Life history'),
+    'longev_prod': ('Long. produtiva (anos)', 'Productive lifespan (yrs)'),
+    'threat_status': ('Ameaça à conservação', 'Conservation threat'),
+    'ref': ('Referência', 'Reference'),
 }
 
 # Numeric columns that should be center-aligned in results table
@@ -76,8 +76,14 @@ def _render_results_table(df, columns):
 
     header_cells = []
     for col in columns:
-        display = COLUMN_DISPLAY_NAMES.get(col, col.replace('_', ' ').title())
-        display_esc = _html.escape(display)
+        names = COLUMN_DISPLAY_NAMES.get(col)
+        if names and isinstance(names, tuple):
+            display_esc = (
+                f'<span class="i18n-pt">{_html.escape(names[0])}</span>'
+                f'<span class="i18n-en">{_html.escape(names[1])}</span>'
+            )
+        else:
+            display_esc = _html.escape(names if names else col.replace('_', ' ').title())
         col_esc = _html.escape(col)
         header_cells.append(
             f'<th>'
@@ -1257,7 +1263,7 @@ def server_app(input,output,session):
         return ui.div(*sections, class_="discovery-results-container")
 
     @render.ui
-    @reactive.event(input.overview_plants, input.stratum_bins, input.harvest_bins)
+    @reactive.event(input.overview_plants, input.stratum_bins)
     def intercrops():
         if input.database_choice() == "try":
             df = open_csv(FILE_NAME)
@@ -1758,7 +1764,7 @@ def server_app(input,output,session):
             # Build Y-axis label formatter as JS function
             sorted_label_items = sorted(y_labels.items(), key=lambda x: x[0])
             y_label_map_js = json.dumps({str(pos): label for pos, label in sorted_label_items}, ensure_ascii=False)
-            js_y_formatter = f"__JS__function(value){{if(value<0)return 'Unknown';var v=Math.round(value*2)/2;var m={y_label_map_js};return m[String(v)]||'';}}__JSEND__"
+            js_y_formatter = f"__JS__function(value){{if(value<0)return value===-1.5?'Unknown':'';var v=Math.round(value*2)/2;var m={y_label_map_js};return m[String(v)]||'';}}__JSEND__"
 
             # Graphic elements (empty — legends and warnings removed)
             graphic_elements = []
@@ -1767,9 +1773,10 @@ def server_app(input,output,session):
 
             x_axis_min = round(min_x - (max_x - min_x) * 0.12, 4)
             x_axis_max = round(max_x + (max_x - min_x) * 0.05, 4)
+            x_mid_neg = round(x_axis_min / 2, 2)
 
-            # X-axis formatter: convert sqrt-space value → real years (hide labels in unknown margin)
-            js_x_formatter = "__JS__function(v){if(v<0)return 'Unknown';var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}__JSEND__"
+            # X-axis formatter: convert sqrt-space value → real years; single "Unknown" at midpoint of negative zone
+            js_x_formatter = f"__JS__function(v){{if(v<0)return Math.abs(v-({x_mid_neg}))<0.15?'Unknown':'';var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}}__JSEND__"
 
             option = {
                 'title': [
@@ -2667,8 +2674,14 @@ def server_app(input,output,session):
     def update_column_choices():
         available_cols = get_available_columns()
         
-        # Get readable column names for display (PT-BR from Figma)
-        readable_cols = {col: COLUMN_DISPLAY_NAMES.get(col, col.replace('_', ' ').title()) for col in available_cols}
+        # Get bilingual column names for display pills
+        readable_cols = {}
+        for col in available_cols:
+            names = COLUMN_DISPLAY_NAMES.get(col)
+            if names and isinstance(names, tuple):
+                readable_cols[col] = t(names[0], names[1])
+            else:
+                readable_cols[col] = names if names else col.replace('_', ' ').title()
         
         # Set default selections (first few columns)
         default_selected = available_cols[:5] if len(available_cols) >= 5 else available_cols
@@ -2792,8 +2805,11 @@ def server_app(input,output,session):
             if "common_en" in valid_columns:
                 selected_df = selected_df.sort_values(by='common_en')
 
-            # Rename columns to PT-BR display names for the CSV
-            rename_map = {c: COLUMN_DISPLAY_NAMES.get(c, c) for c in valid_columns}
+            # Rename columns to display names for the CSV (PT name)
+            rename_map = {}
+            for c in valid_columns:
+                names = COLUMN_DISPLAY_NAMES.get(c)
+                rename_map[c] = names[0] if names and isinstance(names, tuple) else (names or c)
             yield selected_df.rename(columns=rename_map).to_csv(index=False)
         else:
             global SPECIES_GIFT_DATAFRAME
