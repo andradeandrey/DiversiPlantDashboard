@@ -1031,7 +1031,7 @@ def server_app(input,output,session):
                     'bio15': bioclim['bio15'],
                 })
                 query = f"""
-                    SELECT DISTINCT ON (s.id)
+                    SELECT DISTINCT ON (s.canonical_name)
                            cn_en.common_name AS common_en,
                            cn_pt.common_name AS common_pt,
                            s.canonical_name AS sci_name,
@@ -1051,7 +1051,7 @@ def server_app(input,output,session):
                     {origin_join}
                     WHERE su.growth_form IS NOT NULL
                       AND {where_clause}
-                    ORDER BY s.id
+                    ORDER BY s.canonical_name, cn_en.common_name
                 """
                 # Wrap to sort by score and limit
                 query = f"""
@@ -1062,7 +1062,7 @@ def server_app(input,output,session):
                 """
             else:
                 query = f"""
-                    SELECT DISTINCT ON (s.id)
+                    SELECT DISTINCT ON (s.canonical_name)
                            cn_en.common_name AS common_en,
                            cn_pt.common_name AS common_pt,
                            s.canonical_name AS sci_name,
@@ -1078,7 +1078,7 @@ def server_app(input,output,session):
                     {origin_join}
                     WHERE su.growth_form IS NOT NULL
                       AND {where_clause}
-                    ORDER BY s.id
+                    ORDER BY s.canonical_name, cn_en.common_name
                 """
                 query = f"""
                     SELECT common_en, common_pt, sci_name, score
@@ -1094,6 +1094,26 @@ def server_app(input,output,session):
                 logging.warning(f"[DISCOVERY] DB query failed: {e}")
                 rows = []
                 new_count = 0
+
+            # Deduplicate by scientific name, preferring CSV common names
+            csv_df = open_csv(FILE_NAME)
+            csv_names = set(csv_df['common_en'].dropna().str.strip())
+            seen_sci = {}
+            deduped = []
+            for r in rows:
+                cn_en, cn_pt, sci, score_val = r[0] or '', r[1] or '', r[2] or '', r[3]
+                key = sci.lower().strip() if sci else cn_en.lower().strip()
+                prev = seen_sci.get(key)
+                if prev is None:
+                    seen_sci[key] = len(deduped)
+                    deduped.append(r)
+                else:
+                    # Replace if current cn_en is in CSV but previous wasn't
+                    prev_en = deduped[prev][0] or ''
+                    if cn_en in csv_names and prev_en not in csv_names:
+                        deduped[prev] = r
+            rows = deduped
+            new_count = len(rows)
 
             import html as _html
             import re as _re
@@ -1571,7 +1591,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text, ensure_ascii=False)};}}__JSEND__'},
                     'markLine': {
                         'silent': True,
                         'symbol': ['circle', 'none'],
@@ -1640,7 +1660,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text, ensure_ascii=False)};}}__JSEND__'},
                 }
 
                 species_series.append(series_entry)
@@ -1706,7 +1726,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text, ensure_ascii=False)};}}__JSEND__'},
                     'markLine': {
                         'silent': True,
                         'symbol': ['circle', 'none'],
@@ -1756,7 +1776,7 @@ def server_app(input,output,session):
                         'color': '#333',
                         'fontFamily': 'Inter, sans-serif',
                     },
-                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text)};}}__JSEND__'},
+                    'tooltip': {'formatter': f'__JS__function(){{return {json.dumps(tooltip_text, ensure_ascii=False)};}}__JSEND__'},
                 })
                 legend_names.append(name)
                 added_species.add(name)
