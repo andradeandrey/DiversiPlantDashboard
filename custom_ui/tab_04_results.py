@@ -123,55 +123,6 @@ results = ui.nav_panel(
             }
         """),
 
-        # Auto-retry download on first click (Shiny handler may not be warm yet)
-        ui.tags.script("""
-        $(document).on('shiny:sessioninitialized', function() {
-            var dlBtn = document.getElementById('export_df_os');
-            if (!dlBtn) return;
-            var origHref = null;
-            var observer = new MutationObserver(function(muts) {
-                muts.forEach(function(m) {
-                    if (m.attributeName === 'href') origHref = dlBtn.getAttribute('href');
-                });
-            });
-            observer.observe(dlBtn, {attributes: true});
-
-            dlBtn.addEventListener('click', function(e) {
-                if (dlBtn.dataset._retrying) return;
-                var href = dlBtn.getAttribute('href');
-                if (!href) return;
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                fetch(href).then(function(r) {
-                    if (r.ok) {
-                        r.blob().then(function(b) {
-                            var a = document.createElement('a');
-                            a.href = URL.createObjectURL(b);
-                            var cd = r.headers.get('content-disposition');
-                            var fn = 'selected_data.csv';
-                            if (cd) { var m = cd.match(/filename="?([^"]+)"?/); if (m) fn = m[1]; }
-                            a.download = fn;
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                        });
-                    } else {
-                        dlBtn.dataset._retrying = '1';
-                        setTimeout(function() {
-                            delete dlBtn.dataset._retrying;
-                            dlBtn.click();
-                        }, 500);
-                    }
-                }).catch(function() {
-                    dlBtn.dataset._retrying = '1';
-                    setTimeout(function() {
-                        delete dlBtn.dataset._retrying;
-                        dlBtn.click();
-                    }, 500);
-                });
-            }, true);
-        });
-        """),
     ),
     value="tab_results",
 )

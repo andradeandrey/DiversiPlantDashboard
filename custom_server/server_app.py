@@ -2481,59 +2481,6 @@ def server_app(input,output,session):
             else:
                 yield "Unable to filter GIFT database."
                 
-    @output
-    @render.download(filename=lambda: f"selected_{input.database_choice().replace(' ', '_').lower()}_data.csv")
-    def export_df_os():
-        if input.database_choice() == "try":
-            df = open_csv(FILE_NAME)
-            plants = input.overview_plants()
-            
-            # Filter to only include selected plants
-            selected_df = df[df['common_en'].isin(plants)]
-            
-            # Keep only the columns we want
-            selected_columns = ['common_en', 'growth_form', 'plant_max_height', 'stratum', 
-                            'family', 'function', 'yrs_ini_prod', 'life_hist', 
-                            'longev_prod', 'threat_status']
-            
-            # Select columns that exist in the dataframe
-            columns_to_keep = [col for col in selected_columns if col in selected_df.columns]
-            selected_df = selected_df[columns_to_keep]
-            
-            # Format the dataframe
-            selected_df = selected_df.fillna("-")
-            selected_df = selected_df.sort_values(by='common_en')
-            
-            yield selected_df.to_csv(index=False)
-        else:
-            global SPECIES_GIFT_DATAFRAME
-            if SPECIES_GIFT_DATAFRAME.empty:
-                print("SPECIES_GIFT_DATAFRAME is not populated.")
-                yield "Data not available."
-            else:
-                # Filter by selected plants
-                selected_plants = input.overview_plants()
-                
-                if 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
-                    selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
-                    
-                    # Format the dataframe
-                    selected_df = selected_df.fillna("-")
-                    selected_df = selected_df.sort_values("family")
-                    
-                    # Remove unnecessary columns
-                    unnecessary_columns = ['ref_ID', 'list_ID', 'entity_ID', 'work_ID', 'genus_ID', 
-                                        'questionable', 'quest_native', 'endemic_ref', 
-                                        'quest_end_ref', 'quest_end_list']
-                    
-                    # Only drop columns that exist
-                    columns_to_drop = [col for col in unnecessary_columns if col in selected_df.columns]
-                    if columns_to_drop:
-                        selected_df = selected_df.drop(columns=columns_to_drop)
-                    
-                    yield selected_df.to_csv(index=False)
-                else:
-                    yield "Unable to filter GIFT database. Column structure may be different than expected."
 ##Growth Form
 
     #  This functions creates the barchart and make it evolve depending on the lifetime chosen
@@ -2801,77 +2748,66 @@ def server_app(input,output,session):
             return ui.HTML(_render_results_table(table, valid_columns))
 
     # Also update the export function to use selected columns
+    def _export_filename():
+        try:
+            db = input.database_choice() or "try"
+            return f"selected_{db.replace(' ', '_').lower()}_data.csv"
+        except Exception:
+            return "selected_data.csv"
+
     @output
-    @render.download(filename=lambda: f"selected_{input.database_choice().replace(' ', '_').lower()}_data.csv")
-    def export_df_os():
-        if input.database_choice() == "try":
-            df = open_csv(FILE_NAME)
-            plants = input.overview_plants()
-            
-            # Filter to only include selected plants
-            selected_df = df[df['common_en'].isin(plants)]
-            
-            # Get selected columns
+    @render.download(filename=_export_filename)
+    async def export_df_os():
+        import traceback
+        try:
+            db_choice = input.database_choice()
+            plants = list(input.overview_plants())
             columns = list(input.selected_columns())
+            print(f"[DOWNLOAD] db={db_choice}, plants={len(plants)}, cols={len(columns)}")
 
-            # Ensure "common_en" is always included
-            if "common_en" not in columns and "common_en" in df.columns:
-                columns = ["common_en"] + columns
-                
-            # Only use columns that exist
-            valid_columns = [col for col in columns if col in selected_df.columns]
-            
-            if valid_columns:
-                selected_df = selected_df[valid_columns]
-            
-            # Format the dataframe
-            selected_df = selected_df.fillna("-")
-            
-            if "common_en" in valid_columns:
-                selected_df = selected_df.sort_values(by='common_en')
+            if db_choice == "try":
+                df = open_csv(FILE_NAME)
+                selected_df = df[df['common_en'].isin(plants)]
 
-            # Rename columns to display names for the CSV (PT name)
-            rename_map = {}
-            for c in valid_columns:
-                names = COLUMN_DISPLAY_NAMES.get(c)
-                rename_map[c] = names[0] if names and isinstance(names, tuple) else (names or c)
-            yield selected_df.rename(columns=rename_map).to_csv(index=False)
-        else:
-            global SPECIES_GIFT_DATAFRAME
-            if SPECIES_GIFT_DATAFRAME.empty:
-                print("SPECIES_GIFT_DATAFRAME is not populated.")
-                yield "Data not available."
+                if "common_en" not in columns and "common_en" in df.columns:
+                    columns = ["common_en"] + columns
+
+                valid_columns = [col for col in columns if col in selected_df.columns]
+                if valid_columns:
+                    selected_df = selected_df[valid_columns]
+
+                selected_df = selected_df.fillna("-")
+                if "common_en" in valid_columns:
+                    selected_df = selected_df.sort_values(by='common_en')
+
+                rename_map = {}
+                for c in valid_columns:
+                    names = COLUMN_DISPLAY_NAMES.get(c)
+                    rename_map[c] = names[0] if names and isinstance(names, tuple) else (names or c)
+                yield selected_df.rename(columns=rename_map).to_csv(index=False)
             else:
-                # Filter by selected plants
-                selected_plants = input.overview_plants()
-                
-                if 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
-                    selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(selected_plants)]
-                    
-                    # Get selected columns
-                    columns = list(input.selected_columns())
-
-                    # Ensure species identifier is always included
+                global SPECIES_GIFT_DATAFRAME
+                if SPECIES_GIFT_DATAFRAME.empty:
+                    yield "Data not available."
+                elif 'work_species' in SPECIES_GIFT_DATAFRAME.columns:
+                    selected_df = SPECIES_GIFT_DATAFRAME[SPECIES_GIFT_DATAFRAME['work_species'].isin(plants)]
                     if "work_species" not in columns and "work_species" in selected_df.columns:
                         columns = ["work_species"] + columns
-                    
-                    # Only use columns that exist
                     valid_columns = [col for col in columns if col in selected_df.columns]
-                    
                     if valid_columns:
                         selected_df = selected_df[valid_columns]
-                    
-                    # Format the dataframe
                     selected_df = selected_df.fillna("-")
-                    
                     if "work_species" in valid_columns:
                         selected_df = selected_df.sort_values("work_species")
                     elif "family" in valid_columns:
                         selected_df = selected_df.sort_values("family")
-                    
                     yield selected_df.to_csv(index=False)
                 else:
-                    yield "Unable to filter GIFT database. Column structure may be different than expected."
+                    yield "Unable to filter GIFT database."
+        except Exception as e:
+            print(f"[DOWNLOAD ERROR] {e}")
+            traceback.print_exc()
+            yield f"Error: {e}"
                     
     @render.image
     def climate_image():
