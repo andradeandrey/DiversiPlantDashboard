@@ -189,7 +189,7 @@ def server_admin(input, output, session):
         if not DB_AVAILABLE:
             return ui.p("Database not connected.")
 
-        search_term = input.species_search()
+        search_term = input.admin_species_search()
         if not search_term or len(search_term) < 2:
             return ui.p("Enter at least 2 characters to search.")
 

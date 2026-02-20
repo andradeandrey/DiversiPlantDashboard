@@ -121,7 +121,7 @@ admin = ui.nav_panel(
                         ui.column(
                             8,
                             ui.input_text(
-                                "species_search",
+                                "admin_species_search",
                                 "Search Species:",
                                 placeholder="Enter species name..."
                             )
