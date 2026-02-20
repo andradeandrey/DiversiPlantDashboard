@@ -84,3 +84,21 @@ A aba Clima exibia informações genéricas no título, incluía uma seção des
 - Removida dependência de `input.climate_types()` do diagrama de Whittaker (checkboxes de clima não existem mais)
 
 ### Status: APLICADO (2026-02-20)
+
+---
+
+## Ajustes na Aba Espécies
+
+### Alterações
+
+**`custom_ui/tab_03_species.py`:**
+- Label de busca alterado de "Search:" para **"Type plant names you want to include:"** (PT: "Digite nomes de plantas que deseja incluir:")
+- Adicionado título **"Apply filters to limit search results:"** (PT: "Aplique filtros para limitar os resultados:") acima dos filtros
+- Adicionado dropdown **"Origin"** (Origem) entre "Plant use" e "Conservation threat" com opções: All, Native, Endemic — filtra por país botânico WCVP (TDWG) da localização do usuário, sem botão "Todos"
+
+**`custom_server/server_app.py`:**
+- Lê `input.filter_origin()` e resolve código TDWG via `get_tdwg_by_coords`
+- JOIN em `species_regions` com condições `is_native = TRUE` ou `is_endemic = TRUE` conforme seleção
+- Ambas variantes da query (com e sem climate scoring) incluem o origin join
+
+### Status: APLICADO (2026-02-20)

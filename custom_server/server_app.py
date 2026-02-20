@@ -899,6 +899,7 @@ def server_app(input,output,session):
 
         gf = tuple(input.filter_growth_form() or ())
         use = tuple(input.filter_plant_use() or ())
+        origin = input.filter_origin() or "all"
         threat = tuple(input.filter_threat() or ())
         nfix = tuple(input.filter_nfix() or ())
         decid = tuple(input.filter_deciduousness() or ())
@@ -906,17 +907,20 @@ def server_app(input,output,session):
         selected = list(input.overview_plants() or [])
         selected_set = set(selected)
 
-        has_filter = search or gf or use or threat or nfix or decid
+        has_filter = search or gf or use or threat or nfix or decid or origin != "all"
 
-        # --- Climate data for scoring ---
+        # --- Climate data + TDWG for scoring & origin filter ---
         bioclim = None
         has_climate = False
+        user_tdwg = None
         try:
+            from database.connection import get_tdwg_by_coords
             lat_lon_str = input.longitude_latitude()
             if lat_lon_str:
                 lat, lon = parse_lat_lon(lat_lon_str)
                 bioclim = get_bioclim_at_coords(lat, lon)
                 has_climate = bioclim is not None
+                user_tdwg = get_tdwg_by_coords(lat, lon)
         except Exception:
             pass
 
@@ -988,6 +992,17 @@ def server_app(input,output,session):
                         params[key] = f'%{kw}%'
                 conditions.append(f"({' OR '.join(use_conds)})")
 
+            # Origin filter (native/endemic at user's TDWG botanical country)
+            origin_join = ""
+            if origin != "all" and user_tdwg:
+                origin_join = "JOIN species_regions sr_origin ON s.id = sr_origin.species_id"
+                conditions.append("sr_origin.tdwg_code = :user_tdwg")
+                params['user_tdwg'] = user_tdwg
+                if origin == "native":
+                    conditions.append("sr_origin.is_native = TRUE")
+                elif origin == "endemic":
+                    conditions.append("sr_origin.is_endemic = TRUE")
+
             # Exclude already-selected (by common_en name)
             if selected_set:
                 sel_placeholders = []
@@ -1027,6 +1042,7 @@ def server_app(input,output,session):
                     ) cn_pt ON TRUE
                     LEFT JOIN species_climate_envelope sce ON s.id = sce.species_id
                     {use_join}
+                    {origin_join}
                     WHERE su.growth_form IS NOT NULL
                       AND {where_clause}
                     ORDER BY s.id
@@ -1053,6 +1069,7 @@ def server_app(input,output,session):
                         WHERE species_id = s.id AND language = 'pt' LIMIT 1
                     ) cn_pt ON TRUE
                     {use_join}
+                    {origin_join}
                     WHERE su.growth_form IS NOT NULL
                       AND {where_clause}
                     ORDER BY s.id

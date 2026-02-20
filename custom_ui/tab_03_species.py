@@ -78,13 +78,20 @@ main_species = ui.nav_panel(
                     # Search inside left column
                     ui.div(
                         ui.tags.label(
-                            ui.span("Busca:", class_="i18n-pt"),
-                            ui.span("Search:", class_="i18n-en"),
+                            ui.span("Digite nomes de plantas que deseja incluir:", class_="i18n-pt"),
+                            ui.span("Type plant names you want to include:", class_="i18n-en"),
                             class_="species-filter-label",
                         ),
                         ui.input_text("species_search", "",
                             placeholder="Buscar espécie por nome... / Search species by name..."),
                         class_="species-search-inline",
+                    ),
+                    # Filters title
+                    ui.tags.label(
+                        ui.span("Aplique filtros para limitar os resultados:", class_="i18n-pt"),
+                        ui.span("Apply filters to limit search results:", class_="i18n-en"),
+                        class_="species-filter-label",
+                        style="margin-top: 16px; margin-bottom: 8px; display: block;",
                     ),
                     ui.div(
                         ui.input_selectize(
@@ -126,6 +133,19 @@ main_species = ui.nav_panel(
                         ui.tags.button("Todos", class_="btn-select-all",
                             onclick="var s=$('#filter_plant_use')[0].selectize;Object.keys(s.options).forEach(function(k){s.addItem(k,true)});s.close();"),
                         class_="species-filter-item species-filter-multi",
+                    ),
+                    ui.div(
+                        ui.input_select(
+                            "filter_origin",
+                            t("Origem", "Origin"),
+                            choices={
+                                "all": "Todos / All",
+                                "native": "Nativa / Native",
+                                "endemic": "Endêmica / Endemic",
+                            },
+                            selected="all",
+                        ),
+                        class_="species-filter-item",
                     ),
                     ui.div(
                         ui.input_selectize(
