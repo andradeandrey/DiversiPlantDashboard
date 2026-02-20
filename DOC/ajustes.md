@@ -100,5 +100,9 @@ A aba Clima exibia informações genéricas no título, incluía uma seção des
 - Lê `input.filter_origin()` e resolve código TDWG via `get_tdwg_by_coords`
 - JOIN em `species_regions` com condições `is_native = TRUE` ou `is_endemic = TRUE` conforme seleção
 - Ambas variantes da query (com e sem climate scoring) incluem o origin join
+- Removidos todos os botões "Todos" dos filtros selectize
+- Espaçamento entre label "Aplique filtros..." e input de busca reduzido
+- Dropdown "Origem" estilizado com label no padrão `species-filter-label` e altura 38px
+- Classe `species-filter-multi` restaurada nos selectize para manter estilo correto
 
 ### Status: APLICADO (2026-02-20)

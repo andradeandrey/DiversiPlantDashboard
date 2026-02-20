@@ -91,7 +91,7 @@ main_species = ui.nav_panel(
                         ui.span("Aplique filtros para limitar os resultados:", class_="i18n-pt"),
                         ui.span("Apply filters to limit search results:", class_="i18n-en"),
                         class_="species-filter-label",
-                        style="margin-top: 16px; margin-bottom: 8px; display: block;",
+                        style="margin-top: 0; margin-bottom: 6px; display: block;",
                     ),
                     ui.div(
                         ui.input_selectize(
@@ -112,8 +112,6 @@ main_species = ui.nav_panel(
                             options={"plugins": ["remove_button"],
                                      "placeholder": "Forma de crescimento"},
                         ),
-                        ui.tags.button("Todos", class_="btn-select-all",
-                            onclick="var s=$('#filter_growth_form')[0].selectize;Object.keys(s.options).forEach(function(k){s.addItem(k,true)});s.close();"),
                         class_="species-filter-item species-filter-multi",
                     ),
                     ui.div(
@@ -130,8 +128,6 @@ main_species = ui.nav_panel(
                             options={"plugins": ["remove_button"],
                                      "placeholder": "Uso da planta"},
                         ),
-                        ui.tags.button("Todos", class_="btn-select-all",
-                            onclick="var s=$('#filter_plant_use')[0].selectize;Object.keys(s.options).forEach(function(k){s.addItem(k,true)});s.close();"),
                         class_="species-filter-item species-filter-multi",
                     ),
                     ui.div(
@@ -161,8 +157,6 @@ main_species = ui.nav_panel(
                             options={"plugins": ["remove_button"],
                                      "placeholder": "Ameaça à conservação"},
                         ),
-                        ui.tags.button("Todos", class_="btn-select-all",
-                            onclick="var s=$('#filter_threat')[0].selectize;Object.keys(s.options).forEach(function(k){s.addItem(k,true)});s.close();"),
                         class_="species-filter-item species-filter-multi",
                     ),
                     ui.div(
@@ -176,8 +170,6 @@ main_species = ui.nav_panel(
                             options={"plugins": ["remove_button"],
                                      "placeholder": "Fixador de N"},
                         ),
-                        ui.tags.button("Todos", class_="btn-select-all",
-                            onclick="var s=$('#filter_nfix')[0].selectize;Object.keys(s.options).forEach(function(k){s.addItem(k,true)});s.close();"),
                         class_="species-filter-item species-filter-multi",
                     ),
                     ui.div(
@@ -192,8 +184,6 @@ main_species = ui.nav_panel(
                             options={"plugins": ["remove_button"],
                                      "placeholder": "Deciduidade"},
                         ),
-                        ui.tags.button("Todos", class_="btn-select-all",
-                            onclick="var s=$('#filter_deciduousness')[0].selectize;Object.keys(s.options).forEach(function(k){s.addItem(k,true)});s.close();"),
                         class_="species-filter-item species-filter-multi",
                     ),
                     class_="species-filters-col",

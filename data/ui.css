@@ -723,6 +723,19 @@ background-color: #ff1a1a; /* Darker red on hover */
     width: 100% !important;
 }
 
+/* Origin dropdown label — match species-filter-label style */
+.species-filter-item .shiny-input-container > label.control-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+#filter_origin {
+    height: 38px !important;
+    padding: 10px 28px 10px 12px !important;
+}
+
 .species-filter-item .shiny-input-select,
 .species-filter-item select,
 .species-filter-item select.form-select,
@@ -1797,7 +1810,7 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
 
 /* Search input inline (inside filters column) */
 .species-search-inline {
-    margin-bottom: 10px;
+    margin-bottom: 2px;
 }
 
 .species-search-inline .shiny-input-container {
@@ -1829,8 +1842,13 @@ body:has(.tab-pane[data-value="tab_start"].active) .navbar {
     font-size: 13px;
 }
 
-.species-search-inline label.control-label {
+.species-search-inline label.control-label,
+.species-search-inline .shiny-input-container > label {
     display: none !important;
+}
+
+.species-search-inline .form-group {
+    margin-bottom: 0 !important;
 }
 
 .species-filter-label {
