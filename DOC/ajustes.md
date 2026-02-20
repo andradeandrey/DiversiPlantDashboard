@@ -106,3 +106,38 @@ A aba Clima exibia informações genéricas no título, incluía uma seção des
 - Classe `species-filter-multi` restaurada nos selectize para manter estilo correto
 
 ### Status: APLICADO (2026-02-20)
+
+---
+
+## Ajustes no EChart (Gráfico de Nichos Ecológicos)
+
+### Alterações
+
+**`custom_server/server_app.py`:**
+- Título dinâmico "Mostrando...sem ambos" substituído por subtítulo estático: **"Choose compatible species to fill vacant ecological niches along succession"**
+- Ícone de brush (retângulo azul) movido para abaixo do subtítulo com rótulo permanente: **"Select+drag white (vacant) area"**
+- Hover do brush alterado de "Selecionar setor" para: "Selected rectangle will return suitable species to fill each vacant stratum and period."
+- **Removida legenda de growth forms** (duplicava a legenda "Símbolos" já existente)
+- **Removidos todos os avisos ⚠️** (anotações com ponto de exclamação)
+- Eixo Y rotulado: **"Light demand (Stratum)"**
+- Valores negativos de Y exibem **"Unknown"** em vez de vazio
+- Valores negativos de X exibem **"Unknown"** em vez de vazio
+- Texto overlay "Clique para conhecer espécies novas!" substituído por: **"Click to list below species with selected strata & harvest periods"**
+- `grid.top` reduzido de 110 para 60 (espaço liberado pela remoção da legenda)
+
+### Status: APLICADO (2026-02-20)
+
+---
+
+## Simplificação do Modal "Simplify"
+
+### Alteração
+
+**`custom_ui/tab_03_species.py`:**
+- Removido slider **"Nº de períodos de colheita feito"** (`harvest_bins`) — funcionalidade substituída pelo retângulo de seleção Select+Drag do brush
+- Mantido apenas **"Nº de categorias de Estrato"** (radio buttons 2–9)
+
+**`custom_server/server_app.py`:**
+- Adicionado fallback `try/except` para `input.harvest_bins()` com valor padrão 4, evitando erro quando o input não existe mais
+
+### Status: APLICADO (2026-02-20)

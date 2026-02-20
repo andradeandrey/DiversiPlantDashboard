@@ -224,11 +224,6 @@ main_species = ui.nav_panel(
                     selected="4",
                     inline=True,
                 ),
-                style="margin-bottom: 24px;",
-            ),
-            ui.div(
-                ui.p("Nº de períodos de colheita feito", class_="bold-text"),
-                ui.input_slider("harvest_bins", "", min=2, max=10, value=4, step=1),
             ),
             id="binning-controls",
             style="display: none; padding: 8px 0;",

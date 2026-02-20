@@ -1434,7 +1434,10 @@ def server_app(input,output,session):
             min_x_sqrt = sqrt_transform(min_x_real)
             max_x_sqrt = sqrt_transform(max_x_real)
 
-            num_x_bins = int(input.harvest_bins())
+            try:
+                num_x_bins = int(input.harvest_bins())
+            except Exception:
+                num_x_bins = 4
             x_bins_sqrt = [round(x, 4) for x in np.linspace(min_x_sqrt, max_x_sqrt, num_x_bins + 1).tolist()]
             # Real-year labels for each bin edge
             x_bins_real = [round(sx ** 2, 1) for sx in x_bins_sqrt]
@@ -1755,146 +1758,44 @@ def server_app(input,output,session):
             # Build Y-axis label formatter as JS function
             sorted_label_items = sorted(y_labels.items(), key=lambda x: x[0])
             y_label_map_js = json.dumps({str(pos): label for pos, label in sorted_label_items}, ensure_ascii=False)
-            js_y_formatter = f"__JS__function(value){{var v=Math.round(value*2)/2;var m={y_label_map_js};return m[String(v)]||'';}}__JSEND__"
+            js_y_formatter = f"__JS__function(value){{if(value<0)return 'Unknown';var v=Math.round(value*2)/2;var m={y_label_map_js};return m[String(v)]||'';}}__JSEND__"
 
-            # Graphic elements for annotations
+            # Graphic elements (empty — legends and warnings removed)
             graphic_elements = []
 
-            # "Formas de crescimento" title at top
-            graphic_elements.append({
-                'type': 'text',
-                'left': 'center',
-                'top': 8,
-                'style': {
-                    'text': 'Formas de crescimento',
-                    'fontSize': 14,
-                    'fontWeight': 'bold',
-                    'fontFamily': 'Inter, sans-serif',
-                    'fill': '#333',
-                },
-                'z': 100,
-            })
-
-            # Growth form legend row at top of chart (emoji + PT name)
-            gf_display_pt = {
-                'tree': 'Árvore', 'shrub': 'Arbusto', 'subshrub': 'Sub-arbusto',
-                'forb': 'Herbácea', 'graminoid': 'Gram. e afins', 'palm': 'Palmeira',
-                'liana': 'T. lenhosa', 'vine': 'T. herbácea', 'scrambler': 'Rasteira',
-                'bamboo': 'Bambu', 'other': 'Outro',
-            }
-
-            # Fixed legend as graphic elements above the grid (● dot + PT name)
-            n_gf = len(gf_list)
-            for i, gf in enumerate(gf_list):
-                pt_name = gf_display_pt.get(gf, gf)
-                color = COLOR.get(gf, '#333')
-                # Distribute evenly across grid width
-                pct = (i + 0.5) / n_gf * 100
-                graphic_elements.append({
-                    'type': 'text',
-                    'left': f'{pct}%',
-                    'top': 70,
-                    'style': {
-                        'text': f'● {pt_name}',
-                        'fontSize': 10,
-                        'fontFamily': 'Inter, sans-serif',
-                        'fill': color,
-                        'fontWeight': 600,
-                        'textAlign': 'center',
-                    },
-                    'z': 100,
-                })
-
-            # Annotation labels for margin areas
-            if missing_harvest:
-                annot_text = '⚠️ Colheita desconhecida'
-                if partial_info_count > 0:
-                    annot_text += f' (ℹ️ {partial_info_count} com saída)'
-                graphic_elements.append({
-                    'type': 'text',
-                    'left': 20,
-                    'top': 55,
-                    'style': {
-                        'text': annot_text,
-                        'fontSize': 11,
-                        'fill': 'darkorange',
-                        'fontFamily': 'Inter, sans-serif',
-                        'backgroundColor': 'rgba(255,255,255,0.8)',
-                        'borderColor': 'orange',
-                        'borderWidth': 1,
-                        'padding': [3, 6],
-                    },
-                    'z': 50,
-                })
-
-            if missing_stratum:
-                graphic_elements.append({
-                    'type': 'text',
-                    'left': 90,
-                    'bottom': 90,
-                    'style': {
-                        'text': '⚠️ Estrato desconhecido',
-                        'fontSize': 11,
-                        'fill': 'darkred',
-                        'fontFamily': 'Inter, sans-serif',
-                        'backgroundColor': 'rgba(255,255,255,0.8)',
-                        'borderColor': 'red',
-                        'borderWidth': 1,
-                        'padding': [3, 6],
-                    },
-                    'z': 50,
-                })
-
-            if missing_both:
-                graphic_elements.append({
-                    'type': 'text',
-                    'left': 10,
-                    'bottom': 75,
-                    'style': {
-                        'text': '⚠️ Ambos desconhecidos',
-                        'fontSize': 9,
-                        'fill': 'darkred',
-                        'fontFamily': 'Inter, sans-serif',
-                        'backgroundColor': 'rgba(255,255,255,0.8)',
-                        'borderColor': 'darkred',
-                        'borderWidth': 1,
-                        'padding': [2, 4],
-                    },
-                    'z': 50,
-                })
-
-            # Title
-            complete_count = len(complete_data)
-            missing_h_count = len(missing_harvest)
-            missing_s_count = len(missing_stratum)
-            missing_b_count = len(missing_both)
-            title_parts = [f"Mostrando {len(added_species)} espécies selecionadas"]
-            if complete_count:
-                title_parts.append(f"{complete_count} completas")
-            if missing_h_count:
-                title_parts.append(f"{missing_h_count} sem colheita")
-            if missing_s_count:
-                title_parts.append(f"{missing_s_count} sem estrato")
-            if missing_b_count:
-                title_parts.append(f"{missing_b_count} sem ambos")
+            # Static subtitle
 
             x_axis_min = round(min_x - (max_x - min_x) * 0.12, 4)
             x_axis_max = round(max_x + (max_x - min_x) * 0.05, 4)
 
             # X-axis formatter: convert sqrt-space value → real years (hide labels in unknown margin)
-            js_x_formatter = "__JS__function(v){if(v<0)return '';var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}__JSEND__"
+            js_x_formatter = "__JS__function(v){if(v<0)return 'Unknown';var r=v*v; return r<1 ? (Math.round(r*12)+'m') : (Math.round(r*10)/10+'a');}__JSEND__"
 
             option = {
-                'title': {
-                    'text': ' | '.join(title_parts),
-                    'left': 'center',
-                    'top': 25,
-                    'textStyle': {'fontSize': 13, 'fontFamily': 'Inter, sans-serif', 'color': '#555'},
+                'title': [
+                    {
+                        'text': 'Choose compatible species to fill vacant ecological niches along succession',
+                        'left': 'center',
+                        'top': 6,
+                        'textStyle': {'fontSize': 13, 'fontFamily': 'Inter, sans-serif', 'color': '#555', 'fontWeight': 'normal'},
+                    },
+                    {
+                        'text': '⊞  Select+drag white (vacant) area',
+                        'left': 'center',
+                        'top': 30,
+                        'textStyle': {'fontSize': 12, 'fontFamily': 'Inter, sans-serif', 'color': '#888', 'fontWeight': 'normal'},
+                    },
+                ],
+                'tooltip': {
+                    'trigger': 'item',
+                    'confine': True,
                 },
-                'tooltip': {'trigger': 'item', 'confine': True},
                 'toolbox': {
-                    'feature': {'brush': {'type': ['rect'], 'title': {'rect': 'Selecionar setor'}}},
-                    'right': 210, 'top': 10,
+                    'feature': {'brush': {
+                        'type': ['rect'],
+                        'title': {'rect': 'Selected rectangle will return suitable species to fill each vacant stratum and period.'},
+                    }},
+                    'right': 210, 'top': 30,
                 },
                 'brush': {
                     'toolbox': ['rect'],
@@ -1908,7 +1809,7 @@ def server_app(input,output,session):
                     'throttleType': 'debounce', 'throttleDelay': 300,
                 },
                 'legend': {'show': False},
-                'grid': {'left': 140, 'right': 180, 'top': 110, 'bottom': 100},
+                'grid': {'left': 140, 'right': 180, 'top': 60, 'bottom': 100},
                 'xAxis': {
                     'type': 'value',
                     'name': 'Período de colheita (anos após plantio)',
@@ -1927,6 +1828,10 @@ def server_app(input,output,session):
                 },
                 'yAxis': {
                     'type': 'value',
+                    'name': 'Light demand (Stratum)',
+                    'nameLocation': 'middle',
+                    'nameGap': 120,
+                    'nameTextStyle': {'color': '#555', 'fontSize': 14, 'fontFamily': 'Inter, sans-serif'},
                     'min': -2.5,
                     'max': 11,
                     'interval': 0.5,
@@ -1998,7 +1903,7 @@ def server_app(input,output,session):
                 var ov = document.createElement('div');
                 ov.id = 'brush-overlay';
                 ov.className = 'brush-click-overlay';
-                ov.innerHTML = 'Clique para conhecer<br>espécies novas!';
+                ov.innerHTML = 'Click to list below species with<br>selected strata &amp; harvest periods';
                 ov.style.left = cx + 'px';
                 ov.style.top = cy + 'px';
                 el.style.position = 'relative';
