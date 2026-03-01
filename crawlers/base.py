@@ -654,7 +654,7 @@ class BaseCrawler(ABC):
                     WHEN wd.establishment_means IS NULL THEN TRUE
                     ELSE FALSE
                 END,
-                CASE WHEN wd.endemic = '1' THEN TRUE ELSE FALSE END,
+                FALSE,  -- is_endemic: will be computed in post-processing below
                 CASE WHEN wd.introduced = '1' THEN TRUE ELSE FALSE END,
                 'wcvp'
             FROM species s
@@ -669,5 +669,27 @@ class BaseCrawler(ABC):
                 source = EXCLUDED.source
         """), params)
 
+        # Post-processing: derive is_endemic from native distribution count.
+        # A species is endemic to a TDWG L3 area if it occurs natively in
+        # exactly 1 TDWG L3 area worldwide.
+        session.execute(text("""
+            UPDATE species_regions SET is_endemic = FALSE
+        """))
+        session.execute(text("""
+            UPDATE species_regions
+            SET is_endemic = TRUE
+            WHERE species_id IN (
+                SELECT species_id
+                FROM species_regions
+                WHERE is_native = TRUE
+                GROUP BY species_id
+                HAVING COUNT(DISTINCT tdwg_code) = 1
+            )
+            AND is_native = TRUE
+        """))
+
+        endemic_count = session.execute(
+            text("SELECT COUNT(*) FROM species_regions WHERE is_endemic = TRUE")
+        ).scalar()
         count = session.execute(text("SELECT COUNT(*) FROM species_regions")).scalar()
-        self.logger.info(f"species_regions: {count} records")
+        self.logger.info(f"species_regions: {count} records, {endemic_count} endemic")

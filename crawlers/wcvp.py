@@ -441,6 +441,22 @@ class WCVPCrawler(BaseCrawler):
         if lf in self._CLIMBER_DEFAULTS:
             return 'vine'
 
+        # Layer 3E: Portuguese compound forms from legacy data
+        # e.g. "liana/volúvel/trepadeira", "arbusto|arvore", "arbusto|subarbusto|suculenta"
+        lf_norm = lf.replace('á', 'a').replace('ú', 'u').replace('ó', 'o').replace('ê', 'e')
+        if 'suculenta' in lf_norm or 'succulent' in lf_norm:
+            if 'arbusto' in lf_norm or 'shrub' in lf_norm:
+                return 'shrub'
+            return 'other'
+        if 'trepadeira' in lf_norm or 'voluvel' in lf_norm:
+            return 'liana'
+        if 'arbusto' in lf_norm and ('arvore' in lf_norm or 'tree' in lf_norm):
+            return 'tree'
+        if 'arbusto' in lf_norm and 'subarbusto' in lf_norm:
+            return 'shrub'
+        if 'arbusto' in lf_norm:
+            return 'shrub'
+
         # Layer 4: Keyword-based fallback for compound lifeforms not in exact maps
         # Order matters: more specific keywords first
         if 'bamboo' in lf:

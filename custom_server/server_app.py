@@ -937,13 +937,13 @@ def server_app(input,output,session):
             db = get_db()
             # Build dynamic SQL query
             conditions = []
-            params = {}
+            params = {'sp_limit': 1000}
 
             if search:
                 conditions.append(
-                    "(LOWER(cn_en.common_name) LIKE :search "
-                    "OR LOWER(cn_pt.common_name) LIKE :search "
-                    "OR LOWER(s.canonical_name) LIKE :search)"
+                    "(unaccent(LOWER(COALESCE(cn_en.common_name,''))) LIKE unaccent(:search) "
+                    "OR unaccent(LOWER(COALESCE(cn_pt.common_name,''))) LIKE unaccent(:search) "
+                    "OR unaccent(LOWER(s.canonical_name)) LIKE unaccent(:search))"
                 )
                 params['search'] = f'%{search}%'
 
@@ -1016,11 +1016,12 @@ def server_app(input,output,session):
                     key = f'sel{i}'
                     sel_placeholders.append(f':{key}')
                     params[key] = name
-                conditions.append(f"cn_en.common_name NOT IN ({', '.join(sel_placeholders)})")
+                conditions.append(f"(cn_en.common_name IS NULL OR cn_en.common_name NOT IN ({', '.join(sel_placeholders)}))")
 
             # Only clean Latin-script names (skip Korean, corrupted U+FFFD, etc.)
-            conditions.append("cn_en.common_name ~ '^[A-Za-z]'")
-            conditions.append("cn_en.common_name NOT LIKE '%' || chr(65533) || '%'")
+            # These conditions only apply when cn_en is present (LEFT JOIN)
+            conditions.append("(cn_en.common_name IS NULL OR cn_en.common_name ~ '^[A-Za-z]')")
+            conditions.append("(cn_en.common_name IS NULL OR cn_en.common_name NOT LIKE '%' || chr(65533) || '%')")
             where_clause = " AND ".join(conditions) if conditions else "TRUE"
 
             # Climate scoring: if location available, compute score and sort by it
@@ -1041,7 +1042,10 @@ def server_app(input,output,session):
                            ) AS score
                     FROM species s
                     JOIN species_unified su ON s.id = su.species_id
-                    JOIN common_names cn_en ON s.id = cn_en.species_id AND cn_en.language = 'en'
+                    LEFT JOIN LATERAL (
+                        SELECT common_name FROM common_names
+                        WHERE species_id = s.id AND language = 'en' LIMIT 1
+                    ) cn_en ON TRUE
                     LEFT JOIN LATERAL (
                         SELECT common_name FROM common_names
                         WHERE species_id = s.id AND language = 'pt' LIMIT 1
@@ -1057,8 +1061,8 @@ def server_app(input,output,session):
                 query = f"""
                     SELECT common_en, common_pt, sci_name, score
                     FROM ({query}) sub
-                    ORDER BY score DESC
-                    LIMIT 100
+                    ORDER BY sci_name
+                    LIMIT :sp_limit
                 """
             else:
                 query = f"""
@@ -1069,7 +1073,10 @@ def server_app(input,output,session):
                            NULL::float AS score
                     FROM species s
                     JOIN species_unified su ON s.id = su.species_id
-                    JOIN common_names cn_en ON s.id = cn_en.species_id AND cn_en.language = 'en'
+                    LEFT JOIN LATERAL (
+                        SELECT common_name FROM common_names
+                        WHERE species_id = s.id AND language = 'en' LIMIT 1
+                    ) cn_en ON TRUE
                     LEFT JOIN LATERAL (
                         SELECT common_name FROM common_names
                         WHERE species_id = s.id AND language = 'pt' LIMIT 1
@@ -1083,8 +1090,8 @@ def server_app(input,output,session):
                 query = f"""
                     SELECT common_en, common_pt, sci_name, score
                     FROM ({query}) sub
-                    ORDER BY common_en
-                    LIMIT 100
+                    ORDER BY sci_name
+                    LIMIT :sp_limit
                 """
 
             try:
@@ -1138,10 +1145,16 @@ def server_app(input,output,session):
                     new_count -= 1
                     continue
 
+                # Use sci_name as selectize value when no EN name exists
+                display_name = cn_en if cn_en else sci
+                if not display_name:
+                    new_count -= 1
+                    continue
+
                 pct = int(round(score_val * 100)) if score_val and score_val > 0 else None
 
-                safe = _js_sq(cn_en)
-                cb_id = "cb_" + _re.sub(r'[^A-Za-z0-9_]', '', cn_en.replace(' ', '_'))
+                safe = _js_sq(display_name)
+                cb_id = "cb_" + _re.sub(r'[^A-Za-z0-9_]', '', display_name.replace(' ', '_'))
 
                 add_js = (
                     f"var s=$('#overview_plants')[0].selectize;"
