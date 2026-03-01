@@ -977,25 +977,44 @@ def server_app(input,output,session):
                     params[key] = f'%{d}%'
                 conditions.append(f"({' OR '.join(decid_conds)})")
 
-            # Ecocrop categories for plant_use filter
+            # Plant use filter: WCUPS species_uses (primary) + EcoCrop categories (fallback)
             use_join = ""
             if use:
-                use_join = "LEFT JOIN climate_envelope_ecocrop cee ON s.id = cee.species_id"
-                use_conds = []
-                # Map UI values to ecocrop category keywords
-                use_map = {
+                use_join = (
+                    "LEFT JOIN species_uses su_use ON s.id = su_use.species_id "
+                    "LEFT JOIN climate_envelope_ecocrop cee ON s.id = cee.species_id"
+                )
+                # Map UI values to WCUPS EBDCS codes + ecocrop keywords
+                wcups_map = {
+                    'food': ['HF'],
+                    'timber': ['ME', 'FU'],
+                    'medicinal': ['MA'],
+                    'ornamental': ['EU'],
+                    'fodder': ['AF'],
+                }
+                ecocrop_map = {
                     'food': ['fruits', 'vegetables', 'roots', 'cereals', 'sugar', 'pulses', 'oil'],
                     'timber': ['forest', 'wood'],
                     'medicinal': ['medicinal', 'aromatic'],
                     'ornamental': ['ornamental', 'turf'],
                     'fodder': ['forage', 'pasture'],
                 }
+                use_conds = []
                 for u in use:
-                    keywords = use_map.get(u, [u])
-                    for j, kw in enumerate(keywords):
-                        key = f'use_{u}_{j}'
-                        use_conds.append(f"cee.categories::text ILIKE :{key}")
+                    sub_conds = []
+                    # WCUPS codes
+                    wcups_codes = wcups_map.get(u, [])
+                    for j, code in enumerate(wcups_codes):
+                        key = f'wc_{u}_{j}'
+                        sub_conds.append(f"su_use.use_code = :{key}")
+                        params[key] = code
+                    # EcoCrop keywords (fallback)
+                    eco_kws = ecocrop_map.get(u, [u])
+                    for j, kw in enumerate(eco_kws):
+                        key = f'eco_{u}_{j}'
+                        sub_conds.append(f"cee.categories::text ILIKE :{key}")
                         params[key] = f'%{kw}%'
+                    use_conds.append(f"({' OR '.join(sub_conds)})")
                 conditions.append(f"({' OR '.join(use_conds)})")
 
             # Origin filter (native/endemic at user's TDWG botanical country)

@@ -132,7 +132,7 @@ BEGIN
     WHERE species_id = p_species_id;
 
     IF NOT FOUND THEN
-        RETURN 0;
+        RETURN NULL;  -- No climate envelope → unknown, not zero
     END IF;
 
     -- 1. Temperature mean match (25% weight)
@@ -203,7 +203,7 @@ JOIN species_regions sr ON s.id = sr.species_id AND sr.is_native = TRUE
 JOIN tdwg_climate c ON sr.tdwg_code = c.tdwg_code
 WHERE c.bio1_mean IS NOT NULL
 GROUP BY s.id
-HAVING COUNT(DISTINCT sr.tdwg_code) >= 2  -- Minimum 2 regions for reliability
+HAVING COUNT(DISTINCT sr.tdwg_code) >= 1  -- Include species with 1+ native regions
 ON CONFLICT (species_id) DO NOTHING;
 
 -- ============================================================================

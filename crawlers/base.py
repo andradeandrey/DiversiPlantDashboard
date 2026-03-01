@@ -555,9 +555,8 @@ class BaseCrawler(ABC):
             where_clause = "WHERE s.id = ANY(:ids)"
             params['ids'] = species_ids
 
-        # Upsert species_unified with priority: gift > reflora > wcvp > treegoer
-        # GIFT is prioritized for using more consistent definitions (liana vs vine)
-        # and following Renata's Climber.R logic (trait_1.2.2 + trait_1.4.2)
+        # Upsert species_unified using source_priority table for ranking.
+        # Fallback to hardcoded priorities if source_priority table is empty.
         session.execute(text(f"""
             INSERT INTO species_unified (
                 species_id,
@@ -574,24 +573,28 @@ class BaseCrawler(ABC):
             )
             SELECT
                 s.id,
-                COALESCE(
-                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'gift' AND growth_form IS NOT NULL LIMIT 1),
-                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'reflora' AND growth_form IS NOT NULL LIMIT 1),
-                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'wcvp' AND growth_form IS NOT NULL LIMIT 1),
-                    (SELECT growth_form FROM species_traits WHERE species_id = s.id AND source = 'treegoer' AND growth_form IS NOT NULL LIMIT 1)
-                ),
-                CASE
-                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'gift' AND growth_form IS NOT NULL) THEN 'gift'
-                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'reflora' AND growth_form IS NOT NULL) THEN 'reflora'
-                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'wcvp' AND growth_form IS NOT NULL) THEN 'wcvp'
-                    WHEN EXISTS(SELECT 1 FROM species_traits WHERE species_id = s.id AND source = 'treegoer' AND growth_form IS NOT NULL) THEN 'treegoer'
-                END,
-                (SELECT max_height_m FROM species_traits WHERE species_id = s.id AND max_height_m IS NOT NULL ORDER BY
-                    CASE source WHEN 'gift' THEN 1 WHEN 'reflora' THEN 2 WHEN 'wcvp' THEN 3 WHEN 'treegoer' THEN 4 ELSE 5 END
-                LIMIT 1),
-                (SELECT source FROM species_traits WHERE species_id = s.id AND max_height_m IS NOT NULL ORDER BY
-                    CASE source WHEN 'gift' THEN 1 WHEN 'reflora' THEN 2 WHEN 'wcvp' THEN 3 WHEN 'treegoer' THEN 4 ELSE 5 END
-                LIMIT 1),
+                -- growth_form: use source_priority table
+                (SELECT st.growth_form FROM species_traits st
+                 LEFT JOIN source_priority sp ON sp.attribute = 'growth_form' AND sp.source = st.source
+                 WHERE st.species_id = s.id AND st.growth_form IS NOT NULL
+                 ORDER BY COALESCE(sp.priority, 99)
+                 LIMIT 1),
+                (SELECT st.source FROM species_traits st
+                 LEFT JOIN source_priority sp ON sp.attribute = 'growth_form' AND sp.source = st.source
+                 WHERE st.species_id = s.id AND st.growth_form IS NOT NULL
+                 ORDER BY COALESCE(sp.priority, 99)
+                 LIMIT 1),
+                -- max_height_m: use source_priority table
+                (SELECT st.max_height_m FROM species_traits st
+                 LEFT JOIN source_priority sp ON sp.attribute = 'max_height_m' AND sp.source = st.source
+                 WHERE st.species_id = s.id AND st.max_height_m IS NOT NULL
+                 ORDER BY COALESCE(sp.priority, 99)
+                 LIMIT 1),
+                (SELECT st.source FROM species_traits st
+                 LEFT JOIN source_priority sp ON sp.attribute = 'max_height_m' AND sp.source = st.source
+                 WHERE st.species_id = s.id AND st.max_height_m IS NOT NULL
+                 ORDER BY COALESCE(sp.priority, 99)
+                 LIMIT 1),
                 (SELECT woodiness FROM species_traits WHERE species_id = s.id AND woodiness IS NOT NULL LIMIT 1),
                 (SELECT nitrogen_fixer FROM species_traits WHERE species_id = s.id AND nitrogen_fixer IS NOT NULL LIMIT 1),
                 (SELECT dispersal_syndrome FROM species_traits WHERE species_id = s.id AND dispersal_syndrome IS NOT NULL LIMIT 1),

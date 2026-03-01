@@ -6,10 +6,13 @@ Uses ST_SummaryStats to calculate zonal statistics for each TDWG Level 3 region
 from the worldclim_raster table.
 """
 
+import logging
 import os
 import sys
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+logger = logging.getLogger(__name__)
 
 # Database connection
 DB_CONFIG = {
@@ -78,17 +81,21 @@ def classify_whittaker(temp, precip):
 
 
 def main():
-    print("Connecting to database...")
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(name)s [%(levelname)s] %(message)s',
+    )
+    logger.info("Connecting to database...")
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
     # Check if we have raster data
     cursor.execute("SELECT COUNT(DISTINCT bio_var) FROM worldclim_raster")
     n_vars = cursor.fetchone()['count']
-    print(f"Found {n_vars} bio variables in worldclim_raster")
+    logger.info("Found %d bio variables in worldclim_raster", n_vars)
 
     if n_vars == 0:
-        print("ERROR: No raster data found. Run load_wc2_raster.py first.")
+        logger.error("No raster data found. Run load_wc2_raster.py first.")
         sys.exit(1)
 
     # Get all TDWG Level 3 regions
@@ -99,7 +106,7 @@ def main():
         ORDER BY level3_code
     """)
     regions = cursor.fetchall()
-    print(f"Found {len(regions)} TDWG Level 3 regions")
+    logger.info("Found %d TDWG Level 3 regions", len(regions))
 
     processed = 0
     errors = 0
@@ -139,7 +146,7 @@ def main():
             stats = cursor.fetchall()
 
             if not stats:
-                print(f"  {tdwg_code}: No data (outside raster coverage)")
+                logger.debug("%s: No data (outside raster coverage)", tdwg_code)
                 continue
 
             # Build climate data dict
@@ -200,17 +207,16 @@ def main():
 
             if processed % 50 == 0:
                 conn.commit()
-                print(f"  Processed {processed}/{len(regions)} regions...")
+                logger.info("Processed %d/%d regions...", processed, len(regions))
 
         except Exception as e:
-            print(f"  ERROR {tdwg_code}: {e}")
+            logger.error("Region %s failed: %s", tdwg_code, e)
             errors += 1
             conn.rollback()
 
     conn.commit()
 
-    print(f"\n{'='*50}")
-    print(f"Completed: {processed} regions populated, {errors} errors")
+    logger.info("Completed: %d regions populated, %d errors", processed, errors)
 
     # Show summary
     cursor.execute("""
@@ -222,24 +228,28 @@ def main():
         FROM tdwg_climate
     """)
     summary = cursor.fetchone()
-    print(f"\nSummary:")
-    print(f"  Total regions: {summary['total']}")
-    print(f"  With temperature: {summary['with_temp']}")
-    print(f"  With Köppen zone: {summary['with_koppen']}")
-    print(f"  With Whittaker biome: {summary['with_biome']}")
+    logger.info(
+        "Summary — total: %d, with_temp: %d, with_koppen: %d, with_biome: %d",
+        summary['total'], summary['with_temp'],
+        summary['with_koppen'], summary['with_biome'],
+    )
 
     # Show sample Brazilian regions
     cursor.execute("""
         SELECT tdwg_code, bio1_mean, bio12_mean, koppen_zone, whittaker_biome
         FROM tdwg_climate
-        WHERE tdwg_code LIKE 'BZ%'
+        WHERE tdwg_code LIKE 'BZ%%'
         ORDER BY tdwg_code
     """)
     br_regions = cursor.fetchall()
     if br_regions:
-        print(f"\nBrazilian regions:")
+        logger.info("Brazilian regions:")
         for r in br_regions:
-            print(f"  {r['tdwg_code']}: {r['bio1_mean']:.1f}°C, {r['bio12_mean']:.0f}mm, {r['koppen_zone']}, {r['whittaker_biome']}")
+            logger.info(
+                "  %s: %.1f°C, %.0fmm, %s, %s",
+                r['tdwg_code'], r['bio1_mean'], r['bio12_mean'],
+                r['koppen_zone'], r['whittaker_biome'],
+            )
 
     conn.close()
 

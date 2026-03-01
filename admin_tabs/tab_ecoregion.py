@@ -208,7 +208,8 @@ def ecoregion_server(input, output, session):
                     FROM combined_species cs
                     JOIN species s ON cs.species_id = s.id
                     LEFT JOIN species_unified su ON s.id = su.species_id
-                    WHERE COALESCE(calculate_climate_match(s.id, :bio1, :bio5, :bio6, :bio12, :bio15), 0.5) >= :threshold
+                    WHERE (calculate_climate_match(s.id, :bio1, :bio5, :bio6, :bio12, :bio15) IS NULL
+                           OR calculate_climate_match(s.id, :bio1, :bio5, :bio6, :bio12, :bio15) >= :threshold)
                       AND su.growth_form IS NOT NULL
                       {gf_filter}
                     ORDER BY climate_score DESC, cs.total_obs DESC
